@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://varrazzo.com/</loc></url>
-  <url><loc>https://varrazzo.com/about/</loc></url>
-  <url><loc>https://varrazzo.com/blog/</loc></url>
-  <url><loc>https://varrazzo.com/blog/2020/02/11/thinking-psycopg3/</loc></url>
-  <url><loc>https://varrazzo.com/software/</loc></url>
+  <url><loc>https://www.varrazzo.com/</loc></url>
+  <url><loc>https://www.varrazzo.com/about/</loc></url>
+  <url><loc>https://www.varrazzo.com/blog/</loc></url>
+  <url><loc>https://www.varrazzo.com/blog/2020/02/11/thinking-psycopg3/</loc></url>
+  <url><loc>https://www.varrazzo.com/software/</loc></url>
 </urlset>
