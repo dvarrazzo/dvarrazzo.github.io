@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
     <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="/css/main.css?h=ece9dae4">
+    <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
+    <link rel="stylesheet" href="/css/custom.css?h=27aa52f4">
     <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
   </head>
 
@@ -53,16 +55,87 @@
 
 <div class="container mt70 mb70 equal-height-cols">
   <div class="row">
-    <div class="col-md-8 col-md-offset-2"><p>Looks like building Psycopg on OS X is tricky: the code needs no tweak, but linking against the right library seems problematic.</p>
-<!-- CUT-HERE -->
-<p>Here is a list of articles I've found about the matter or I've been suggested: please take a look at these and leave a comment if you wish to suggest anything else or share your experience.</p>
-<ol class="arabic simple">
-<li><a class="reference external" href="http://blog.jonypawks.net/2008/06/20/installing-psycopg2-on-os-x/">Installing psycopg2 on OS X</a></li>
-<li><a class="reference external" href="http://ronny.haryan.to/archives/2008/09/12/psycopg2-and-64-bit-apache-on-leopard/">psycopg2 and 64-bit Apache on Leopard</a></li>
-<li><a class="reference external" href="http://blog.timc3.com/2010/08/20/psycopg2-os-x-_pqbackendpid/">psycopg2 OS X – _PQbackendPID</a></li>
-<li><a class="reference external" href="http://blog.serverhorror.com/2010/04/28/python-psycopg2-postgresql">Python, psycopg2, postgresql84 and Mac OS X Snow Leopard</a></li>
-</ol>
-<p>If you know enough to write a comprehensive article you are welcome!</p>
+    <div class="col-md-8 col-md-offset-2"><p>I have been <a class="reference external" href="https://www.psycopg.org/">psycopg2</a> maintainer since 2010; before that, <a class="reference external" href="https://github.com/psycopg/psycopg2/commit/4805a935690b1d618247267318a0ef7aa06c2378">git says</a> that my
+first contribution was in 2005. At that time, psycopg (one) was the tool to
+use, and psycopg2 was an interesting experiment.</p>
+<p>In many years of using psycopg2 daily and reading about the expectations,
+frustrations, surprises experienced by its users, I have been making my mind
+about a better system, and if I had to release a version incompatible with the
+past, those are some of the things I would change.</p>
+<div class="section" id="adaptation-system">
+<h3>Adaptation system</h3>
+<p>psycopg2 composes the queries (binding the arguments to the placeholders in
+the SQL string) on the client, and sends to the server the complete query with
+its values. It does it right, so it doesn't result in SQL injection
+vulnerabilities, however the correct way of doing it should be to send the
+query and its parameters separately (i.e. using the <a class="reference external" href="https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQEXECPARAMS"><tt class="docutils literal">PQexecParams</tt></a> libpq
+function rather than <a class="reference external" href="https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQEXEC"><tt class="docutils literal">PQexec</tt></a>).</p>
+<p>On the pro side, separating the statements is a huge help for the query parser
+and saves memory at parsing time. However the behaviour of the library would
+change slightly:</p>
+<ul class="simple">
+<li><tt class="docutils literal">PQexecParams</tt> supports only one command at time: it would be no more
+possible to send several queries separated by semicolon in a single
+<tt class="docutils literal">execute()</tt>.</li>
+<li>psycopg2 helps solving some types ambiguities by attaching casts to the
+types represented as strings (e.g. the date 1/1/2020 is currently merged to
+the query as <tt class="docutils literal"><span class="pre">'2010-01-01'::date</span></tt>). Using <tt class="docutils literal">PQexecParams</tt> the trick
+wouldn't be available anymore (although the type can be specified otherwise
+in the query).</li>
+<li>Custom-defined adapters should be rewritten.</li>
+</ul>
+<p>The main difference between the old adaptation protocol (called <a class="reference external" href="https://www.psycopg.org/docs/extensions.html#psycopg2.extensions.ISQLQuote"><tt class="docutils literal">ISQLQuote</tt></a>)
+and the new one (which doesn't have a name yet, and probably should be
+<tt class="docutils literal">ISQL</tt>) is the use of the quotes, whereby the string <tt class="docutils literal">O'Connor</tt> is passed
+to the query as <tt class="docutils literal"><span class="pre">'O''Connor'</span></tt>. In <tt class="docutils literal">ISQL</tt> the string wouldn't undergo the
+same transformation to add and escape quotes, and other types would be just
+converted into strings in the PostgreSQL syntax, but wouldn't need to be
+wrapped in quotes to create a SQL literal. Using <tt class="docutils literal">ISQL</tt> as the fundamental
+adaptation steps there would be some interesting improvements:</p>
+<ul class="simple">
+<li>adapting composite types and arrays would be a much straightforward matter,</li>
+<li>it opens the door to the use of <a class="reference external" href="https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQPREPARE">prepared statements</a>, but especially</li>
+<li>the <tt class="docutils literal">COPY FROM</tt> operation could take an iterable object yielding Python
+types instead of a file-like object to read; similarly <tt class="docutils literal">COPY TO</tt> could
+return an iterable object yielding Python types.</li>
+</ul>
+<p>I mean: this would be great! <a class="reference external" href="https://www.postgresql.org/docs/current/sql-copy.html"><tt class="docutils literal">COPY</tt></a> is by far the most efficient way to
+insert data into the database: using it via psycopg2 requires exposing the
+data via a <a class="reference external" href="https://www.psycopg.org/docs/usage.html#using-copy-to-and-copy-from">file-like object</a>, which not only is a weird interface, but it
+requires people to roll their own adaptation format. Looking forward for:</p>
+<pre class="code python literal-block">
+<span class="n">curs</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;COPY song (artist, title) FROM STDIN&quot;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;Sinead O'Connor&quot;</span><span class="p">,</span> <span class="s2">&quot;Nothing Compares 2 U&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'REM'</span><span class="p">,</span> <span class="s2">&quot;Losing my Religion&quot;</span><span class="p">),</span>
+<span class="p">])</span>
+</pre>
+</div>
+<div class="section" id="optional-c-module">
+<h3>Optional C module</h3>
+<p>psycopg2 is a C extension module wrapping the libpq, the PostgreSQL client
+library. As such, in order to build, it requires a C compiler, Python, and
+libpq development packages. It is a relatively low bar, but it can be a pain
+nonetheless for several beginner users.</p>
+<p>In order to support PyPI, during the years, a few &quot;python-only&quot;
+implementations have been developed: first a <a class="reference external" href="https://github.com/mvantellingen/psycopg2-ctypes">ctypes implementation</a>, to
+which I contributed but which hasn't been maintained at the same feature level
+of the C psycopg2. It was further forked into a <a class="reference external" href="https://github.com/chtd/psycopg2cffi">cffi implementation</a>, whose
+release numbers don't follow the original one, which is mighty confusing.</p>
+<p>What I think is that psycopg3 should follow an approach similar to PyYAML
+(I've seen it doing, I have to check how...), which tries to compile an
+optimized version of the library and falls back to a Python implementation if
+it fails.</p>
+<p>psycopg3 would try to use the C module in preference of the Python module, but
+if someone wanted to enforce the use of one specific implementation, an
+environment variable could be used for the task, such as
+<tt class="docutils literal"><span class="pre">PSYCOPG3_IMPL={C|PYTHON}</span></tt>.</p>
+</div>
+<div class="section" id="other-improvements">
+<h3>Other improvements</h3>
+<p>I've noted some of the ideas to implement in <a class="reference external" href="https://trello.com/b/6tF2oHJ0/psycopg3">a trello board</a> and in <a class="reference external" href="https://github.com/psycopg/psycopg2/milestone/4">an
+issues milestone</a>. Some of them weren't actually incompatible and ended up
+implemented in psycopg2 versions; some will have to wait.</p>
+</div>
 
   </div>
 </div>
