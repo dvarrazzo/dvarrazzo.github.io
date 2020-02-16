@@ -113,6 +113,54 @@ requires people to roll their own adaptation format. Looking forward for:</p>
 <span class="p">])</span>
 </pre>
 </div>
+<div class="section" id="context-managers-and-transactions">
+<h3>Context managers and transactions</h3>
+<p>psycopg2 follows a de-facto standard (which was <a class="reference external" href="https://mail.python.org/pipermail/db-sig/2012-November/thread.html">widely discussed</a> but never
+landed in the DBAPI specs), whereby connections manage a transaction when used
+as context manager, by committing/rolling back on <tt class="docutils literal">__exit__</tt>. So the way to
+use it would be:</p>
+<pre class="code python literal-block">
+<span class="n">conn</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">DSN</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># these are two separate transactions</span>
+    <span class="k">with</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="n">do_something</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="n">do_something_else</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+</pre>
+<p>This is very useful, but it is a surprising behaviour: developers usually
+expect an object implementing <tt class="docutils literal">close()</tt> to be closed on context exit (as
+files, and even cursors do). It also get in the way of managing different life
+cycles on the connection, for instance if there is a pool a connection is
+taken from:</p>
+<pre class="code python literal-block">
+<span class="k">with</span> <span class="n">pool</span><span class="o">.</span><span class="n">getconn</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">curs</span><span class="p">:</span>
+        <span class="n">do_someting</span><span class="p">(</span><span class="n">curs</span><span class="p">)</span>
+</pre>
+<p>it is expected (and <a class="reference external" href="https://github.com/psycopg/psycopg2/pull/17">vocally requested</a>) that the connection is returned to the
+pool at the end of the block.</p>
+<p>Talking about transactions, PostgreSQL support for <tt class="docutils literal">SAVEPOINT</tt> makes
+possible to implement nested transactions (already implemented on top of
+psycopg2 e.g. <a class="reference external" href="https://docs.djangoproject.com/en/3.0/topics/db/transactions/#django.db.transaction.atomic">by Django</a> and <a class="reference external" href="https://github.com/asqui/psycopg-nestedtransactions">in a stand-alone module</a>).</p>
+<p>Maybe it would be useful to add an explicit method to start an atomic block
+(either a transaction or a savepoint, according to the current connection
+state):</p>
+<pre class="code python literal-block">
+<span class="k">with</span> <span class="n">connect</span><span class="p">(</span><span class="n">DSN</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+        <span class="n">do_something</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+            <span class="n">do_something_nested</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">tx</span><span class="p">:</span>
+        <span class="n">do_something_else</span><span class="p">()</span>
+        <span class="c1"># we were just testing and we don't really want to do this</span>
+        <span class="n">tx</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+<span class="c1"># and here the connection is closed</span>
+</pre>
+</div>
 <div class="section" id="optional-c-module">
 <h3>Optional C module</h3>
 <p>psycopg2 is a C extension module wrapping the <a class="reference external" href="https://www.postgresql.org/docs/current/libpq.html">libpq</a>, the PostgreSQL client
@@ -128,7 +176,7 @@ breaking backwards compatibility</a>)... There's too magic in that.</p>
 implementations have been developed: first a <a class="reference external" href="https://github.com/mvantellingen/psycopg2-ctypes">ctypes implementation</a>, to
 which I contributed but which hasn't been maintained at the same feature level
 of the C psycopg2. It was further forked into a <a class="reference external" href="https://github.com/chtd/psycopg2cffi">cffi implementation</a>, whose
-release numbers don't follow the original one, which is mighty confusing.</p>
+release numbers don't follow the original ones, which is mighty confusing.</p>
 <p>What I think is that psycopg3 should follow an approach similar to PyYAML
 (I've seen it doing, I have to check how...), which tries to compile an
 optimized version of the library and falls back to a Python implementation if
@@ -136,17 +184,17 @@ it fails.</p>
 <p>psycopg3 would try to use the C module in preference of the Python module, but
 if someone wanted to enforce the use of one specific implementation, an
 environment variable could be used for the task, such as
-<tt class="docutils literal"><span class="pre">PSYCOPG3_IMPL={C|PYTHON}</span></tt>, which would make the import fail if the
-requested implementation is not found.</p>
+<tt class="docutils literal"><span class="pre">PSYCOPG3_IMPL={C|PYTHON}</span></tt>, in the presence of which importing the module
+would fail in case the requested implementation is not available.</p>
 </div>
 <div class="section" id="other-improvements">
 <h3>Other improvements</h3>
 <p>I've noted some of the ideas to implement in <a class="reference external" href="https://trello.com/b/6tF2oHJ0/psycopg3">a trello board</a> and in <a class="reference external" href="https://github.com/psycopg/psycopg2/milestone/4">an
 issues milestone</a>. Some of them weren't actually incompatible and ended up
-implemented in psycopg2 versions; some will have to wait.</p>
+implemented in psycopg2; some will have to wait.</p>
 <p>A lot can be done if there is will:</p>
 <ul class="simple">
-<li>an async interface based on <a class="reference external" href="https://docs.python.org/3.8/library/asyncio.html">asyncio</a> (as <a class="reference external" href="https://github.com/aio-libs/aiopg">aiopg</a> offess)</li>
+<li>an async interface based on <a class="reference external" href="https://docs.python.org/3.8/library/asyncio.html">asyncio</a> (as <a class="reference external" href="https://github.com/aio-libs/aiopg">aiopg</a> offers)</li>
 <li>async COPY methods (see <a class="reference external" href="https://github.com/psycopg/psycopg2/issues/428">issue #428</a>)</li>
 <li>better support for SQL_ASCII databases (which unlike their name are actually
 unencoded 8 bits, see <a class="reference external" href="https://github.com/psycopg/psycopg2/issues/519">issue #519</a>)</li>

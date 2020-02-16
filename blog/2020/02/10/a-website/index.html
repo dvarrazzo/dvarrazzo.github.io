@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <title>A Website! &mdash; Daniele Varrazzo</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="img/favicon.png">
+    <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/main.css?h=ece9dae4">
+    <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
+    <link rel="stylesheet" href="/css/custom.css?h=27aa52f4">
+    <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
+  </head>
+
+  <body>
+    <div class="main-wrapper animsition">
+<header id="header" class="">
+  <a href="/about/" class="logo">
+    <img src="/img/logo.png?h=0ad960b2" class="logo-dark" alt="">
+    <img src="/img/logo-light.png?h=cb66caa4" class="logo-light" alt="">
+  </a>
+  <a href="#" class="mob-menu"><i class="fa fa-bars"></i></a>
+  <nav>
+    <ul class="main-menu">
+<li>
+  <a href="/about/">About</a>
+</li>
+<li>
+  <a href="/software/">Software</a>
+</li>
+<li>
+  <a href="/photo/">Photography</a>
+</li>
+<li>
+  <a href="/blog/">Blog</a>
+</li>
+<li>
+  <a href="/contact">Contact</a>
+</li>
+    </ul>
+  </nav>
+</header>
+<div class="container fullwidth pt140 pb140" data-background="/img/blog/portopalo.jpg">
+  <div class="pt140 pb140">
+    <div class="entrance">
+      <h2 class="title">A Website!</h2>
+      <p class="separator"></p>
+      <p class="small capitalize serif">2020-02-10</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="container mt70 mb70 equal-height-cols">
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2"><p>There's something broken on the internet.</p>
+<p>Walled gardens are taking over. Facebook, Twitter, Instagram are becoming
+synonym for Internet, and people is surprised by how limited that turns out to
+be, by how little their ideas stick in a flow of unrelated news.</p>
+<p>I think this generation of people users, who never considered running their
+own website, is missing out all the freedom the 90's neckbeards were designing
+for them. On the other hand I'm not exactly a chatty dude: speaking up my mind
+hasn't often be on top of my thoughts, so I never got around having my own
+presence.</p>
+<p>So, late, very late, well after Google murdered RSS syndication, and the
+orange icon is a thing of the past, here is a blog!</p>
+<div class="section" id="how-was-it-made">
+<h3>How was it made</h3>
+<p>Unless you need concurrent content editing by several users with different
+permissions and with no technical competence, a database-backed website is not
+really needed. And if a website is just a bunch of static pages, nice things
+will happen:</p>
+<ul class="simple">
+<li>you can version it in Git or your favourite other SCM;</li>
+<li>it's very simple to serve: just a bunch of files on a webserver,</li>
+<li>it will never be pwned,</li>
+<li>you can easily find someone to serve it for you: <a class="reference external" href="https://pages.github.com/">GitHub pages</a> for
+instance.</li>
+</ul>
+<p>Of course I don't want to write HTML by hand. So off I went looking for a
+static website generator. As we mentioned GitHub pages, <a class="reference external" href="https://jekyllrb.com/docs/github-pages/">Jekyll</a> did come to
+mind, but it has two shortcomings:</p>
+<ul class="simple">
+<li>it's written in Ruby, which is not my expertise, so in case I need a quick
+hack it would be a lot of overhead to hack together;</li>
+<li>it uses <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> as markup languages, which is <a class="reference external" href="http://www.zverovich.net/2016/06/16/rst-vs-markdown.html">immensely inferior</a> to
+<a class="reference external" href="https://en.wikipedia.org/wiki/ReStructuredText">reStructuredText</a> in design and tooling.</li>
+</ul>
+<p>Shopping around I found <a class="reference external" href="https://www.getlektor.com/">Lektor</a>, which seems actually a nifty thing. It also
+uses Markdown out-of the box, but it is easy to <a class="reference external" href="https://github.com/fschulze/lektor-rst">add reST using a plugin</a>.</p>
+<p>I tried this setup with the <a class="reference external" href="https://www.psycopg.org/">psycopg website</a>, which I migrated from being a
+Django website to <a class="reference external" href="https://github.com/psycopg/psycopg-website/">static content</a>, and it was quite a simple task.</p>
+<p>Then I went around shopping for a nice template: I found a cool one called
+<a class="reference external" href="achtungthemes.com/borano/">Borano</a> (look at this <a class="reference external" href="http://achtungthemes.com/borano/index-portfolio.html">portfolio</a>, it is a joy...). Lektor supports <a class="reference external" href="https://palletsprojects.com/p/jinja/">Jinja</a>
+templates to spit HTML, so I am now in the process, as I create some content
+and work out what is that I have to say, to <a class="reference external" href="https://github.com/dvarrazzo/www.varrazzo.com/blob/30dc51b3d8c8a8a9220c8a77f2585d69d22947e2/templates/borano-page.html">convert</a> the template to Jinja.</p>
+</div>
+<div class="section" id="the-workflow">
+<h3>The workflow</h3>
+<p>All it takes to work on the website is:</p>
+<ul class="simple">
+<li>use my favourite editor (no pesky HTML textarea) to create and edit pages;</li>
+<li>running <tt class="docutils literal">make serve</tt> the website preview is immediately available on
+<tt class="docutils literal"><span class="pre">http://localhost:5000/</span></tt>;</li>
+<li>commit and push to <a class="reference external" href="https://github.com/dvarrazzo/www.varrazzo.com/">the website repos</a>.</li>
+</ul>
+<p>This is where the work to add or change content finishes. What will happen
+behind the scene will be:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://travis-ci.org/dvarrazzo/www.varrazzo.com">Travis will render the pages</a> and push the result <a class="reference external" href="https://github.com/dvarrazzo/dvarrazzo.github.io">on another repos</a>;</li>
+<li>from there the website is immediately published on <a class="reference external" href="https://www.varrazzo.com/">https://www.varrazzo.com/</a>.</li>
+</ul>
+<p>That's it.</p>
+<p>I don't think the system can work for everyone. I could probably set up the
+system to some non tech friend and explain what to do, but they should at
+least be able to use git for their regular workflow. It might be actually not
+such a high bar: if someone would like to try and start publishing a small
+website please let me know!</p>
+</div>
+
+  </div>
+</div>
+
+<footer id="footer" class="">
+  <div class="footer-links">
+    &copy; 2020. By Daniele Varrazzo. |
+    <a target="_blank" href="https://github.com/dvarrazzo/">GitHub</a> |
+    <a target="_blank" href="https://www.linkedin.com/in/danielevarrazzo/">LinkedIn</a> |
+    <a target="_blank" href="https://www.instagram.com/dvarrazzo/">Instagram</a> |
+    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/">Flickr</a>
+  </div>
+
+</footer>
+    </div>
+    <script src="/js/lib/jquery.min.js?h=d6c1f419"></script>
+    <script src="/js/lib/scripts.js?h=e59b43e0"></script>
+    <script src="/js/main.js?h=d7b4eca1"></script>
+  </body>
+</html>
