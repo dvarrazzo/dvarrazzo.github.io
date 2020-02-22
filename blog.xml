@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title type="text">Blog</title>
+  <id>urn:uuid:345e7579-5b16-39e4-9f1d-2a4bff93035d</id>
+  <updated>2020-02-15T00:00:00Z</updated>
+  <link href="https://www.varrazzo.com/blog/" />
+  <link href="https://www.varrazzo.com/blog.xml" rel="self" />
+  <author>
+    <name></name>
+  </author>
+  <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/02/15/thinking-psycopg3/">
+    <title type="text">Thinking psycopg3</title>
+    <id>urn:uuid:c38c961a-a398-3c96-8a19-53e5ce15189e</id>
+    <updated>2020-02-15T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/02/15/thinking-psycopg3/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;p&gt;I have been &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/&quot;&gt;psycopg2&lt;/a&gt; maintainer since 2010; before that, &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/commit/4805a935690b1d618247267318a0ef7aa06c2378&quot;&gt;git says&lt;/a&gt; that my
+first contribution was in 2005. At that time, psycopg (one) was the tool to
+use, and psycopg2 was an interesting experiment.&lt;/p&gt;
+&lt;p&gt;In many years of using psycopg2 daily and reading about the expectations,
+frustrations, surprises experienced by its users, I have been making my mind
+about a better system, and if I had to release a version incompatible with the
+past, those are some of the things I would change.&lt;/p&gt;
+&lt;div class=&quot;section&quot; id=&quot;adaptation-system&quot;&gt;
+&lt;h3&gt;Adaptation system&lt;/h3&gt;
+&lt;p&gt;psycopg2 composes the queries (binding the arguments to the placeholders in
+the SQL string) on the client, and sends to the server the complete query with
+its values. It does it right, so it doesn't result in SQL injection
+vulnerabilities, however the correct way of doing it should be to send the
+query and its parameters separately (i.e. using the &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQEXECPARAMS&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PQexecParams&lt;/tt&gt;&lt;/a&gt; libpq
+function rather than &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQEXEC&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PQexec&lt;/tt&gt;&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;On the pro side, separating the statements is a huge help for the query parser
+and saves memory at parsing time. However the behaviour of the library would
+change slightly:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PQexecParams&lt;/tt&gt; supports only one command at time: it would be no more
+possible to send several queries separated by semicolon in a single
+&lt;tt class=&quot;docutils literal&quot;&gt;execute()&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;psycopg2 helps solving some types ambiguities by attaching casts to the
+types represented as strings (e.g. the date 1/1/2020 is currently merged to
+the query as &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;'2010-01-01'::date&lt;/span&gt;&lt;/tt&gt;). Using &lt;tt class=&quot;docutils literal&quot;&gt;PQexecParams&lt;/tt&gt; the trick
+wouldn't be available anymore (although the type can be specified otherwise
+in the query).&lt;/li&gt;
+&lt;li&gt;Custom-defined adapters should be rewritten.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The main difference between the old adaptation protocol (called &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/extensions.html#psycopg2.extensions.ISQLQuote&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;ISQLQuote&lt;/tt&gt;&lt;/a&gt;)
+and the new one (which doesn't have a name yet, and probably should be
+&lt;tt class=&quot;docutils literal&quot;&gt;ISQL&lt;/tt&gt;) is the use of the quotes, whereby the string &lt;tt class=&quot;docutils literal&quot;&gt;O'Connor&lt;/tt&gt; is passed
+to the query as &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;'O''Connor'&lt;/span&gt;&lt;/tt&gt;. In &lt;tt class=&quot;docutils literal&quot;&gt;ISQL&lt;/tt&gt; the string wouldn't undergo the
+same transformation to add and escape quotes, and other types would be just
+converted into strings in the PostgreSQL syntax, but wouldn't need to be
+wrapped in quotes to create a SQL literal. Using &lt;tt class=&quot;docutils literal&quot;&gt;ISQL&lt;/tt&gt; as the fundamental
+adaptation steps there would be some interesting improvements:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;adapting composite types and arrays would be a much straightforward matter,&lt;/li&gt;
+&lt;li&gt;it opens the door to the use of &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQPREPARE&quot;&gt;prepared statements&lt;/a&gt;, but especially&lt;/li&gt;
+&lt;li&gt;the &lt;tt class=&quot;docutils literal&quot;&gt;COPY FROM&lt;/tt&gt; operation could take an iterable object yielding Python
+types instead of a file-like object to read; similarly &lt;tt class=&quot;docutils literal&quot;&gt;COPY TO&lt;/tt&gt; could
+return an iterable object yielding Python types.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I mean: this would be great! &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/sql-copy.html&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;COPY&lt;/tt&gt;&lt;/a&gt; is by far the most efficient way to
+insert data into the database: using it via psycopg2 requires exposing the
+data via a &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/usage.html#using-copy-to-and-copy-from&quot;&gt;file-like object&lt;/a&gt;, which not only is a weird interface, but it
+requires people to roll their own adaptation format. Looking forward for:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;curs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;COPY song (artist, title) FROM STDIN&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Sinead O'Connor&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Nothing Compares 2 U&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'REM'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Losing my Religion&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;context-managers-and-transactions&quot;&gt;
+&lt;h3&gt;Context managers and transactions&lt;/h3&gt;
+&lt;p&gt;psycopg2 follows a de-facto standard (which was &lt;a class=&quot;reference external&quot; href=&quot;https://mail.python.org/pipermail/db-sig/2012-November/thread.html&quot;&gt;widely discussed&lt;/a&gt; but never
+landed in the DBAPI specs), whereby connections manage a transaction when used
+as context manager, by committing/rolling back on &lt;tt class=&quot;docutils literal&quot;&gt;__exit__&lt;/tt&gt;. So the way to
+use it would be:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DSN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# these are two separate transactions&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_something&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_something_else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;This is very useful, but it is a surprising behaviour: developers usually
+expect an object implementing &lt;tt class=&quot;docutils literal&quot;&gt;close()&lt;/tt&gt; to be closed on context exit (as
+files, and even cursors do). It also get in the way of managing different life
+cycles on the connection, for instance if there is a pool a connection is
+taken from:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pool&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getconn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;curs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_someting&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;curs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;it is expected (and &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/pull/17&quot;&gt;vocally requested&lt;/a&gt;) that the connection is returned to the
+pool at the end of the block.&lt;/p&gt;
+&lt;p&gt;Talking about transactions, PostgreSQL support for &lt;tt class=&quot;docutils literal&quot;&gt;SAVEPOINT&lt;/tt&gt; makes
+possible to implement nested transactions (already implemented on top of
+psycopg2 e.g. &lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/topics/db/transactions/#django.db.transaction.atomic&quot;&gt;by Django&lt;/a&gt; and &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/asqui/psycopg-nestedtransactions&quot;&gt;in a stand-alone module&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;Maybe it would be useful to add an explicit method to start an atomic block
+(either a transaction or a savepoint, according to the current connection
+state):&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DSN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_something&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;do_something_nested&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_something_else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;# we were just testing and we don't really want to do this&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;tx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rollback&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# and here the connection is closed&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;optional-c-module&quot;&gt;
+&lt;h3&gt;Optional C module&lt;/h3&gt;
+&lt;p&gt;psycopg2 is a C extension module wrapping the &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq.html&quot;&gt;libpq&lt;/a&gt;, the PostgreSQL client
+library. As such, in order to build, it requires a C compiler, Python, and
+libpq development packages. It is a relatively low bar, but it can be a pain
+nonetheless for several beginner users.&lt;/p&gt;
+&lt;p&gt;We tried to avoid the problem shipping a &lt;a class=&quot;reference external&quot; href=&quot;https://pythonwheels.com/&quot;&gt;wheel package&lt;/a&gt;, but the experience
+has been &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues?utf8=%E2%9C%93&amp;amp;q=+label%3Awheel&quot;&gt;far from being a success&lt;/a&gt;,  marred by issues such as the possible
+incompatibility between the libcrypto used by Python and by the libpq, the
+lack of support for musl libc/Alpine Linux, broken assumptions (like &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/pypa/manylinux/issues/305&quot;&gt;glibc
+breaking backwards compatibility&lt;/a&gt;)... There's too magic in that.&lt;/p&gt;
+&lt;p&gt;Mostly in order to support PyPy, during the years a few &amp;quot;python-only&amp;quot;
+implementations have been developed: first a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/mvantellingen/psycopg2-ctypes&quot;&gt;ctypes implementation&lt;/a&gt;, to
+which I contributed but which hasn't been maintained at the same feature level
+of the C psycopg2. It was further forked into a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/chtd/psycopg2cffi&quot;&gt;cffi implementation&lt;/a&gt;, whose
+release numbers don't follow the original ones, which is mighty confusing.&lt;/p&gt;
+&lt;p&gt;What I think is that psycopg3 should follow an approach similar to PyYAML
+(I've seen it doing, I have to check how...), which tries to compile an
+optimized version of the library and falls back to a Python implementation if
+it fails.&lt;/p&gt;
+&lt;p&gt;psycopg3 would try to use the C module in preference of the Python module, but
+if someone wanted to enforce the use of one specific implementation, an
+environment variable could be used for the task, such as
+&lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;PSYCOPG3_IMPL={C|PYTHON}&lt;/span&gt;&lt;/tt&gt;, in the presence of which importing the module
+would fail in case the requested implementation is not available.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;other-improvements&quot;&gt;
+&lt;h3&gt;Other improvements&lt;/h3&gt;
+&lt;p&gt;I've noted some of the ideas to implement in &lt;a class=&quot;reference external&quot; href=&quot;https://trello.com/b/6tF2oHJ0/psycopg3&quot;&gt;a trello board&lt;/a&gt; and in &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/milestone/4&quot;&gt;an
+issues milestone&lt;/a&gt;. Some of them weren't actually incompatible and ended up
+implemented in psycopg2; some will have to wait.&lt;/p&gt;
+&lt;p&gt;A lot can be done if there is will:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;an async interface based on &lt;a class=&quot;reference external&quot; href=&quot;https://docs.python.org/3.8/library/asyncio.html&quot;&gt;asyncio&lt;/a&gt; (as &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/aio-libs/aiopg&quot;&gt;aiopg&lt;/a&gt; offers)&lt;/li&gt;
+&lt;li&gt;async COPY methods (see &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues/428&quot;&gt;issue #428&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;better support for SQL_ASCII databases (which unlike their name are actually
+unencoded 8 bits, see &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues/519&quot;&gt;issue #519&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://gist.github.com/dvarrazzo/3797445&quot;&gt;preparing cursors&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;reorganising the &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/extensions.html&quot;&gt;extensions&lt;/a&gt; and &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/extras.html&quot;&gt;extras&lt;/a&gt; module, which contain an
+heterogeneous assortment of objects, functions, constants...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I would be interested in starting the development of this project, and would
+love to hear what areas should be the focus: I would like some discussion to
+happen on the &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/list/psycopg/&quot;&gt;Mailing List&lt;/a&gt;, so please &lt;a class=&quot;reference external&quot; href=&quot;https://lists.postgresql.org/&quot;&gt;subscribe&lt;/a&gt; and participate!&lt;/p&gt;
+&lt;p&gt;And if psycopg2 has been useful so far for you and your business and would
+love to see a psycopg3 even more performing and easier to use, please consider
+&lt;a class=&quot;reference external&quot; href=&quot;https://github.com/sponsors/dvarrazzo/&quot;&gt;sponsoring the development&lt;/a&gt;, thank you! 💓&lt;/p&gt;
+&lt;/div&gt;
+</content>
+  </entry>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/02/10/a-website/">
+    <title type="text">A Website!</title>
+    <id>urn:uuid:9ef98bd1-11e2-3b83-8c1c-2867fef80f27</id>
+    <updated>2020-02-10T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/02/10/a-website/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;p&gt;There's something broken on the internet. This blog will fix it all!&lt;/p&gt;
+&lt;p&gt;Nevermind being late to the party some good 20 years...&lt;/p&gt;
+&lt;p&gt;However I find myself with a &lt;a class=&quot;reference external&quot; href=&quot;/software/&quot;&gt;body of works&lt;/a&gt; I would like to present, news I
+would like to give, &lt;a class=&quot;reference external&quot; href=&quot;/photos/&quot;&gt;photos&lt;/a&gt; I would like to show and talk about... I was
+starting to need a place of my own.&lt;/p&gt;
+&lt;p&gt;So, late, very late, well after Google murdered RSS syndication, and the
+orange icon is a thing of the past, here is a blog!&lt;/p&gt;
+&lt;div class=&quot;section&quot; id=&quot;how-was-it-made&quot;&gt;
+&lt;h3&gt;How was it made&lt;/h3&gt;
+&lt;p&gt;Unless you need concurrent content editing by several users with different
+permissions and with no technical competence, a database-backed website is not
+really needed. And if a website is just a bunch of static pages, nice things
+will happen:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;you can version it in Git or in your favourite SCM of the past,&lt;/li&gt;
+&lt;li&gt;it's very simple to serve: just a bunch of files on a webserver,&lt;/li&gt;
+&lt;li&gt;it will never be pwned,&lt;/li&gt;
+&lt;li&gt;you can easily find someone to serve it for you: &lt;a class=&quot;reference external&quot; href=&quot;https://pages.github.com/&quot;&gt;GitHub pages&lt;/a&gt; for
+instance.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Of course I don't want to write HTML by hand, so off I went looking for a
+static website generator. As we mentioned GitHub pages, &lt;a class=&quot;reference external&quot; href=&quot;https://jekyllrb.com/docs/github-pages/&quot;&gt;Jekyll&lt;/a&gt; did come to
+mind, but it has a couple of shortcomings:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;it's written in Ruby, which is not my expertise so, in case I needed a quick
+hack, there would be a lot of overhead;&lt;/li&gt;
+&lt;li&gt;it uses &lt;a class=&quot;reference external&quot; href=&quot;https://daringfireball.net/projects/markdown/&quot;&gt;Markdown&lt;/a&gt; as markup languages, which is &lt;a class=&quot;reference external&quot; href=&quot;http://www.zverovich.net/2016/06/16/rst-vs-markdown.html&quot;&gt;immensely inferior&lt;/a&gt; to
+&lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/ReStructuredText&quot;&gt;reStructuredText&lt;/a&gt; in design and tooling.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Shopping around, I found &lt;a class=&quot;reference external&quot; href=&quot;https://www.getlektor.com/&quot;&gt;Lektor&lt;/a&gt;, which seems actually a nifty thing. It uses
+Markdown out-of the box as well, but it is easy to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/fschulze/lektor-rst&quot;&gt;add reST using a
+plugin&lt;/a&gt;. For an example, &lt;a class=&quot;reference external&quot; href=&quot;https://raw.githubusercontent.com/dvarrazzo/www.varrazzo.com/master/content/blog/a-website/contents.lr&quot;&gt;this is this article source&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I tried this setup with the &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/&quot;&gt;psycopg website&lt;/a&gt;, which I migrated from being a
+Django website to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg-website/&quot;&gt;static content&lt;/a&gt;, and it was quite a simple task.&lt;/p&gt;
+&lt;p&gt;Then I went around shopping for a nice template: I found a cool one called
+&lt;a class=&quot;reference external&quot; href=&quot;achtungthemes.com/borano/&quot;&gt;Borano&lt;/a&gt; (look at this &lt;a class=&quot;reference external&quot; href=&quot;http://achtungthemes.com/borano/index-portfolio.html&quot;&gt;portfolio&lt;/a&gt;, it is a joy...). Lektor supports &lt;a class=&quot;reference external&quot; href=&quot;https://palletsprojects.com/p/jinja/&quot;&gt;Jinja&lt;/a&gt;
+templates to spit HTML, so I am now in the process, as I create some content
+and work out what is that I have to say, to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/www.varrazzo.com/blob/e02696529e58b1b72bb9067c91e1c783895b8912/templates/page.html&quot;&gt;convert&lt;/a&gt; the template to Jinja.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;the-workflow&quot;&gt;
+&lt;h3&gt;The workflow&lt;/h3&gt;
+&lt;p&gt;All it takes to work on the website is:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;use my favourite editor (no pesky HTML textarea) to create and edit pages;&lt;/li&gt;
+&lt;li&gt;running &lt;tt class=&quot;docutils literal&quot;&gt;make serve&lt;/tt&gt; the website preview is immediately available on
+&lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;http://localhost:5000/&lt;/span&gt;&lt;/tt&gt;;&lt;/li&gt;
+&lt;li&gt;commit and push to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/www.varrazzo.com/&quot;&gt;the website repos&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This is where the work to add or change content finishes. What will happen
+behind the scene will be:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/dvarrazzo/www.varrazzo.com&quot;&gt;Travis will render the pages&lt;/a&gt; and push the result &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/dvarrazzo.github.io&quot;&gt;on another repos&lt;/a&gt;;&lt;/li&gt;
+&lt;li&gt;from there the website is immediately published on &lt;a class=&quot;reference external&quot; href=&quot;https://www.varrazzo.com/&quot;&gt;https://www.varrazzo.com/&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;That's it.&lt;/p&gt;
+&lt;p&gt;I don't think the system can work for everyone. I could probably set up the
+system to some non tech friend and explain what to do, but they should at
+least be able to use git for their regular workflow. It might be actually not
+such a high bar: if someone would like to try and start publishing a small
+website please let me know!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;bonus-comments&quot;&gt;
+&lt;h3&gt;Bonus: comments&lt;/h3&gt;
+&lt;p&gt;A blog is not a blog if it doesn't have comments. But open comments take spam
+with them, which in my experience got very boring to administer.&lt;/p&gt;
+&lt;p&gt;I was thinking to use GitHub issues to store my comments, in order to leverage
+their anti-spam system, whilst still being able to take them out in case I'd
+like to migrate to something else. But apparently it's difficult to have a new
+idea on Internet, and I found a few implementations already written.&lt;/p&gt;
+&lt;p&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://utteranc.es/&quot;&gt;utteranc.es&lt;/a&gt; seems a very good one and quick to set up, so here it is... 👇&lt;/p&gt;
+&lt;/div&gt;
+</content>
+  </entry>
+</feed>

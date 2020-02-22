@@ -48,6 +48,15 @@
       <h2 class="title">A Website!</h2>
       <p class="separator"></p>
       <p class="small capitalize serif">2020-02-10</p>
+      
+        <p class="small">
+        
+          <a href="/blog/tag/website/">#website</a>
+        
+          <a href="/blog/tag/software/">#software</a>
+        
+        </p>
+      
     </div>
 
   </div>
@@ -55,15 +64,11 @@
 
 <div class="container mt70 mb70 equal-height-cols">
   <div class="row">
-    <div class="col-md-8 col-md-offset-2"><p>There's something broken on the internet.</p>
-<p>Walled gardens are taking over. Facebook, Twitter, Instagram are becoming
-synonym for Internet, and people is surprised by how limited that turns out to
-be, by how little their ideas stick in a flow of unrelated news.</p>
-<p>I think this generation of people users, who never considered running their
-own website, is missing out all the freedom the 90's neckbeards were designing
-for them. On the other hand I'm not exactly a chatty dude: speaking up my mind
-hasn't often be on top of my thoughts, so I never got around having my own
-presence.</p>
+    <div class="col-md-8 col-md-offset-2"><p>There's something broken on the internet. This blog will fix it all!</p>
+<p>Nevermind being late to the party some good 20 years...</p>
+<p>However I find myself with a <a class="reference external" href="/software/">body of works</a> I would like to present, news I
+would like to give, <a class="reference external" href="/photos/">photos</a> I would like to show and talk about... I was
+starting to need a place of my own.</p>
 <p>So, late, very late, well after Google murdered RSS syndication, and the
 orange icon is a thing of the past, here is a blog!</p>
 <div class="section" id="how-was-it-made">
@@ -73,23 +78,24 @@ permissions and with no technical competence, a database-backed website is not
 really needed. And if a website is just a bunch of static pages, nice things
 will happen:</p>
 <ul class="simple">
-<li>you can version it in Git or your favourite other SCM;</li>
+<li>you can version it in Git or in your favourite SCM of the past,</li>
 <li>it's very simple to serve: just a bunch of files on a webserver,</li>
 <li>it will never be pwned,</li>
 <li>you can easily find someone to serve it for you: <a class="reference external" href="https://pages.github.com/">GitHub pages</a> for
 instance.</li>
 </ul>
-<p>Of course I don't want to write HTML by hand. So off I went looking for a
+<p>Of course I don't want to write HTML by hand, so off I went looking for a
 static website generator. As we mentioned GitHub pages, <a class="reference external" href="https://jekyllrb.com/docs/github-pages/">Jekyll</a> did come to
-mind, but it has two shortcomings:</p>
+mind, but it has a couple of shortcomings:</p>
 <ul class="simple">
-<li>it's written in Ruby, which is not my expertise, so in case I need a quick
-hack it would be a lot of overhead to hack together;</li>
+<li>it's written in Ruby, which is not my expertise so, in case I needed a quick
+hack, there would be a lot of overhead;</li>
 <li>it uses <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> as markup languages, which is <a class="reference external" href="http://www.zverovich.net/2016/06/16/rst-vs-markdown.html">immensely inferior</a> to
 <a class="reference external" href="https://en.wikipedia.org/wiki/ReStructuredText">reStructuredText</a> in design and tooling.</li>
 </ul>
-<p>Shopping around I found <a class="reference external" href="https://www.getlektor.com/">Lektor</a>, which seems actually a nifty thing. It also
-uses Markdown out-of the box, but it is easy to <a class="reference external" href="https://github.com/fschulze/lektor-rst">add reST using a plugin</a>.</p>
+<p>Shopping around, I found <a class="reference external" href="https://www.getlektor.com/">Lektor</a>, which seems actually a nifty thing. It uses
+Markdown out-of the box as well, but it is easy to <a class="reference external" href="https://github.com/fschulze/lektor-rst">add reST using a
+plugin</a>. For an example, <a class="reference external" href="https://raw.githubusercontent.com/dvarrazzo/www.varrazzo.com/master/content/blog/a-website/contents.lr">this is this article source</a>.</p>
 <p>I tried this setup with the <a class="reference external" href="https://www.psycopg.org/">psycopg website</a>, which I migrated from being a
 Django website to <a class="reference external" href="https://github.com/psycopg/psycopg-website/">static content</a>, and it was quite a simple task.</p>
 <p>Then I went around shopping for a nice template: I found a cool one called
@@ -119,8 +125,26 @@ least be able to use git for their regular workflow. It might be actually not
 such a high bar: if someone would like to try and start publishing a small
 website please let me know!</p>
 </div>
+<div class="section" id="bonus-comments">
+<h3>Bonus: comments</h3>
+<p>A blog is not a blog if it doesn't have comments. But open comments take spam
+with them, which in my experience got very boring to administer.</p>
+<p>I was thinking to use GitHub issues to store my comments, in order to leverage
+their anti-spam system, whilst still being able to take them out in case I'd
+like to migrate to something else. But apparently it's difficult to have a new
+idea on Internet, and I found a few implementations already written.</p>
+<p><a class="reference external" href="https://utteranc.es/">utteranc.es</a> seems a very good one and quick to set up, so here it is... 👇</p>
+</div>
 
-  </div>
+      <script src="https://utteranc.es/client.js"
+        repo="dvarrazzo/www.varrazzo.com"
+        issue-term="pathname"
+        label="comments"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
 </div>
 
 <footer id="footer" class="">
