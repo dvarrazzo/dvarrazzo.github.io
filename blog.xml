@@ -17,19 +17,30 @@
     <author>
       <name>Daniele Varrazzo</name>
     </author>
-    <content type="html">&lt;p&gt;There's something broken on the internet. This blog will fix it all!&lt;/p&gt;
-&lt;p&gt;Nevermind being late to the party some good 20 years...&lt;/p&gt;
-&lt;p&gt;However I find myself with a &lt;a class=&quot;reference external&quot; href=&quot;/software/&quot;&gt;body of works&lt;/a&gt; I would like to present, news I
-would like to give, &lt;a class=&quot;reference external&quot; href=&quot;/photos/&quot;&gt;photos&lt;/a&gt; I would like to show and talk about... I was
-starting to need a place of my own.&lt;/p&gt;
-&lt;p&gt;So, late, very late, well after Google murdered RSS syndication, and the
-orange icon is a thing of the past, here is a blog!&lt;/p&gt;
+    <content type="html">&lt;p&gt;Time of changes.&lt;/p&gt;
+&lt;p&gt;Last week, after 12 years working for the same company, I have terminated my
+employment. It was a destabilising moment, followed by a wave of excitement,
+which I'm still riding, about what is to come.&lt;/p&gt;
+&lt;p&gt;I still don't know what will come next: for sure a break, and a journey
+already organized in a couple of weeks. After which I doubt I will be able to
+remain without working for a long time...&lt;/p&gt;
+&lt;p&gt;My biggest desire would be to try and earn some living with &lt;a class=&quot;reference external&quot; href=&quot;/software/&quot;&gt;free software
+projects&lt;/a&gt;. Some of my projects are already widely used, and I have new
+features in mind to write. Other projects haven't been widely released, but I
+we have used them in my previous company and they are very promising. I have
+recently set up a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/sponsors/dvarrazzo/&quot;&gt;funding page&lt;/a&gt;: and I'm curious to see if it will become
+anything relevant.&lt;/p&gt;
+&lt;p&gt;At the same time, I am enjoying more and more practicing &lt;a class=&quot;reference external&quot; href=&quot;/photo/&quot;&gt;photography&lt;/a&gt;, so I
+was also feeling the need to put somewhere an photographic portfolio, not only
+a software one.&lt;/p&gt;
+&lt;p&gt;But let's stop talking about me. Let's talk about this website, because
+putting it together was actually cool.&lt;/p&gt;
 &lt;div class=&quot;section&quot; id=&quot;how-was-it-made&quot;&gt;
 &lt;h3&gt;How was it made&lt;/h3&gt;
-&lt;p&gt;Unless you need concurrent content editing by several users with different
-permissions and with no technical competence, a database-backed website is not
-really needed. And if a website is just a bunch of static pages, nice things
-will happen:&lt;/p&gt;
+&lt;p&gt;Unless you need to support several users editing the same content
+concurrently, each one with different permissions, a database-backed website
+is not really needed. And if a website is just a bunch of static pages, nice
+things will happen:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
 &lt;li&gt;you can version it in Git or in your favourite SCM of the past,&lt;/li&gt;
 &lt;li&gt;it's very simple to serve: just a bunch of files on a webserver,&lt;/li&gt;
@@ -43,7 +54,7 @@ mind, but it has a couple of shortcomings:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
 &lt;li&gt;it's written in Ruby, which is not my expertise so, in case I needed a quick
 hack, there would be a lot of overhead;&lt;/li&gt;
-&lt;li&gt;it uses &lt;a class=&quot;reference external&quot; href=&quot;https://daringfireball.net/projects/markdown/&quot;&gt;Markdown&lt;/a&gt; as markup languages, which is &lt;a class=&quot;reference external&quot; href=&quot;http://www.zverovich.net/2016/06/16/rst-vs-markdown.html&quot;&gt;immensely inferior&lt;/a&gt; to
+&lt;li&gt;it uses &lt;a class=&quot;reference external&quot; href=&quot;https://daringfireball.net/projects/markdown/&quot;&gt;Markdown&lt;/a&gt; as markup languages, which is &lt;a class=&quot;reference external&quot; href=&quot;http://www.zverovich.net/2016/06/16/rst-vs-markdown.html&quot;&gt;largely inferior&lt;/a&gt; to
 &lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/ReStructuredText&quot;&gt;reStructuredText&lt;/a&gt; in design and tooling.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Shopping around, I found &lt;a class=&quot;reference external&quot; href=&quot;https://www.getlektor.com/&quot;&gt;Lektor&lt;/a&gt;, which seems actually a nifty thing. It uses
@@ -52,7 +63,7 @@ plugin&lt;/a&gt;. For an example, &lt;a class=&quot;reference external&quot; hre
 &lt;p&gt;I tried this setup with the &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/&quot;&gt;psycopg website&lt;/a&gt;, which I migrated from being a
 Django website to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg-website/&quot;&gt;static content&lt;/a&gt;, and it was quite a simple task.&lt;/p&gt;
 &lt;p&gt;Then I went around shopping for a nice template: I found a cool one called
-&lt;a class=&quot;reference external&quot; href=&quot;achtungthemes.com/borano/&quot;&gt;Borano&lt;/a&gt; (look at this &lt;a class=&quot;reference external&quot; href=&quot;http://achtungthemes.com/borano/index-portfolio.html&quot;&gt;portfolio&lt;/a&gt;, it is a joy...). Lektor supports &lt;a class=&quot;reference external&quot; href=&quot;https://palletsprojects.com/p/jinja/&quot;&gt;Jinja&lt;/a&gt;
+&lt;a class=&quot;reference external&quot; href=&quot;achtungthemes.com/borano/&quot;&gt;Borano&lt;/a&gt; (look at the &lt;a class=&quot;reference external&quot; href=&quot;/photo/&quot;&gt;portfolio&lt;/a&gt;, it is a joy...). Lektor supports &lt;a class=&quot;reference external&quot; href=&quot;https://palletsprojects.com/p/jinja/&quot;&gt;Jinja&lt;/a&gt;
 templates to spit HTML, so I am now in the process, as I create some content
 and work out what is that I have to say, to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/www.varrazzo.com/blob/e02696529e58b1b72bb9067c91e1c783895b8912/templates/page.html&quot;&gt;convert&lt;/a&gt; the template to Jinja.&lt;/p&gt;
 &lt;/div&gt;
@@ -68,15 +79,16 @@ and work out what is that I have to say, to &lt;a class=&quot;reference external
 &lt;p&gt;This is where the work to add or change content finishes. What will happen
 behind the scene will be:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
-&lt;li&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/dvarrazzo/www.varrazzo.com&quot;&gt;Travis will render the pages&lt;/a&gt; and push the result &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/dvarrazzo.github.io&quot;&gt;on another repos&lt;/a&gt;;&lt;/li&gt;
+&lt;li&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/dvarrazzo/www.varrazzo.com&quot;&gt;Travis will render the pages&lt;/a&gt; and push the result to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/dvarrazzo.github.io&quot;&gt;the GitHub pages
+repos&lt;/a&gt;;&lt;/li&gt;
 &lt;li&gt;from there the website is immediately published on &lt;a class=&quot;reference external&quot; href=&quot;https://www.varrazzo.com/&quot;&gt;https://www.varrazzo.com/&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;That's it.&lt;/p&gt;
 &lt;p&gt;I don't think the system can work for everyone. I could probably set up the
 system to some non tech friend and explain what to do, but they should at
-least be able to use git for their regular workflow. It might be actually not
-such a high bar: if someone would like to try and start publishing a small
-website please let me know!&lt;/p&gt;
+least be comfortable to use git for their regular workflow. It might be
+actually not such a high bar: if someone would like to try and start
+publishing a small website please let me know!&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;section&quot; id=&quot;bonus-comments&quot;&gt;
 &lt;h3&gt;Bonus: comments&lt;/h3&gt;

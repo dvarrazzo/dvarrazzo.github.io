@@ -5,6 +5,13 @@
     <title>A Website! &mdash; Daniele Varrazzo</title>
     
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-158968242-1');
+    </script>
     <link rel="shortcut icon" href="img/favicon.png">
     <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
     <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
@@ -80,19 +87,30 @@
 
 <div class="container mt70 mb70">
   <div class="row">
-    <div class="col-md-8 col-md-offset-2"><p>There's something broken on the internet. This blog will fix it all!</p>
-<p>Nevermind being late to the party some good 20 years...</p>
-<p>However I find myself with a <a class="reference external" href="/software/">body of works</a> I would like to present, news I
-would like to give, <a class="reference external" href="/photos/">photos</a> I would like to show and talk about... I was
-starting to need a place of my own.</p>
-<p>So, late, very late, well after Google murdered RSS syndication, and the
-orange icon is a thing of the past, here is a blog!</p>
+    <div class="col-md-8 col-md-offset-2"><p>Time of changes.</p>
+<p>Last week, after 12 years working for the same company, I have terminated my
+employment. It was a destabilising moment, followed by a wave of excitement,
+which I'm still riding, about what is to come.</p>
+<p>I still don't know what will come next: for sure a break, and a journey
+already organized in a couple of weeks. After which I doubt I will be able to
+remain without working for a long time...</p>
+<p>My biggest desire would be to try and earn some living with <a class="reference external" href="/software/">free software
+projects</a>. Some of my projects are already widely used, and I have new
+features in mind to write. Other projects haven't been widely released, but I
+we have used them in my previous company and they are very promising. I have
+recently set up a <a class="reference external" href="https://github.com/sponsors/dvarrazzo/">funding page</a>: and I'm curious to see if it will become
+anything relevant.</p>
+<p>At the same time, I am enjoying more and more practicing <a class="reference external" href="/photo/">photography</a>, so I
+was also feeling the need to put somewhere an photographic portfolio, not only
+a software one.</p>
+<p>But let's stop talking about me. Let's talk about this website, because
+putting it together was actually cool.</p>
 <div class="section" id="how-was-it-made">
 <h3>How was it made</h3>
-<p>Unless you need concurrent content editing by several users with different
-permissions and with no technical competence, a database-backed website is not
-really needed. And if a website is just a bunch of static pages, nice things
-will happen:</p>
+<p>Unless you need to support several users editing the same content
+concurrently, each one with different permissions, a database-backed website
+is not really needed. And if a website is just a bunch of static pages, nice
+things will happen:</p>
 <ul class="simple">
 <li>you can version it in Git or in your favourite SCM of the past,</li>
 <li>it's very simple to serve: just a bunch of files on a webserver,</li>
@@ -106,7 +124,7 @@ mind, but it has a couple of shortcomings:</p>
 <ul class="simple">
 <li>it's written in Ruby, which is not my expertise so, in case I needed a quick
 hack, there would be a lot of overhead;</li>
-<li>it uses <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> as markup languages, which is <a class="reference external" href="http://www.zverovich.net/2016/06/16/rst-vs-markdown.html">immensely inferior</a> to
+<li>it uses <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> as markup languages, which is <a class="reference external" href="http://www.zverovich.net/2016/06/16/rst-vs-markdown.html">largely inferior</a> to
 <a class="reference external" href="https://en.wikipedia.org/wiki/ReStructuredText">reStructuredText</a> in design and tooling.</li>
 </ul>
 <p>Shopping around, I found <a class="reference external" href="https://www.getlektor.com/">Lektor</a>, which seems actually a nifty thing. It uses
@@ -115,7 +133,7 @@ plugin</a>. For an example, <a class="reference external" href="https://raw.gith
 <p>I tried this setup with the <a class="reference external" href="https://www.psycopg.org/">psycopg website</a>, which I migrated from being a
 Django website to <a class="reference external" href="https://github.com/psycopg/psycopg-website/">static content</a>, and it was quite a simple task.</p>
 <p>Then I went around shopping for a nice template: I found a cool one called
-<a class="reference external" href="achtungthemes.com/borano/">Borano</a> (look at this <a class="reference external" href="http://achtungthemes.com/borano/index-portfolio.html">portfolio</a>, it is a joy...). Lektor supports <a class="reference external" href="https://palletsprojects.com/p/jinja/">Jinja</a>
+<a class="reference external" href="achtungthemes.com/borano/">Borano</a> (look at the <a class="reference external" href="/photo/">portfolio</a>, it is a joy...). Lektor supports <a class="reference external" href="https://palletsprojects.com/p/jinja/">Jinja</a>
 templates to spit HTML, so I am now in the process, as I create some content
 and work out what is that I have to say, to <a class="reference external" href="https://github.com/dvarrazzo/www.varrazzo.com/blob/e02696529e58b1b72bb9067c91e1c783895b8912/templates/page.html">convert</a> the template to Jinja.</p>
 </div>
@@ -131,15 +149,16 @@ and work out what is that I have to say, to <a class="reference external" href="
 <p>This is where the work to add or change content finishes. What will happen
 behind the scene will be:</p>
 <ul class="simple">
-<li><a class="reference external" href="https://travis-ci.org/dvarrazzo/www.varrazzo.com">Travis will render the pages</a> and push the result <a class="reference external" href="https://github.com/dvarrazzo/dvarrazzo.github.io">on another repos</a>;</li>
+<li><a class="reference external" href="https://travis-ci.org/dvarrazzo/www.varrazzo.com">Travis will render the pages</a> and push the result to <a class="reference external" href="https://github.com/dvarrazzo/dvarrazzo.github.io">the GitHub pages
+repos</a>;</li>
 <li>from there the website is immediately published on <a class="reference external" href="https://www.varrazzo.com/">https://www.varrazzo.com/</a>.</li>
 </ul>
 <p>That's it.</p>
 <p>I don't think the system can work for everyone. I could probably set up the
 system to some non tech friend and explain what to do, but they should at
-least be able to use git for their regular workflow. It might be actually not
-such a high bar: if someone would like to try and start publishing a small
-website please let me know!</p>
+least be comfortable to use git for their regular workflow. It might be
+actually not such a high bar: if someone would like to try and start
+publishing a small website please let me know!</p>
 </div>
 <div class="section" id="bonus-comments">
 <h3>Bonus: comments</h3>
