@@ -89,15 +89,15 @@
   <div class="row">
     <div class="col-md-8 col-md-offset-2"><p>Time of changes.</p>
 <p>Last week, after 12 years working for the same company, I have terminated my
-employment. It was a destabilising moment, followed by a wave of excitement,
-which I'm still riding, about what is to come.</p>
-<p>I still don't know what will come next: for sure a break, and a journey
-already organized in a couple of weeks. After which I doubt I will be able to
+employment. It was a destabilising moment, followed by a wave of excitement
+that I'm still riding, about what is to come.</p>
+<p>I still don't know about my next moves: for sure a break, and a journey
+already organized in a couple of weeks, after which I doubt I will be able to
 remain without working for a long time...</p>
 <p>My biggest desire would be to try and earn some living with <a class="reference external" href="/software/">free software
 projects</a>. Some of my projects are already widely used, and I have new
 features in mind to write. Other projects haven't been widely released, but I
-we have used them in my previous company and they are very promising. I have
+have used them in my previous company and they are very promising. I have
 recently set up a <a class="reference external" href="https://github.com/sponsors/dvarrazzo/">funding page</a>: and I'm curious to see if it will become
 anything relevant.</p>
 <p>At the same time, I am enjoying more and more practicing <a class="reference external" href="/photo/">photography</a>, so I
@@ -128,33 +128,34 @@ hack, there would be a lot of overhead;</li>
 <a class="reference external" href="https://en.wikipedia.org/wiki/ReStructuredText">reStructuredText</a> in design and tooling.</li>
 </ul>
 <p>Shopping around, I found <a class="reference external" href="https://www.getlektor.com/">Lektor</a>, which seems actually a nifty thing. It uses
-Markdown out-of the box as well, but it is easy to <a class="reference external" href="https://github.com/fschulze/lektor-rst">add reST using a
+Markdown out-of-the-box as well, but it is easy to <a class="reference external" href="https://github.com/fschulze/lektor-rst">add reST using a
 plugin</a>. For an example, <a class="reference external" href="https://raw.githubusercontent.com/dvarrazzo/www.varrazzo.com/master/content/blog/a-website/contents.lr">this is this article source</a>.</p>
 <p>I tried this setup with the <a class="reference external" href="https://www.psycopg.org/">psycopg website</a>, which I migrated from being a
 Django website to <a class="reference external" href="https://github.com/psycopg/psycopg-website/">static content</a>, and it was quite a simple task.</p>
 <p>Then I went around shopping for a nice template: I found a cool one called
 <a class="reference external" href="achtungthemes.com/borano/">Borano</a> (look at the <a class="reference external" href="/photo/">portfolio</a>, it is a joy...). Lektor supports <a class="reference external" href="https://palletsprojects.com/p/jinja/">Jinja</a>
-templates to spit HTML, so I am now in the process, as I create some content
-and work out what is that I have to say, to <a class="reference external" href="https://github.com/dvarrazzo/www.varrazzo.com/blob/e02696529e58b1b72bb9067c91e1c783895b8912/templates/page.html">convert</a> the template to Jinja.</p>
+templates to spit HTML, so now I am in the process of <a class="reference external" href="https://github.com/dvarrazzo/www.varrazzo.com/blob/e02696529e58b1b72bb9067c91e1c783895b8912/templates/page.html">converting</a> the
+template to Jinja, while at the same time I try and and work out what is that
+I have to say.</p>
 </div>
 <div class="section" id="the-workflow">
 <h3>The workflow</h3>
-<p>All it takes to work on the website is:</p>
+<p>All it takes to edit the website is:</p>
 <ul class="simple">
 <li>use my favourite editor (no pesky HTML textarea) to create and edit pages;</li>
 <li>running <tt class="docutils literal">make serve</tt> the website preview is immediately available on
 <tt class="docutils literal"><span class="pre">http://localhost:5000/</span></tt>;</li>
 <li>commit and push to <a class="reference external" href="https://github.com/dvarrazzo/www.varrazzo.com/">the website repos</a>.</li>
 </ul>
-<p>This is where the work to add or change content finishes. What will happen
-behind the scene will be:</p>
+<p>This is where the human work of adding or changing content finishes. What will
+happen behind the scene will be:</p>
 <ul class="simple">
 <li><a class="reference external" href="https://travis-ci.org/dvarrazzo/www.varrazzo.com">Travis will render the pages</a> and push the result to <a class="reference external" href="https://github.com/dvarrazzo/dvarrazzo.github.io">the GitHub pages
 repos</a>;</li>
 <li>from there the website is immediately published on <a class="reference external" href="https://www.varrazzo.com/">https://www.varrazzo.com/</a>.</li>
 </ul>
 <p>That's it.</p>
-<p>I don't think the system can work for everyone. I could probably set up the
+<p>I don't think this setup can work for everyone. I could probably set up the
 system to some non tech friend and explain what to do, but they should at
 least be comfortable to use git for their regular workflow. It might be
 actually not such a high bar: if someone would like to try and start

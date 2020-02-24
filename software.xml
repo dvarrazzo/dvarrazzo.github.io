@@ -19,15 +19,15 @@
     </author>
     <content type="html">&lt;p&gt;Time of changes.&lt;/p&gt;
 &lt;p&gt;Last week, after 12 years working for the same company, I have terminated my
-employment. It was a destabilising moment, followed by a wave of excitement,
-which I'm still riding, about what is to come.&lt;/p&gt;
-&lt;p&gt;I still don't know what will come next: for sure a break, and a journey
-already organized in a couple of weeks. After which I doubt I will be able to
+employment. It was a destabilising moment, followed by a wave of excitement
+that I'm still riding, about what is to come.&lt;/p&gt;
+&lt;p&gt;I still don't know about my next moves: for sure a break, and a journey
+already organized in a couple of weeks, after which I doubt I will be able to
 remain without working for a long time...&lt;/p&gt;
 &lt;p&gt;My biggest desire would be to try and earn some living with &lt;a class=&quot;reference external&quot; href=&quot;/software/&quot;&gt;free software
 projects&lt;/a&gt;. Some of my projects are already widely used, and I have new
 features in mind to write. Other projects haven't been widely released, but I
-we have used them in my previous company and they are very promising. I have
+have used them in my previous company and they are very promising. I have
 recently set up a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/sponsors/dvarrazzo/&quot;&gt;funding page&lt;/a&gt;: and I'm curious to see if it will become
 anything relevant.&lt;/p&gt;
 &lt;p&gt;At the same time, I am enjoying more and more practicing &lt;a class=&quot;reference external&quot; href=&quot;/photo/&quot;&gt;photography&lt;/a&gt;, so I
@@ -58,33 +58,34 @@ hack, there would be a lot of overhead;&lt;/li&gt;
 &lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/ReStructuredText&quot;&gt;reStructuredText&lt;/a&gt; in design and tooling.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Shopping around, I found &lt;a class=&quot;reference external&quot; href=&quot;https://www.getlektor.com/&quot;&gt;Lektor&lt;/a&gt;, which seems actually a nifty thing. It uses
-Markdown out-of the box as well, but it is easy to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/fschulze/lektor-rst&quot;&gt;add reST using a
+Markdown out-of-the-box as well, but it is easy to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/fschulze/lektor-rst&quot;&gt;add reST using a
 plugin&lt;/a&gt;. For an example, &lt;a class=&quot;reference external&quot; href=&quot;https://raw.githubusercontent.com/dvarrazzo/www.varrazzo.com/master/content/blog/a-website/contents.lr&quot;&gt;this is this article source&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;I tried this setup with the &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/&quot;&gt;psycopg website&lt;/a&gt;, which I migrated from being a
 Django website to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg-website/&quot;&gt;static content&lt;/a&gt;, and it was quite a simple task.&lt;/p&gt;
 &lt;p&gt;Then I went around shopping for a nice template: I found a cool one called
 &lt;a class=&quot;reference external&quot; href=&quot;achtungthemes.com/borano/&quot;&gt;Borano&lt;/a&gt; (look at the &lt;a class=&quot;reference external&quot; href=&quot;/photo/&quot;&gt;portfolio&lt;/a&gt;, it is a joy...). Lektor supports &lt;a class=&quot;reference external&quot; href=&quot;https://palletsprojects.com/p/jinja/&quot;&gt;Jinja&lt;/a&gt;
-templates to spit HTML, so I am now in the process, as I create some content
-and work out what is that I have to say, to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/www.varrazzo.com/blob/e02696529e58b1b72bb9067c91e1c783895b8912/templates/page.html&quot;&gt;convert&lt;/a&gt; the template to Jinja.&lt;/p&gt;
+templates to spit HTML, so now I am in the process of &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/www.varrazzo.com/blob/e02696529e58b1b72bb9067c91e1c783895b8912/templates/page.html&quot;&gt;converting&lt;/a&gt; the
+template to Jinja, while at the same time I try and and work out what is that
+I have to say.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;section&quot; id=&quot;the-workflow&quot;&gt;
 &lt;h3&gt;The workflow&lt;/h3&gt;
-&lt;p&gt;All it takes to work on the website is:&lt;/p&gt;
+&lt;p&gt;All it takes to edit the website is:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
 &lt;li&gt;use my favourite editor (no pesky HTML textarea) to create and edit pages;&lt;/li&gt;
 &lt;li&gt;running &lt;tt class=&quot;docutils literal&quot;&gt;make serve&lt;/tt&gt; the website preview is immediately available on
 &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;http://localhost:5000/&lt;/span&gt;&lt;/tt&gt;;&lt;/li&gt;
 &lt;li&gt;commit and push to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/www.varrazzo.com/&quot;&gt;the website repos&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;This is where the work to add or change content finishes. What will happen
-behind the scene will be:&lt;/p&gt;
+&lt;p&gt;This is where the human work of adding or changing content finishes. What will
+happen behind the scene will be:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
 &lt;li&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/dvarrazzo/www.varrazzo.com&quot;&gt;Travis will render the pages&lt;/a&gt; and push the result to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/dvarrazzo.github.io&quot;&gt;the GitHub pages
 repos&lt;/a&gt;;&lt;/li&gt;
 &lt;li&gt;from there the website is immediately published on &lt;a class=&quot;reference external&quot; href=&quot;https://www.varrazzo.com/&quot;&gt;https://www.varrazzo.com/&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;That's it.&lt;/p&gt;
-&lt;p&gt;I don't think the system can work for everyone. I could probably set up the
+&lt;p&gt;I don't think this setup can work for everyone. I could probably set up the
 system to some non tech friend and explain what to do, but they should at
 least be comfortable to use git for their regular workflow. It might be
 actually not such a high bar: if someone would like to try and start
