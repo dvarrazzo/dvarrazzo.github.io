@@ -361,10 +361,10 @@ $(function () {
 		});
 		
 		function itemSizes(){
-			$item.width( $grid.width() / $cols );
-			$item.height( $item.width() * 4/5 );
-			$itemTall.height( $item.width() * 8/5 );
-			$itemWide.width( $grid.width() / $cols * 2);	
+			$item.width(Math.round($grid.width() / $cols));
+			$item.height(Math.round($item.width() * 4/5));
+			$itemTall.height(Math.round($item.width() * 8/5));
+			$itemWide.width(Math.round($grid.width() / $cols * 2));
 		}
 		itemSizes();
 		
@@ -494,8 +494,9 @@ $(function () {
 
 	// Lightbox
 	$('[data-rel^=lightcase]').lightcase({
-		maxWidth: 1100,
-		maxHeight: 800
+		maxWidth: 1600,
+		maxHeight: 1200,
+		shrinkFactor: 1
 	});
 	
 	// Intense
