@@ -100,10 +100,10 @@
 
 <div class="container mt70 mb70">
   <div class="row">
-    <div class="col-md-8 col-md-offset-2"><p>Developing database-backed applications, I've often had the need to extract
-a meaningful selection of data from a production database. Maybe to set up a
-development environment, or a testing environment, or to try out a complex
-migration on smaller data.</p>
+    <div class="col-md-8 col-md-offset-2"><p>Developing database-backed applications, I've often had the need to extract a
+meaningful selection of data out of a production database. Maybe in order to
+set up a development environment, or a testing environment, or to try out a
+complex migration on smaller dataset.</p>
 <p>However a <tt class="docutils literal">pg_dump</tt> of the production db is not necessarily a good idea:</p>
 <ul class="simple">
 <li>the production data may be YUGE;</li>
@@ -117,13 +117,14 @@ saving a script to keep the unwieldy command line, and still that does not
 make you able to modify in any way the data dumped from the table, for
 instance to omit the <tt class="docutils literal">password</tt> column. You might use <tt class="docutils literal">COPY TO</tt> for that,
 but that's an entirely different beast from <tt class="docutils literal">pg_dump</tt> and the resulting file
-is only data: it will bear no context about how it should be restored (now
-that you dropped the <tt class="docutils literal">password</tt> column the data won't align anymore for a
-trivial <tt class="docutils literal">COPY FROM</tt>...)</p>
-<p>A few months ago I decided to scratch the itch properly, and I started writing
-an tool that turned out to be <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump">pg_seldump</a>. The idea behind the tool is to
-define a <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file with a description of the dumping rule to apply to
-different tables. For instance:</p>
+is <em>only</em> data: not even the columns names. It will bear no context about how
+it should be restored (and now that you dropped the <tt class="docutils literal">password</tt> column the
+data won't align anymore and you won't be able to just run a <tt class="docutils literal">COPY FROM</tt>...)</p>
+<p>A few months ago I decided to scratch this itch properly, and I started
+writing a tool that, after some improvement, was deemed to be good enough out
+to be declared a version 0.1 of <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump">pg_seldump</a>. The idea of the tool is to define
+a <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file containing a description of the rule to apply to different
+database objects to dump. For instance:</p>
 <pre class="code YAML literal-block">
 <span class="c1"># A YAML file is similar in content to a JSON file, but easier for human</span>
 <span class="c1"># to edit: more compact, less noisy, and can be commented.</span>
@@ -146,12 +147,16 @@ different tables. For instance:</p>
     <span class="nt">replace</span><span class="p">:</span>
       <span class="nt">telephone</span><span class="p">:</span> <span class="s">&quot;+44</span><span class="nv"> </span><span class="s">7853</span><span class="nv"> </span><span class="s">123456&quot;</span>
 </pre>
+<p>This description would produce a data-only dump as a text file containing the
+data and enough statements to restore them by piping the entire file into
+<cite>psql</cite>.</p>
 <p>The program isn't finished yet, but it is already quite interesting: the
 <tt class="docutils literal">pg_seldump</tt> command takes in input one or more configuration files like the
 one in the example and introspects the database looking for the objects to
 dump. The objects are matched against all the rules and, inspired to CSS, it
 picks the one with the highest selectivity. It also understand what fields use
-what sequences, and if the field is dumped the sequence will be saved as well.</p>
+what sequences, and if the field is dumped then the sequence state will be
+saved as well.</p>
 <p>There is one large feature I'm about to develop: automatically navigating
 foreign keys in order to collect all the data necessary to create a consistent
 sample of the data. I started yesterday working at that feature, but
@@ -171,11 +176,12 @@ deceiving: validating YAML with JSON Schema? That turns out to be no problem,
 because the validation doesn't happen at syntactical level, but it is
 performed on the objects after parsing. Limiting the YAML to the same data
 types JSON can handle it will work no problem.</p>
-<p>JSON Schemas are quite simple to define: it didn't take too long to put
-together a <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml">schema for pg_seldump configuration file</a> (in YAML of course).
-However, performing validation (using the <a class="reference external" href="https://pypi.org/project/jsonschema/">jsonschema</a> Python package) the
-results are not entirely satisfactory. For instance, this is a configuration
-file containing 4 errors:</p>
+<p>JSON Schemas are quite simple to define: I started thinking &quot;noooo, another
+huge thing to learn just for a simple thing...&quot; but actually it's not
+difficult at all: it didn't take too long to put together a <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml">schema for
+pg_seldump configuration file</a> (in YAML of course). However, performing
+validation (using the <a class="reference external" href="https://pypi.org/project/jsonschema/">jsonschema</a> Python package) the results are not entirely
+satisfactory. For instance, this is a configuration file containing 4 errors:</p>
 <pre class="code YAML literal-block">
 <span class="ln">1 </span><span class="c1"># badconfig.yaml</span>
 <span class="ln">2 </span><span class="nt">db_objects</span><span class="p">:</span>
@@ -206,23 +212,26 @@ characteristic that allowed us to validate a YAML file against a JSON schema
 expressed in a YAML file: everything is based on Python plain objects
 (scalars, dicts, lists) and the information of what line in what file that
 value came from is long lost.</p>
-<p>In order to overcome the problem, the idea is to attach these information,
-available at parsing time, to the parsed objects. In a previous approximation
-of the solution I had <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/yaml.py">only the dictionaries</a> &quot;decorated&quot; with their
-position. In case of error the name of the file and the first line of the
-dictionary would have been printed: better than nothing I guess, but not
-perfect (in the above example any error would have been reported at line 3).</p>
+<p>In order to overcome the problem, the idea is to attach file and line
+information, available at parsing time, to the parsed objects. In a previous
+approximation of the solution I had <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/yaml.py">only the dictionaries</a> subclassed to
+attach them their position. In case of error, the name of the file and the
+first line of the dictionary would have been printed: better than nothing I
+guess, but not perfect (in the above example any error would have been
+reported at line 3).</p>
 <p>With the introduction of the JSON schema validator I got back on the
-customized yaml parser. First I used more hooks to memorize the position of
-lists and scalar types too. The scalars themselves don't remember the
-attribute they are attached to: that <tt class="docutils literal">10</tt> above knows it's at line 3, but
-not that it was the tentative <tt class="docutils literal">name</tt> of an object. So the idea was to
-further instrument the dictionaries returned by YAML and memorize, item by
-item, what line the value was parsed from. When a schema validation error is
-found, <tt class="docutils literal">jsonschema</tt> errors have an useful <tt class="docutils literal">path</tt> attribute describing in
-what object the error was found. So, if the last element is a string and the
-penultimate is a dictionary, there is enough information to <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/config.py#L135-L167">associate it back
-to the original file and position</a>.</p>
+customized YAML parser. First I used <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/yaml.py#L89">more customization</a>, subclassing lists
+and wrapping scalars to memorize their positions and the position of their
+content. The scalars themselves don't remember the attribute they are attached
+to: the <tt class="docutils literal">10</tt> above knows it came from line 3 of a file, but not that it was
+the tentative <tt class="docutils literal">name</tt> of an object. So the idea was to further instrument the
+containers returned by the YAML parser, and memorize item by item what line
+the values are parsed from. When a schema validation error is found,
+<tt class="docutils literal">jsonschema</tt> errors have an useful <tt class="docutils literal">path</tt> attribute describing in what
+object the error was found (for instance <tt class="docutils literal">['db_objects', 0, 'name']</tt> for the
+first error). So, if the last element is a string and the penultimate is a
+dictionary, there is enough information to <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/config.py#L135-L167">associate it back to the original
+file and position</a>.</p>
 <p>The result I think is very user friendly:</p>
 <pre class="literal-block">
 $ pg_seldump --test badconfig.yaml
@@ -231,17 +240,20 @@ ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'part
 ERROR at badconfig.yaml:4: adjust_score: 'a' is not of type 'integer'
 ERROR at badconfig.yaml:6: action: 'trip' is not one of ['dump', 'skip', 'error']
 </pre>
-<p>Interesting that the errors are not in line order: I'll try and sort them.
-Also, it wasn't possible to express everything in the JSON schema: demanding
-at most one between <tt class="docutils literal">name</tt> and <tt class="docutils literal">names</tt> for each object seems quite
-difficult and I don't think there exist a regular expression to state that
-<tt class="docutils literal">names</tt> must be a valid regular expression, so certain things are still
-demanded to a step after validation. However, emitting all the errors in one
-go and the precise location of where they occur was a good usability step.
-This is a program I would like to use.</p>
-<p>Looking forward to diving into graph traversal matters to gather the set of
-all the records recursively referred by the selected records, and the
-recursive queries to generate them...</p>
+<p>Interesting that the errors are not in line order: I'll have to sort them.</p>
+<p>It wasn't possible to express everything in the JSON schema: demanding at most
+one between <tt class="docutils literal">name</tt> and <tt class="docutils literal">names</tt> for in rule objects seems quite difficult
+and... I don't think a regular expression exists to verify that a certain
+string is a valid regular expression, does it? So certain finer checks are
+still performed a step after schema validation, but still before handing
+control to the rest of the program. However, emitting all the errors in one
+go, together with the precise location where they occurred, makes the program
+an ally rather than an opponent. <em>This is a program I would like to use.</em></p>
+<p>Enough of YAML and configuration! Now I'm looking forward to dive into the
+problem of navigating the graph of the tables across foreign keys and to
+generate dynamically the nested queries to extract a consistent sample of
+data, watching for the pitfalls of circular foreign keys and self-referencing
+tables...</p>
 </div>
 
       <script src="https://utteranc.es/client.js"

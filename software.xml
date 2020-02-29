@@ -17,10 +17,10 @@
     <author>
       <name>Daniele Varrazzo</name>
     </author>
-    <content type="html">&lt;p&gt;Developing database-backed applications, I've often had the need to extract
-a meaningful selection of data from a production database. Maybe to set up a
-development environment, or a testing environment, or to try out a complex
-migration on smaller data.&lt;/p&gt;
+    <content type="html">&lt;p&gt;Developing database-backed applications, I've often had the need to extract a
+meaningful selection of data out of a production database. Maybe in order to
+set up a development environment, or a testing environment, or to try out a
+complex migration on smaller dataset.&lt;/p&gt;
 &lt;p&gt;However a &lt;tt class=&quot;docutils literal&quot;&gt;pg_dump&lt;/tt&gt; of the production db is not necessarily a good idea:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
 &lt;li&gt;the production data may be YUGE;&lt;/li&gt;
@@ -34,13 +34,14 @@ saving a script to keep the unwieldy command line, and still that does not
 make you able to modify in any way the data dumped from the table, for
 instance to omit the &lt;tt class=&quot;docutils literal&quot;&gt;password&lt;/tt&gt; column. You might use &lt;tt class=&quot;docutils literal&quot;&gt;COPY TO&lt;/tt&gt; for that,
 but that's an entirely different beast from &lt;tt class=&quot;docutils literal&quot;&gt;pg_dump&lt;/tt&gt; and the resulting file
-is only data: it will bear no context about how it should be restored (now
-that you dropped the &lt;tt class=&quot;docutils literal&quot;&gt;password&lt;/tt&gt; column the data won't align anymore for a
-trivial &lt;tt class=&quot;docutils literal&quot;&gt;COPY FROM&lt;/tt&gt;...)&lt;/p&gt;
-&lt;p&gt;A few months ago I decided to scratch the itch properly, and I started writing
-an tool that turned out to be &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump&quot;&gt;pg_seldump&lt;/a&gt;. The idea behind the tool is to
-define a &lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/YAML&quot;&gt;YAML&lt;/a&gt; file with a description of the dumping rule to apply to
-different tables. For instance:&lt;/p&gt;
+is &lt;em&gt;only&lt;/em&gt; data: not even the columns names. It will bear no context about how
+it should be restored (and now that you dropped the &lt;tt class=&quot;docutils literal&quot;&gt;password&lt;/tt&gt; column the
+data won't align anymore and you won't be able to just run a &lt;tt class=&quot;docutils literal&quot;&gt;COPY FROM&lt;/tt&gt;...)&lt;/p&gt;
+&lt;p&gt;A few months ago I decided to scratch this itch properly, and I started
+writing a tool that, after some improvement, was deemed to be good enough out
+to be declared a version 0.1 of &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump&quot;&gt;pg_seldump&lt;/a&gt;. The idea of the tool is to define
+a &lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/YAML&quot;&gt;YAML&lt;/a&gt; file containing a description of the rule to apply to different
+database objects to dump. For instance:&lt;/p&gt;
 &lt;pre class=&quot;code YAML literal-block&quot;&gt;
 &lt;span class=&quot;c1&quot;&gt;# A YAML file is similar in content to a JSON file, but easier for human&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;# to edit: more compact, less noisy, and can be commented.&lt;/span&gt;
@@ -63,12 +64,16 @@ different tables. For instance:&lt;/p&gt;
     &lt;span class=&quot;nt&quot;&gt;replace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
       &lt;span class=&quot;nt&quot;&gt;telephone&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;+44&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;7853&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;123456&amp;quot;&lt;/span&gt;
 &lt;/pre&gt;
+&lt;p&gt;This description would produce a data-only dump as a text file containing the
+data and enough statements to restore them by piping the entire file into
+&lt;cite&gt;psql&lt;/cite&gt;.&lt;/p&gt;
 &lt;p&gt;The program isn't finished yet, but it is already quite interesting: the
 &lt;tt class=&quot;docutils literal&quot;&gt;pg_seldump&lt;/tt&gt; command takes in input one or more configuration files like the
 one in the example and introspects the database looking for the objects to
 dump. The objects are matched against all the rules and, inspired to CSS, it
 picks the one with the highest selectivity. It also understand what fields use
-what sequences, and if the field is dumped the sequence will be saved as well.&lt;/p&gt;
+what sequences, and if the field is dumped then the sequence state will be
+saved as well.&lt;/p&gt;
 &lt;p&gt;There is one large feature I'm about to develop: automatically navigating
 foreign keys in order to collect all the data necessary to create a consistent
 sample of the data. I started yesterday working at that feature, but
@@ -88,11 +93,12 @@ deceiving: validating YAML with JSON Schema? That turns out to be no problem,
 because the validation doesn't happen at syntactical level, but it is
 performed on the objects after parsing. Limiting the YAML to the same data
 types JSON can handle it will work no problem.&lt;/p&gt;
-&lt;p&gt;JSON Schemas are quite simple to define: it didn't take too long to put
-together a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml&quot;&gt;schema for pg_seldump configuration file&lt;/a&gt; (in YAML of course).
-However, performing validation (using the &lt;a class=&quot;reference external&quot; href=&quot;https://pypi.org/project/jsonschema/&quot;&gt;jsonschema&lt;/a&gt; Python package) the
-results are not entirely satisfactory. For instance, this is a configuration
-file containing 4 errors:&lt;/p&gt;
+&lt;p&gt;JSON Schemas are quite simple to define: I started thinking &amp;quot;noooo, another
+huge thing to learn just for a simple thing...&amp;quot; but actually it's not
+difficult at all: it didn't take too long to put together a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml&quot;&gt;schema for
+pg_seldump configuration file&lt;/a&gt; (in YAML of course). However, performing
+validation (using the &lt;a class=&quot;reference external&quot; href=&quot;https://pypi.org/project/jsonschema/&quot;&gt;jsonschema&lt;/a&gt; Python package) the results are not entirely
+satisfactory. For instance, this is a configuration file containing 4 errors:&lt;/p&gt;
 &lt;pre class=&quot;code YAML literal-block&quot;&gt;
 &lt;span class=&quot;ln&quot;&gt;1 &lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;# badconfig.yaml&lt;/span&gt;
 &lt;span class=&quot;ln&quot;&gt;2 &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;db_objects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
@@ -123,23 +129,26 @@ characteristic that allowed us to validate a YAML file against a JSON schema
 expressed in a YAML file: everything is based on Python plain objects
 (scalars, dicts, lists) and the information of what line in what file that
 value came from is long lost.&lt;/p&gt;
-&lt;p&gt;In order to overcome the problem, the idea is to attach these information,
-available at parsing time, to the parsed objects. In a previous approximation
-of the solution I had &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/yaml.py&quot;&gt;only the dictionaries&lt;/a&gt; &amp;quot;decorated&amp;quot; with their
-position. In case of error the name of the file and the first line of the
-dictionary would have been printed: better than nothing I guess, but not
-perfect (in the above example any error would have been reported at line 3).&lt;/p&gt;
+&lt;p&gt;In order to overcome the problem, the idea is to attach file and line
+information, available at parsing time, to the parsed objects. In a previous
+approximation of the solution I had &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/yaml.py&quot;&gt;only the dictionaries&lt;/a&gt; subclassed to
+attach them their position. In case of error, the name of the file and the
+first line of the dictionary would have been printed: better than nothing I
+guess, but not perfect (in the above example any error would have been
+reported at line 3).&lt;/p&gt;
 &lt;p&gt;With the introduction of the JSON schema validator I got back on the
-customized yaml parser. First I used more hooks to memorize the position of
-lists and scalar types too. The scalars themselves don't remember the
-attribute they are attached to: that &lt;tt class=&quot;docutils literal&quot;&gt;10&lt;/tt&gt; above knows it's at line 3, but
-not that it was the tentative &lt;tt class=&quot;docutils literal&quot;&gt;name&lt;/tt&gt; of an object. So the idea was to
-further instrument the dictionaries returned by YAML and memorize, item by
-item, what line the value was parsed from. When a schema validation error is
-found, &lt;tt class=&quot;docutils literal&quot;&gt;jsonschema&lt;/tt&gt; errors have an useful &lt;tt class=&quot;docutils literal&quot;&gt;path&lt;/tt&gt; attribute describing in
-what object the error was found. So, if the last element is a string and the
-penultimate is a dictionary, there is enough information to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/config.py#L135-L167&quot;&gt;associate it back
-to the original file and position&lt;/a&gt;.&lt;/p&gt;
+customized YAML parser. First I used &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/yaml.py#L89&quot;&gt;more customization&lt;/a&gt;, subclassing lists
+and wrapping scalars to memorize their positions and the position of their
+content. The scalars themselves don't remember the attribute they are attached
+to: the &lt;tt class=&quot;docutils literal&quot;&gt;10&lt;/tt&gt; above knows it came from line 3 of a file, but not that it was
+the tentative &lt;tt class=&quot;docutils literal&quot;&gt;name&lt;/tt&gt; of an object. So the idea was to further instrument the
+containers returned by the YAML parser, and memorize item by item what line
+the values are parsed from. When a schema validation error is found,
+&lt;tt class=&quot;docutils literal&quot;&gt;jsonschema&lt;/tt&gt; errors have an useful &lt;tt class=&quot;docutils literal&quot;&gt;path&lt;/tt&gt; attribute describing in what
+object the error was found (for instance &lt;tt class=&quot;docutils literal&quot;&gt;['db_objects', 0, 'name']&lt;/tt&gt; for the
+first error). So, if the last element is a string and the penultimate is a
+dictionary, there is enough information to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/config.py#L135-L167&quot;&gt;associate it back to the original
+file and position&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;The result I think is very user friendly:&lt;/p&gt;
 &lt;pre class=&quot;literal-block&quot;&gt;
 $ pg_seldump --test badconfig.yaml
@@ -148,17 +157,20 @@ ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'part
 ERROR at badconfig.yaml:4: adjust_score: 'a' is not of type 'integer'
 ERROR at badconfig.yaml:6: action: 'trip' is not one of ['dump', 'skip', 'error']
 &lt;/pre&gt;
-&lt;p&gt;Interesting that the errors are not in line order: I'll try and sort them.
-Also, it wasn't possible to express everything in the JSON schema: demanding
-at most one between &lt;tt class=&quot;docutils literal&quot;&gt;name&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;names&lt;/tt&gt; for each object seems quite
-difficult and I don't think there exist a regular expression to state that
-&lt;tt class=&quot;docutils literal&quot;&gt;names&lt;/tt&gt; must be a valid regular expression, so certain things are still
-demanded to a step after validation. However, emitting all the errors in one
-go and the precise location of where they occur was a good usability step.
-This is a program I would like to use.&lt;/p&gt;
-&lt;p&gt;Looking forward to diving into graph traversal matters to gather the set of
-all the records recursively referred by the selected records, and the
-recursive queries to generate them...&lt;/p&gt;
+&lt;p&gt;Interesting that the errors are not in line order: I'll have to sort them.&lt;/p&gt;
+&lt;p&gt;It wasn't possible to express everything in the JSON schema: demanding at most
+one between &lt;tt class=&quot;docutils literal&quot;&gt;name&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;names&lt;/tt&gt; for in rule objects seems quite difficult
+and... I don't think a regular expression exists to verify that a certain
+string is a valid regular expression, does it? So certain finer checks are
+still performed a step after schema validation, but still before handing
+control to the rest of the program. However, emitting all the errors in one
+go, together with the precise location where they occurred, makes the program
+an ally rather than an opponent. &lt;em&gt;This is a program I would like to use.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Enough of YAML and configuration! Now I'm looking forward to dive into the
+problem of navigating the graph of the tables across foreign keys and to
+generate dynamically the nested queries to extract a consistent sample of
+data, watching for the pitfalls of circular foreign keys and self-referencing
+tables...&lt;/p&gt;
 &lt;/div&gt;
 </content>
   </entry>
