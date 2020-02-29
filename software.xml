@@ -2,13 +2,166 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">Software</title>
   <id>urn:uuid:345e7579-5b16-39e4-9f1d-2a4bff93035d</id>
-  <updated>2020-02-23T00:00:00Z</updated>
+  <updated>2020-02-29T00:00:00Z</updated>
   <link href="https://www.varrazzo.com/blog/" />
   <link href="https://www.varrazzo.com/software.xml" rel="self" />
   <author>
     <name></name>
   </author>
   <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/02/29/adventures-in-yaml-config/">
+    <title type="text">Adventures in YAML config</title>
+    <id>urn:uuid:a325926a-9137-3067-8700-5917960f7b5f</id>
+    <updated>2020-02-29T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/02/29/adventures-in-yaml-config/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;p&gt;Developing database-backed applications, I've often had the need to extract
+a meaningful selection of data from a production database. Maybe to set up a
+development environment, or a testing environment, or to try out a complex
+migration on smaller data.&lt;/p&gt;
+&lt;p&gt;However a &lt;tt class=&quot;docutils literal&quot;&gt;pg_dump&lt;/tt&gt; of the production db is not necessarily a good idea:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;the production data may be YUGE;&lt;/li&gt;
+&lt;li&gt;the production data may contain sensitive information;&lt;/li&gt;
+&lt;li&gt;some of the data in the production db might be bulky and irrelevant, for
+instance audit tables.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Still, googling around, you don't get much to help: people still advise to use
+&lt;tt class=&quot;docutils literal&quot;&gt;pg_dump&lt;/tt&gt; with a plethora of &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;--table&lt;/span&gt;&lt;/tt&gt;, but this results in the need of
+saving a script to keep the unwieldy command line, and still that does not
+make you able to modify in any way the data dumped from the table, for
+instance to omit the &lt;tt class=&quot;docutils literal&quot;&gt;password&lt;/tt&gt; column. You might use &lt;tt class=&quot;docutils literal&quot;&gt;COPY TO&lt;/tt&gt; for that,
+but that's an entirely different beast from &lt;tt class=&quot;docutils literal&quot;&gt;pg_dump&lt;/tt&gt; and the resulting file
+is only data: it will bear no context about how it should be restored (now
+that you dropped the &lt;tt class=&quot;docutils literal&quot;&gt;password&lt;/tt&gt; column the data won't align anymore for a
+trivial &lt;tt class=&quot;docutils literal&quot;&gt;COPY FROM&lt;/tt&gt;...)&lt;/p&gt;
+&lt;p&gt;A few months ago I decided to scratch the itch properly, and I started writing
+an tool that turned out to be &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump&quot;&gt;pg_seldump&lt;/a&gt;. The idea behind the tool is to
+define a &lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/YAML&quot;&gt;YAML&lt;/a&gt; file with a description of the dumping rule to apply to
+different tables. For instance:&lt;/p&gt;
+&lt;pre class=&quot;code YAML literal-block&quot;&gt;
+&lt;span class=&quot;c1&quot;&gt;# A YAML file is similar in content to a JSON file, but easier for human&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# to edit: more compact, less noisy, and can be commented.&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;db_objects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# dump all the tables in the schema 'myapp'&lt;/span&gt;
+  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;schema&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;myapp&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;dump&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# but not the one starting with 'audit_'&lt;/span&gt;
+  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;schema&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;myapp&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;names&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;^audit_.*&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;skip&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# don't dump customers passwords, and replace their telephone no. with a dummy&lt;/span&gt;
+  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;schema&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;myapp&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;customer&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;no_columns&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;password&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;replace&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;telephone&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;+44&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;7853&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;123456&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;The program isn't finished yet, but it is already quite interesting: the
+&lt;tt class=&quot;docutils literal&quot;&gt;pg_seldump&lt;/tt&gt; command takes in input one or more configuration files like the
+one in the example and introspects the database looking for the objects to
+dump. The objects are matched against all the rules and, inspired to CSS, it
+picks the one with the highest selectivity. It also understand what fields use
+what sequences, and if the field is dumped the sequence will be saved as well.&lt;/p&gt;
+&lt;p&gt;There is one large feature I'm about to develop: automatically navigating
+foreign keys in order to collect all the data necessary to create a consistent
+sample of the data. I started yesterday working at that feature, but
+there is something else I wanted to do before...&lt;/p&gt;
+&lt;div class=&quot;section&quot; id=&quot;what-s-into-a-configuration-file&quot;&gt;
+&lt;h3&gt;What's into a configuration file?&lt;/h3&gt;
+&lt;p&gt;So far, the program had a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/dumprule.py#L103&quot;&gt;parser for the configuration file&lt;/a&gt; to create
+&amp;quot;rule&amp;quot; objects out of what found in the YAML. While it works, it's quite
+verbose, it stops at the first error, and it's hard to understand from it what
+is really allowed in the file. I find working with unstructured data really
+impractical: every single property is optional, every typo (&lt;tt class=&quot;docutils literal&quot;&gt;schmea&lt;/tt&gt;) should
+be explicitly checked.&lt;/p&gt;
+&lt;p&gt;In order to check the configuration entirely before throwing it into the rest
+of the program, and in order to be able to document precisely what is a valid
+configuration file, I've taken a look at &lt;a class=&quot;reference external&quot; href=&quot;https://json-schema.org/&quot;&gt;JSON Schema&lt;/a&gt;. Now, that's
+deceiving: validating YAML with JSON Schema? That turns out to be no problem,
+because the validation doesn't happen at syntactical level, but it is
+performed on the objects after parsing. Limiting the YAML to the same data
+types JSON can handle it will work no problem.&lt;/p&gt;
+&lt;p&gt;JSON Schemas are quite simple to define: it didn't take too long to put
+together a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml&quot;&gt;schema for pg_seldump configuration file&lt;/a&gt; (in YAML of course).
+However, performing validation (using the &lt;a class=&quot;reference external&quot; href=&quot;https://pypi.org/project/jsonschema/&quot;&gt;jsonschema&lt;/a&gt; Python package) the
+results are not entirely satisfactory. For instance, this is a configuration
+file containing 4 errors:&lt;/p&gt;
+&lt;pre class=&quot;code YAML literal-block&quot;&gt;
+&lt;span class=&quot;ln&quot;&gt;1 &lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;# badconfig.yaml&lt;/span&gt;
+&lt;span class=&quot;ln&quot;&gt;2 &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;db_objects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;ln&quot;&gt;3 &lt;/span&gt;  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;10&lt;/span&gt;
+&lt;span class=&quot;ln&quot;&gt;4 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;adjust_score&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;a&lt;/span&gt;
+&lt;span class=&quot;ln&quot;&gt;5 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;wat&lt;/span&gt;
+&lt;span class=&quot;ln&quot;&gt;6 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;trip&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;It can be easily validated against the schema:&lt;/p&gt;
+&lt;pre class=&quot;code pycon literal-block&quot;&gt;
+&lt;span class=&quot;kn&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;jsonschema&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;yaml&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;schema&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;yaml&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;seldump/schema/config.yaml&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;validator&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsonschema&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Draft7Validator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;schema&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;config&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;yaml&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;badconfig.yaml&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iter_errors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;10 is not of type 'string'
+'wat' is not one of ['table', 'sequence', 'partitioned table', 'materialized view']
+'a' is not of type 'integer'
+'trip' is not one of ['dump', 'skip', 'error']&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;However these error messages, as informative as they can be, have lost the
+context of where they originated. Sure 10 is not a string, but good luck
+finding the right &amp;quot;10&amp;quot; into a large file. The problem comes from that same
+characteristic that allowed us to validate a YAML file against a JSON schema
+expressed in a YAML file: everything is based on Python plain objects
+(scalars, dicts, lists) and the information of what line in what file that
+value came from is long lost.&lt;/p&gt;
+&lt;p&gt;In order to overcome the problem, the idea is to attach these information,
+available at parsing time, to the parsed objects. In a previous approximation
+of the solution I had &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/yaml.py&quot;&gt;only the dictionaries&lt;/a&gt; &amp;quot;decorated&amp;quot; with their
+position. In case of error the name of the file and the first line of the
+dictionary would have been printed: better than nothing I guess, but not
+perfect (in the above example any error would have been reported at line 3).&lt;/p&gt;
+&lt;p&gt;With the introduction of the JSON schema validator I got back on the
+customized yaml parser. First I used more hooks to memorize the position of
+lists and scalar types too. The scalars themselves don't remember the
+attribute they are attached to: that &lt;tt class=&quot;docutils literal&quot;&gt;10&lt;/tt&gt; above knows it's at line 3, but
+not that it was the tentative &lt;tt class=&quot;docutils literal&quot;&gt;name&lt;/tt&gt; of an object. So the idea was to
+further instrument the dictionaries returned by YAML and memorize, item by
+item, what line the value was parsed from. When a schema validation error is
+found, &lt;tt class=&quot;docutils literal&quot;&gt;jsonschema&lt;/tt&gt; errors have an useful &lt;tt class=&quot;docutils literal&quot;&gt;path&lt;/tt&gt; attribute describing in
+what object the error was found. So, if the last element is a string and the
+penultimate is a dictionary, there is enough information to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/config.py#L135-L167&quot;&gt;associate it back
+to the original file and position&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The result I think is very user friendly:&lt;/p&gt;
+&lt;pre class=&quot;literal-block&quot;&gt;
+$ pg_seldump --test badconfig.yaml
+ERROR at badconfig.yaml:3: name: 10 is not of type 'string'
+ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'partitioned table', view']
+ERROR at badconfig.yaml:4: adjust_score: 'a' is not of type 'integer'
+ERROR at badconfig.yaml:6: action: 'trip' is not one of ['dump', 'skip', 'error']
+&lt;/pre&gt;
+&lt;p&gt;Interesting that the errors are not in line order: I'll try and sort them.
+Also, it wasn't possible to express everything in the JSON schema: demanding
+at most one between &lt;tt class=&quot;docutils literal&quot;&gt;name&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;names&lt;/tt&gt; for each object seems quite
+difficult and I don't think there exist a regular expression to state that
+&lt;tt class=&quot;docutils literal&quot;&gt;names&lt;/tt&gt; must be a valid regular expression, so certain things are still
+demanded to a step after validation. However, emitting all the errors in one
+go and the precise location of where they occur was a good usability step.
+This is a program I would like to use.&lt;/p&gt;
+&lt;p&gt;Looking forward to diving into graph traversal matters to gather the set of
+all the records recursively referred by the selected records, and the
+recursive queries to generate them...&lt;/p&gt;
+&lt;/div&gt;
+</content>
+  </entry>
   <entry xml:base="https://www.varrazzo.com/blog/2020/02/23/a-website/">
     <title type="text">A Website!</title>
     <id>urn:uuid:9ef98bd1-11e2-3b83-8c1c-2867fef80f27</id>

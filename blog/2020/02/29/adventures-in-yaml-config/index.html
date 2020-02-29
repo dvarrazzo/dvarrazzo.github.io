@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <title>Adventures in YAML config &mdash; Daniele Varrazzo</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-158968242-1');
+    </script>
+    <link rel="shortcut icon" href="img/favicon.png">
+    <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/main.css?h=ece9dae4">
+    <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
+    <link rel="stylesheet" href="/css/custom.css?h=c93675d4">
+    <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
+  </head>
+
+  <body>
+    <div class="main-wrapper">
+<header id="header" class="">
+  <a href="/about/" class="logo">
+    <img src="/img/logo.png?h=0ad960b2" class="logo-dark" alt="">
+    <img src="/img/logo-light.png?h=cb66caa4" class="logo-light" alt="">
+  </a>
+  <a href="#" class="mob-menu"><i class="fa fa-bars"></i></a>
+  <nav>
+    <ul class="main-menu">
+<li>
+  <a href="/about/">About</a>
+</li>
+<li>
+  <a href="/software/">Software</a>
+  <ul>
+<li>
+  <a href="https://www.psycopg.org/" target="_blank">psycopg</a>
+</li>
+<li>
+  <a href="https://www.varrazzo.com/pgmp/" target="_blank">pgmp</a>
+</li>
+<li>
+  <a href="https://pgxn.github.io/pgxnclient/" target="_blank">PGXN Client</a>
+</li>
+<li>
+  <a href="https://reorg.github.io/pg_repack/" target="_blank">pg_repack</a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/photo/">Photography</a>
+  <ul>
+<li>
+  <a href="/photo/longexp/">Long exposures</a>
+</li>
+<li>
+  <a href="/photo/ireland/">Ireland, 2019</a>
+</li>
+<li>
+  <a href="/photo/japan/">Japan, 2019</a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/blog/">Blog</a>
+</li>
+<li>
+  <a href="/contact/">Contact</a>
+</li>
+    </ul>
+  </nav>
+</header>
+<div class="container fullwidth pt140 pb140" data-background="/img/blog/elephants.jpg">
+  <div class="pt140 pb140">
+    <div class="entrance">
+      <h2 class="title">Adventures in YAML config</h2>
+      <p class="separator"></p>
+      <p class="small capitalize serif">2020-02-29</p>
+      
+        <div class="bumper">
+          <p class="small">
+          
+            <a href="/blog/tag/software/">#software</a>
+          
+            <a href="/blog/tag/design/">#design</a>
+          
+            <a href="/blog/tag/database/">#database</a>
+          
+          </p>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+<div class="container mt70 mb70">
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2"><p>Developing database-backed applications, I've often had the need to extract
+a meaningful selection of data from a production database. Maybe to set up a
+development environment, or a testing environment, or to try out a complex
+migration on smaller data.</p>
+<p>However a <tt class="docutils literal">pg_dump</tt> of the production db is not necessarily a good idea:</p>
+<ul class="simple">
+<li>the production data may be YUGE;</li>
+<li>the production data may contain sensitive information;</li>
+<li>some of the data in the production db might be bulky and irrelevant, for
+instance audit tables.</li>
+</ul>
+<p>Still, googling around, you don't get much to help: people still advise to use
+<tt class="docutils literal">pg_dump</tt> with a plethora of <tt class="docutils literal"><span class="pre">--table</span></tt>, but this results in the need of
+saving a script to keep the unwieldy command line, and still that does not
+make you able to modify in any way the data dumped from the table, for
+instance to omit the <tt class="docutils literal">password</tt> column. You might use <tt class="docutils literal">COPY TO</tt> for that,
+but that's an entirely different beast from <tt class="docutils literal">pg_dump</tt> and the resulting file
+is only data: it will bear no context about how it should be restored (now
+that you dropped the <tt class="docutils literal">password</tt> column the data won't align anymore for a
+trivial <tt class="docutils literal">COPY FROM</tt>...)</p>
+<p>A few months ago I decided to scratch the itch properly, and I started writing
+an tool that turned out to be <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump">pg_seldump</a>. The idea behind the tool is to
+define a <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file with a description of the dumping rule to apply to
+different tables. For instance:</p>
+<pre class="code YAML literal-block">
+<span class="c1"># A YAML file is similar in content to a JSON file, but easier for human</span>
+<span class="c1"># to edit: more compact, less noisy, and can be commented.</span>
+<span class="nt">db_objects</span><span class="p">:</span>
+
+  <span class="c1"># dump all the tables in the schema 'myapp'</span>
+  <span class="p-Indicator">-</span> <span class="nt">schema</span><span class="p">:</span> <span class="l-Scalar-Plain">myapp</span>
+    <span class="nt">action</span><span class="p">:</span> <span class="l-Scalar-Plain">dump</span>
+
+  <span class="c1"># but not the one starting with 'audit_'</span>
+  <span class="p-Indicator">-</span> <span class="nt">schema</span><span class="p">:</span> <span class="l-Scalar-Plain">myapp</span>
+    <span class="nt">names</span><span class="p">:</span> <span class="s">&quot;^audit_.*&quot;</span>
+    <span class="nt">action</span><span class="p">:</span> <span class="l-Scalar-Plain">skip</span>
+
+  <span class="c1"># don't dump customers passwords, and replace their telephone no. with a dummy</span>
+  <span class="p-Indicator">-</span> <span class="nt">schema</span><span class="p">:</span> <span class="l-Scalar-Plain">myapp</span>
+    <span class="nt">name</span><span class="p">:</span> <span class="l-Scalar-Plain">customer</span>
+    <span class="nt">no_columns</span><span class="p">:</span>
+      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">password</span>
+    <span class="nt">replace</span><span class="p">:</span>
+      <span class="nt">telephone</span><span class="p">:</span> <span class="s">&quot;+44</span><span class="nv"> </span><span class="s">7853</span><span class="nv"> </span><span class="s">123456&quot;</span>
+</pre>
+<p>The program isn't finished yet, but it is already quite interesting: the
+<tt class="docutils literal">pg_seldump</tt> command takes in input one or more configuration files like the
+one in the example and introspects the database looking for the objects to
+dump. The objects are matched against all the rules and, inspired to CSS, it
+picks the one with the highest selectivity. It also understand what fields use
+what sequences, and if the field is dumped the sequence will be saved as well.</p>
+<p>There is one large feature I'm about to develop: automatically navigating
+foreign keys in order to collect all the data necessary to create a consistent
+sample of the data. I started yesterday working at that feature, but
+there is something else I wanted to do before...</p>
+<div class="section" id="what-s-into-a-configuration-file">
+<h3>What's into a configuration file?</h3>
+<p>So far, the program had a <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/dumprule.py#L103">parser for the configuration file</a> to create
+&quot;rule&quot; objects out of what found in the YAML. While it works, it's quite
+verbose, it stops at the first error, and it's hard to understand from it what
+is really allowed in the file. I find working with unstructured data really
+impractical: every single property is optional, every typo (<tt class="docutils literal">schmea</tt>) should
+be explicitly checked.</p>
+<p>In order to check the configuration entirely before throwing it into the rest
+of the program, and in order to be able to document precisely what is a valid
+configuration file, I've taken a look at <a class="reference external" href="https://json-schema.org/">JSON Schema</a>. Now, that's
+deceiving: validating YAML with JSON Schema? That turns out to be no problem,
+because the validation doesn't happen at syntactical level, but it is
+performed on the objects after parsing. Limiting the YAML to the same data
+types JSON can handle it will work no problem.</p>
+<p>JSON Schemas are quite simple to define: it didn't take too long to put
+together a <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml">schema for pg_seldump configuration file</a> (in YAML of course).
+However, performing validation (using the <a class="reference external" href="https://pypi.org/project/jsonschema/">jsonschema</a> Python package) the
+results are not entirely satisfactory. For instance, this is a configuration
+file containing 4 errors:</p>
+<pre class="code YAML literal-block">
+<span class="ln">1 </span><span class="c1"># badconfig.yaml</span>
+<span class="ln">2 </span><span class="nt">db_objects</span><span class="p">:</span>
+<span class="ln">3 </span>  <span class="p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l-Scalar-Plain">10</span>
+<span class="ln">4 </span>    <span class="nt">adjust_score</span><span class="p">:</span> <span class="l-Scalar-Plain">a</span>
+<span class="ln">5 </span>    <span class="nt">kind</span><span class="p">:</span> <span class="l-Scalar-Plain">wat</span>
+<span class="ln">6 </span>    <span class="nt">action</span><span class="p">:</span> <span class="l-Scalar-Plain">trip</span>
+</pre>
+<p>It can be easily validated against the schema:</p>
+<pre class="code pycon literal-block">
+<span class="kn"></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jsonschema</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">yaml</span>
+<span class="go">
+</span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;seldump/schema/config.yaml&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">validator</span> <span class="o">=</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">Draft7Validator</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+<span class="go">
+</span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;badconfig.yaml&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">iter_errors</span><span class="p">(</span><span class="n">config</span><span class="p">)))</span>
+<span class="go">10 is not of type 'string'
+'wat' is not one of ['table', 'sequence', 'partitioned table', 'materialized view']
+'a' is not of type 'integer'
+'trip' is not one of ['dump', 'skip', 'error']</span>
+</pre>
+<p>However these error messages, as informative as they can be, have lost the
+context of where they originated. Sure 10 is not a string, but good luck
+finding the right &quot;10&quot; into a large file. The problem comes from that same
+characteristic that allowed us to validate a YAML file against a JSON schema
+expressed in a YAML file: everything is based on Python plain objects
+(scalars, dicts, lists) and the information of what line in what file that
+value came from is long lost.</p>
+<p>In order to overcome the problem, the idea is to attach these information,
+available at parsing time, to the parsed objects. In a previous approximation
+of the solution I had <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/yaml.py">only the dictionaries</a> &quot;decorated&quot; with their
+position. In case of error the name of the file and the first line of the
+dictionary would have been printed: better than nothing I guess, but not
+perfect (in the above example any error would have been reported at line 3).</p>
+<p>With the introduction of the JSON schema validator I got back on the
+customized yaml parser. First I used more hooks to memorize the position of
+lists and scalar types too. The scalars themselves don't remember the
+attribute they are attached to: that <tt class="docutils literal">10</tt> above knows it's at line 3, but
+not that it was the tentative <tt class="docutils literal">name</tt> of an object. So the idea was to
+further instrument the dictionaries returned by YAML and memorize, item by
+item, what line the value was parsed from. When a schema validation error is
+found, <tt class="docutils literal">jsonschema</tt> errors have an useful <tt class="docutils literal">path</tt> attribute describing in
+what object the error was found. So, if the last element is a string and the
+penultimate is a dictionary, there is enough information to <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/config.py#L135-L167">associate it back
+to the original file and position</a>.</p>
+<p>The result I think is very user friendly:</p>
+<pre class="literal-block">
+$ pg_seldump --test badconfig.yaml
+ERROR at badconfig.yaml:3: name: 10 is not of type 'string'
+ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'partitioned table', view']
+ERROR at badconfig.yaml:4: adjust_score: 'a' is not of type 'integer'
+ERROR at badconfig.yaml:6: action: 'trip' is not one of ['dump', 'skip', 'error']
+</pre>
+<p>Interesting that the errors are not in line order: I'll try and sort them.
+Also, it wasn't possible to express everything in the JSON schema: demanding
+at most one between <tt class="docutils literal">name</tt> and <tt class="docutils literal">names</tt> for each object seems quite
+difficult and I don't think there exist a regular expression to state that
+<tt class="docutils literal">names</tt> must be a valid regular expression, so certain things are still
+demanded to a step after validation. However, emitting all the errors in one
+go and the precise location of where they occur was a good usability step.
+This is a program I would like to use.</p>
+<p>Looking forward to diving into graph traversal matters to gather the set of
+all the records recursively referred by the selected records, and the
+recursive queries to generate them...</p>
+</div>
+
+      <script src="https://utteranc.es/client.js"
+        repo="dvarrazzo/www.varrazzo.com"
+        issue-term="pathname"
+        label="comments"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+</div>
+
+<footer id="footer" class="">
+  <div class="footer-links">
+    &copy; 2020. By Daniele Varrazzo. |
+    <a target="_blank" href="https://github.com/dvarrazzo/">GitHub</a> |
+    <a target="_blank" href="https://www.linkedin.com/in/danielevarrazzo/">LinkedIn</a> |
+    <a target="_blank" href="https://www.instagram.com/dvarrazzo/">Instagram</a> |
+    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/">Flickr</a>
+  </div>
+
+</footer>
+    </div>
+    <script src="/js/lib/jquery.min.js?h=d6c1f419"></script>
+    <script src="/js/lib/scripts.js?h=e59b43e0"></script>
+    <script src="/js/main.js?h=4b3e78de"></script>
+  </body>
+</html>
