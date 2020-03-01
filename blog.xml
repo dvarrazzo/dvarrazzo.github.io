@@ -80,8 +80,8 @@ saved as well.&lt;/p&gt;
 foreign keys in order to collect all the data necessary to create a consistent
 sample of the data. I started yesterday working at that feature, but
 there is something else I wanted to do before...&lt;/p&gt;
-&lt;div class=&quot;section&quot; id=&quot;what-s-into-a-configuration-file&quot;&gt;
-&lt;h3&gt;What's into a configuration file?&lt;/h3&gt;
+&lt;div class=&quot;section&quot; id=&quot;what-s-in-a-configuration-file&quot;&gt;
+&lt;h3&gt;What's in a configuration file?&lt;/h3&gt;
 &lt;p&gt;So far, the program had a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/dumprule.py#L103&quot;&gt;parser for the configuration file&lt;/a&gt; to create
 &amp;quot;rule&amp;quot; objects out of what found in the YAML. While it works, it's quite
 verbose, it stops at the first error, and it's hard to understand from it what
