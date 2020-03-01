@@ -121,10 +121,12 @@ is <em>only</em> data: not even the columns names. It will bear no context about
 it should be restored (and now that you dropped the <tt class="docutils literal">password</tt> column the
 data won't align anymore and you won't be able to just run a <tt class="docutils literal">COPY FROM</tt>...)</p>
 <p>A few months ago I decided to scratch this itch properly, and I started
-writing a tool that, after some improvement, was deemed to be good enough out
-to be declared a version 0.1 of <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump">pg_seldump</a>. The idea of the tool is to define
-a <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file containing a description of the rule to apply to different
-database objects to dump. For instance:</p>
+writing a tool that, after some improvements, was deemed to be good enough to
+be stamped as 0.1. After some discussion about the meaning of <em>dump</em> and what
+a good synonym could have been (with references ranging from relation breakups
+to more scatological ones) it was called <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump">pg_seldump</a>.</p>
+<p>The idea of the tool is to define a <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file containing a description of the
+rule to apply to different database objects to dump. For instance:</p>
 <pre class="code YAML literal-block">
 <span class="c1"># A YAML file is similar in content to a JSON file, but easier for human</span>
 <span class="c1"># to edit: more compact, less noisy, and can be commented.</span>

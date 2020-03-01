@@ -38,10 +38,12 @@ is &lt;em&gt;only&lt;/em&gt; data: not even the columns names. It will bear no c
 it should be restored (and now that you dropped the &lt;tt class=&quot;docutils literal&quot;&gt;password&lt;/tt&gt; column the
 data won't align anymore and you won't be able to just run a &lt;tt class=&quot;docutils literal&quot;&gt;COPY FROM&lt;/tt&gt;...)&lt;/p&gt;
 &lt;p&gt;A few months ago I decided to scratch this itch properly, and I started
-writing a tool that, after some improvement, was deemed to be good enough out
-to be declared a version 0.1 of &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump&quot;&gt;pg_seldump&lt;/a&gt;. The idea of the tool is to define
-a &lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/YAML&quot;&gt;YAML&lt;/a&gt; file containing a description of the rule to apply to different
-database objects to dump. For instance:&lt;/p&gt;
+writing a tool that, after some improvements, was deemed to be good enough to
+be stamped as 0.1. After some discussion about the meaning of &lt;em&gt;dump&lt;/em&gt; and what
+a good synonym could have been (with references ranging from relation breakups
+to more scatological ones) it was called &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump&quot;&gt;pg_seldump&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The idea of the tool is to define a &lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/YAML&quot;&gt;YAML&lt;/a&gt; file containing a description of the
+rule to apply to different database objects to dump. For instance:&lt;/p&gt;
 &lt;pre class=&quot;code YAML literal-block&quot;&gt;
 &lt;span class=&quot;c1&quot;&gt;# A YAML file is similar in content to a JSON file, but easier for human&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;# to edit: more compact, less noisy, and can be commented.&lt;/span&gt;
