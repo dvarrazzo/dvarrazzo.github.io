@@ -203,8 +203,8 @@ satisfactory. For instance, this is a configuration file containing 4 errors:</p
 </span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;badconfig.yaml&quot;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">iter_errors</span><span class="p">(</span><span class="n">config</span><span class="p">)))</span>
 <span class="go">10 is not of type 'string'
-'wat' is not one of ['table', 'sequence', 'partitioned table', 'materialized view']
 'a' is not of type 'integer'
+'wat' is not one of ['table', 'sequence', 'partitioned table', 'materialized view']
 'trip' is not one of ['dump', 'skip', 'error']</span>
 </pre>
 <p>However these error messages, as informative as they can be, have lost the
@@ -238,11 +238,10 @@ file and position</a>.</p>
 <pre class="literal-block">
 $ pg_seldump --test badconfig.yaml
 ERROR at badconfig.yaml:3: name: 10 is not of type 'string'
-ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'partitioned table', view']
 ERROR at badconfig.yaml:4: adjust_score: 'a' is not of type 'integer'
+ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'partitioned table', view']
 ERROR at badconfig.yaml:6: action: 'trip' is not one of ['dump', 'skip', 'error']
 </pre>
-<p>Interesting that the errors are not in line order: I'll have to sort them.</p>
 <p>It wasn't possible to express everything in the JSON schema: demanding at most
 one between <tt class="docutils literal">name</tt> and <tt class="docutils literal">names</tt> for in rule objects seems quite difficult
 and... I don't think a regular expression exists to verify that a certain

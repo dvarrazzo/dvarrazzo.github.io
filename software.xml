@@ -120,8 +120,8 @@ satisfactory. For instance, this is a configuration file containing 4 errors:&lt
 &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;config&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;yaml&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;badconfig.yaml&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
 &lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iter_errors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
 &lt;span class=&quot;go&quot;&gt;10 is not of type 'string'
-'wat' is not one of ['table', 'sequence', 'partitioned table', 'materialized view']
 'a' is not of type 'integer'
+'wat' is not one of ['table', 'sequence', 'partitioned table', 'materialized view']
 'trip' is not one of ['dump', 'skip', 'error']&lt;/span&gt;
 &lt;/pre&gt;
 &lt;p&gt;However these error messages, as informative as they can be, have lost the
@@ -155,11 +155,10 @@ file and position&lt;/a&gt;.&lt;/p&gt;
 &lt;pre class=&quot;literal-block&quot;&gt;
 $ pg_seldump --test badconfig.yaml
 ERROR at badconfig.yaml:3: name: 10 is not of type 'string'
-ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'partitioned table', view']
 ERROR at badconfig.yaml:4: adjust_score: 'a' is not of type 'integer'
+ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'partitioned table', view']
 ERROR at badconfig.yaml:6: action: 'trip' is not one of ['dump', 'skip', 'error']
 &lt;/pre&gt;
-&lt;p&gt;Interesting that the errors are not in line order: I'll have to sort them.&lt;/p&gt;
 &lt;p&gt;It wasn't possible to express everything in the JSON schema: demanding at most
 one between &lt;tt class=&quot;docutils literal&quot;&gt;name&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;names&lt;/tt&gt; for in rule objects seems quite difficult
 and... I don't think a regular expression exists to verify that a certain
