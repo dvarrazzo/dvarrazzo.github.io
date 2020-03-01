@@ -178,12 +178,14 @@ deceiving: validating YAML with JSON Schema? That turns out to be no problem,
 because the validation doesn't happen at syntactical level, but it is
 performed on the objects after parsing. Limiting the YAML to the same data
 types JSON can handle it will work no problem.</p>
-<p>JSON Schemas are quite simple to define: I started thinking &quot;noooo, another
-huge thing to learn just for a simple thing...&quot; but actually it's not
-difficult at all: it didn't take too long to put together a <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml">schema for
-pg_seldump configuration file</a> (in YAML of course). However, performing
-validation (using the <a class="reference external" href="https://pypi.org/project/jsonschema/">jsonschema</a> Python package) the results are not entirely
-satisfactory. For instance, this is a configuration file containing 4 errors:</p>
+<p>JSON Schemas are quite simple to define. My first thought was <em>noooo, another
+huge thing to learn just for a simple thing...</em> but actually it turned out to
+be not difficult at all: it didn't take too long to put together a <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml">schema for
+pg_seldump configuration file</a> (in YAML of course). Having that it is
+possible to perform automatic validation of the document against the schema
+(for instance using the <a class="reference external" href="https://pypi.org/project/jsonschema/">jsonschema</a> Python package). Exciting times...</p>
+<p>However the results are not entirely satisfactory. For instance, this is a
+configuration file containing 4 errors:</p>
 <pre class="code YAML literal-block">
 <span class="ln">1 </span><span class="c1"># badconfig.yaml</span>
 <span class="ln">2 </span><span class="nt">db_objects</span><span class="p">:</span>
@@ -192,7 +194,7 @@ satisfactory. For instance, this is a configuration file containing 4 errors:</p
 <span class="ln">5 </span>    <span class="nt">kid</span><span class="p">:</span> <span class="l-Scalar-Plain">table</span>
 <span class="ln">6 </span>    <span class="nt">adjust_score</span><span class="p">:</span> <span class="l-Scalar-Plain">twelve</span>
 </pre>
-<p>It can be easily validated against the schema:</p>
+<p>It's easy to use the validator to find all the errors at once:</p>
 <pre class="code pycon literal-block">
 <span class="kn"></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jsonschema</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">yaml</span>
@@ -212,9 +214,10 @@ Additional properties are not allowed ('kid' was unexpected)
 context of where they originated. Sure 10 is not a string, but good luck
 finding the right &quot;10&quot; into a large file. The problem comes from that same
 characteristic that allowed us to validate a YAML file against a JSON schema
-expressed in a YAML file: everything is based on Python plain objects
+expressed into a YAML file: everything is based on Python plain objects
 (scalars, dicts, lists) and the information of what line in what file that
-value came from is long lost.</p>
+value came from is long lost. For the same reason, the errors ordering is
+undetermined.</p>
 <p>In order to overcome the problem, the idea is to attach file and line
 information, available at parsing time, to the parsed objects. In a previous
 approximation of the solution I had <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/yaml.py">only the dictionaries</a> subclassed to

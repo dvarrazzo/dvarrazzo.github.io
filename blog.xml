@@ -95,12 +95,14 @@ deceiving: validating YAML with JSON Schema? That turns out to be no problem,
 because the validation doesn't happen at syntactical level, but it is
 performed on the objects after parsing. Limiting the YAML to the same data
 types JSON can handle it will work no problem.&lt;/p&gt;
-&lt;p&gt;JSON Schemas are quite simple to define: I started thinking &amp;quot;noooo, another
-huge thing to learn just for a simple thing...&amp;quot; but actually it's not
-difficult at all: it didn't take too long to put together a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml&quot;&gt;schema for
-pg_seldump configuration file&lt;/a&gt; (in YAML of course). However, performing
-validation (using the &lt;a class=&quot;reference external&quot; href=&quot;https://pypi.org/project/jsonschema/&quot;&gt;jsonschema&lt;/a&gt; Python package) the results are not entirely
-satisfactory. For instance, this is a configuration file containing 4 errors:&lt;/p&gt;
+&lt;p&gt;JSON Schemas are quite simple to define. My first thought was &lt;em&gt;noooo, another
+huge thing to learn just for a simple thing...&lt;/em&gt; but actually it turned out to
+be not difficult at all: it didn't take too long to put together a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/schema/config.yaml&quot;&gt;schema for
+pg_seldump configuration file&lt;/a&gt; (in YAML of course). Having that it is
+possible to perform automatic validation of the document against the schema
+(for instance using the &lt;a class=&quot;reference external&quot; href=&quot;https://pypi.org/project/jsonschema/&quot;&gt;jsonschema&lt;/a&gt; Python package). Exciting times...&lt;/p&gt;
+&lt;p&gt;However the results are not entirely satisfactory. For instance, this is a
+configuration file containing 4 errors:&lt;/p&gt;
 &lt;pre class=&quot;code YAML literal-block&quot;&gt;
 &lt;span class=&quot;ln&quot;&gt;1 &lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;# badconfig.yaml&lt;/span&gt;
 &lt;span class=&quot;ln&quot;&gt;2 &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;db_objects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
@@ -109,7 +111,7 @@ satisfactory. For instance, this is a configuration file containing 4 errors:&lt
 &lt;span class=&quot;ln&quot;&gt;5 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;kid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;table&lt;/span&gt;
 &lt;span class=&quot;ln&quot;&gt;6 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;adjust_score&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;twelve&lt;/span&gt;
 &lt;/pre&gt;
-&lt;p&gt;It can be easily validated against the schema:&lt;/p&gt;
+&lt;p&gt;It's easy to use the validator to find all the errors at once:&lt;/p&gt;
 &lt;pre class=&quot;code pycon literal-block&quot;&gt;
 &lt;span class=&quot;kn&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;jsonschema&lt;/span&gt;
 &lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;yaml&lt;/span&gt;
@@ -129,9 +131,10 @@ Additional properties are not allowed ('kid' was unexpected)
 context of where they originated. Sure 10 is not a string, but good luck
 finding the right &amp;quot;10&amp;quot; into a large file. The problem comes from that same
 characteristic that allowed us to validate a YAML file against a JSON schema
-expressed in a YAML file: everything is based on Python plain objects
+expressed into a YAML file: everything is based on Python plain objects
 (scalars, dicts, lists) and the information of what line in what file that
-value came from is long lost.&lt;/p&gt;
+value came from is long lost. For the same reason, the errors ordering is
+undetermined.&lt;/p&gt;
 &lt;p&gt;In order to overcome the problem, the idea is to attach file and line
 information, available at parsing time, to the parsed objects. In a previous
 approximation of the solution I had &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/96c811b272130d7492c62ba89216ab537dbd4d41/seldump/yaml.py&quot;&gt;only the dictionaries&lt;/a&gt; subclassed to
