@@ -188,9 +188,9 @@ satisfactory. For instance, this is a configuration file containing 4 errors:</p
 <span class="ln">1 </span><span class="c1"># badconfig.yaml</span>
 <span class="ln">2 </span><span class="nt">db_objects</span><span class="p">:</span>
 <span class="ln">3 </span>  <span class="p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l-Scalar-Plain">10</span>
-<span class="ln">4 </span>    <span class="nt">adjust_score</span><span class="p">:</span> <span class="l-Scalar-Plain">a</span>
-<span class="ln">5 </span>    <span class="nt">kind</span><span class="p">:</span> <span class="l-Scalar-Plain">wat</span>
-<span class="ln">6 </span>    <span class="nt">action</span><span class="p">:</span> <span class="l-Scalar-Plain">trip</span>
+<span class="ln">4 </span>    <span class="nt">action</span><span class="p">:</span> <span class="l-Scalar-Plain">download</span>
+<span class="ln">5 </span>    <span class="nt">kid</span><span class="p">:</span> <span class="l-Scalar-Plain">table</span>
+<span class="ln">6 </span>    <span class="nt">adjust_score</span><span class="p">:</span> <span class="l-Scalar-Plain">twelve</span>
 </pre>
 <p>It can be easily validated against the schema:</p>
 <pre class="code pycon literal-block">
@@ -202,10 +202,11 @@ satisfactory. For instance, this is a configuration file containing 4 errors:</p
 <span class="go">
 </span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;badconfig.yaml&quot;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">iter_errors</span><span class="p">(</span><span class="n">config</span><span class="p">)))</span>
-<span class="go">10 is not of type 'string'
-'a' is not of type 'integer'
-'wat' is not one of ['table', 'sequence', 'partitioned table', 'materialized view']
-'trip' is not one of ['dump', 'skip', 'error']</span>
+<span class="go">
+Additional properties are not allowed ('kid' was unexpected)
+10 is not of type 'string'
+'twelve' is not of type 'integer'
+'download' is not one of ['dump', 'skip', 'error', 'ref']</span>
 </pre>
 <p>However these error messages, as informative as they can be, have lost the
 context of where they originated. Sure 10 is not a string, but good luck
@@ -231,16 +232,16 @@ containers returned by the YAML parser, and memorize item by item what line
 the values are parsed from. When a schema validation error is found,
 <tt class="docutils literal">jsonschema</tt> errors have an useful <tt class="docutils literal">path</tt> attribute describing in what
 object the error was found (for instance <tt class="docutils literal">['db_objects', 0, 'name']</tt> for the
-first error). So, if the last element is a string and the penultimate is a
+&quot;10&quot; error). So, if the last element is a string and the penultimate is a
 dictionary, there is enough information to <a class="reference external" href="https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/config.py#L135-L167">associate it back to the original
 file and position</a>.</p>
 <p>The result I think is very user friendly:</p>
 <pre class="literal-block">
 $ pg_seldump --test badconfig.yaml
 ERROR at badconfig.yaml:3: name: 10 is not of type 'string'
-ERROR at badconfig.yaml:4: adjust_score: 'a' is not of type 'integer'
-ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'partitioned table', view']
-ERROR at badconfig.yaml:6: action: 'trip' is not one of ['dump', 'skip', 'error']
+ERROR at badconfig.yaml:4: action: 'download' is not one of ['dump', 'skip', 'error']
+ERROR at badconfig.yaml:5: Additional properties are not allowed ('kid' was unexpected)
+ERROR at badconfig.yaml:6: adjust_score: 'twelve' is not of type 'integer'
 </pre>
 <p>It wasn't possible to express everything in the JSON schema: demanding at most
 one between <tt class="docutils literal">name</tt> and <tt class="docutils literal">names</tt> for in rule objects seems quite difficult

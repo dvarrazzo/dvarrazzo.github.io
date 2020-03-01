@@ -105,9 +105,9 @@ satisfactory. For instance, this is a configuration file containing 4 errors:&lt
 &lt;span class=&quot;ln&quot;&gt;1 &lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;# badconfig.yaml&lt;/span&gt;
 &lt;span class=&quot;ln&quot;&gt;2 &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;db_objects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
 &lt;span class=&quot;ln&quot;&gt;3 &lt;/span&gt;  &lt;span class=&quot;p-Indicator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;10&lt;/span&gt;
-&lt;span class=&quot;ln&quot;&gt;4 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;adjust_score&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;a&lt;/span&gt;
-&lt;span class=&quot;ln&quot;&gt;5 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;wat&lt;/span&gt;
-&lt;span class=&quot;ln&quot;&gt;6 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;trip&lt;/span&gt;
+&lt;span class=&quot;ln&quot;&gt;4 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;action&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;download&lt;/span&gt;
+&lt;span class=&quot;ln&quot;&gt;5 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;kid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;table&lt;/span&gt;
+&lt;span class=&quot;ln&quot;&gt;6 &lt;/span&gt;    &lt;span class=&quot;nt&quot;&gt;adjust_score&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;l-Scalar-Plain&quot;&gt;twelve&lt;/span&gt;
 &lt;/pre&gt;
 &lt;p&gt;It can be easily validated against the schema:&lt;/p&gt;
 &lt;pre class=&quot;code pycon literal-block&quot;&gt;
@@ -119,10 +119,11 @@ satisfactory. For instance, this is a configuration file containing 4 errors:&lt
 &lt;span class=&quot;go&quot;&gt;
 &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;config&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;yaml&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;badconfig.yaml&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
 &lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;validator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iter_errors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-&lt;span class=&quot;go&quot;&gt;10 is not of type 'string'
-'a' is not of type 'integer'
-'wat' is not one of ['table', 'sequence', 'partitioned table', 'materialized view']
-'trip' is not one of ['dump', 'skip', 'error']&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;
+Additional properties are not allowed ('kid' was unexpected)
+10 is not of type 'string'
+'twelve' is not of type 'integer'
+'download' is not one of ['dump', 'skip', 'error', 'ref']&lt;/span&gt;
 &lt;/pre&gt;
 &lt;p&gt;However these error messages, as informative as they can be, have lost the
 context of where they originated. Sure 10 is not a string, but good luck
@@ -148,16 +149,16 @@ containers returned by the YAML parser, and memorize item by item what line
 the values are parsed from. When a schema validation error is found,
 &lt;tt class=&quot;docutils literal&quot;&gt;jsonschema&lt;/tt&gt; errors have an useful &lt;tt class=&quot;docutils literal&quot;&gt;path&lt;/tt&gt; attribute describing in what
 object the error was found (for instance &lt;tt class=&quot;docutils literal&quot;&gt;['db_objects', 0, 'name']&lt;/tt&gt; for the
-first error). So, if the last element is a string and the penultimate is a
+&amp;quot;10&amp;quot; error). So, if the last element is a string and the penultimate is a
 dictionary, there is enough information to &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pg_seldump/blob/eae1d8634444b0fd1bfeff4f75f89116a975b736/seldump/config.py#L135-L167&quot;&gt;associate it back to the original
 file and position&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;The result I think is very user friendly:&lt;/p&gt;
 &lt;pre class=&quot;literal-block&quot;&gt;
 $ pg_seldump --test badconfig.yaml
 ERROR at badconfig.yaml:3: name: 10 is not of type 'string'
-ERROR at badconfig.yaml:4: adjust_score: 'a' is not of type 'integer'
-ERROR at badconfig.yaml:5: kind: 'wat' is not one of ['table', 'sequence', 'partitioned table', view']
-ERROR at badconfig.yaml:6: action: 'trip' is not one of ['dump', 'skip', 'error']
+ERROR at badconfig.yaml:4: action: 'download' is not one of ['dump', 'skip', 'error']
+ERROR at badconfig.yaml:5: Additional properties are not allowed ('kid' was unexpected)
+ERROR at badconfig.yaml:6: adjust_score: 'twelve' is not of type 'integer'
 &lt;/pre&gt;
 &lt;p&gt;It wasn't possible to express everything in the JSON schema: demanding at most
 one between &lt;tt class=&quot;docutils literal&quot;&gt;name&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;names&lt;/tt&gt; for in rule objects seems quite difficult
