@@ -2,13 +2,234 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">Software</title>
   <id>urn:uuid:345e7579-5b16-39e4-9f1d-2a4bff93035d</id>
-  <updated>2020-02-29T00:00:00Z</updated>
+  <updated>2020-03-06T00:00:00Z</updated>
   <link href="https://www.varrazzo.com/blog/" />
   <link href="https://www.varrazzo.com/software.xml" rel="self" />
   <author>
     <name></name>
   </author>
   <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/03/06/thinking-psycopg3/">
+    <title type="text">Thinking psycopg3</title>
+    <id>urn:uuid:c38c961a-a398-3c96-8a19-53e5ce15189e</id>
+    <updated>2020-03-06T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/03/06/thinking-psycopg3/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;p&gt;I have been &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/&quot;&gt;psycopg2&lt;/a&gt; maintainer since 2010; before that, &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/commit/4805a935690b1d618247267318a0ef7aa06c2378&quot;&gt;git says&lt;/a&gt; that my
+first contribution was in 2005. At that time, psycopg (one) was the tool to
+use, and psycopg2 was an interesting experiment.&lt;/p&gt;
+&lt;p&gt;In several years of using psycopg2 daily and reading about expectations,
+frustrations, surprises experienced by other users, I have been making my mind
+about a better system, and if I had to release a version incompatible with the
+past, those are some of the things I would change.&lt;/p&gt;
+&lt;div class=&quot;section&quot; id=&quot;query-parameters-adaptation&quot;&gt;
+&lt;h3&gt;Query parameters adaptation&lt;/h3&gt;
+&lt;p&gt;psycopg2 composes queries (replacing the placeholders in the SQL strings with
+the values supplied by the user) on the client, and sends a complete query to
+the server.&lt;/p&gt;
+&lt;img alt=&quot;Sequence diagram for psycopg2&quot; class=&quot;mb10 align-center&quot; src=&quot;seq-psycopg2.jpg&quot; /&gt;
+&lt;p&gt;It does its job right, so it doesn't result in SQL injection vulnerabilities.
+However the correct way of doing it, as far as PostgreSQL is concerned, should
+be to send the query and its parameters separately (i.e. using the
+&lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQEXECPARAMS&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PQexecParams&lt;/tt&gt;&lt;/a&gt; libpq function rather than &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQEXEC&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PQexec&lt;/tt&gt;&lt;/a&gt;).&lt;/p&gt;
+&lt;img alt=&quot;Sequence diagram for psycopg3&quot; class=&quot;mb10 align-center&quot; src=&quot;seq-psycopg3.jpg&quot; /&gt;
+&lt;p&gt;Separating the statement from the parameters improves performance and memory
+usage at parsing time. However the behaviour of the library would change
+slightly, which is the reason why server-side merging hasn't been used so far.
+For instance:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PQexecParams&lt;/tt&gt; only supports one command at time: it wouldn't be possible
+anymore to send a batch of queries separated by semicolon in a single
+&lt;tt class=&quot;docutils literal&quot;&gt;execute()&lt;/tt&gt; call.&lt;/li&gt;
+&lt;li&gt;psycopg2 helps solving some type casting ambiguities by attaching casts to
+the types represented as strings (e.g. the date 1/1/2020 is currently merged
+to the query as &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;'2010-01-01'::date&lt;/span&gt;&lt;/tt&gt;); using &lt;tt class=&quot;docutils literal&quot;&gt;PQexecParams&lt;/tt&gt; the trick
+wouldn't be available anymore. It might be possible maybe to suggest the
+type in other ways, but if that's not the case then queries should be
+modified by applying explicit casts next to their placeholders (e.g.
+&lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;%s::date&lt;/span&gt;&lt;/tt&gt;).&lt;/li&gt;
+&lt;li&gt;Custom-defined adapters should be rewritten.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The main difference between the old adaptation protocol (called &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/extensions.html#psycopg2.extensions.ISQLQuote&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;ISQLQuote&lt;/tt&gt;&lt;/a&gt;)
+and the new one (which doesn't have a name yet, it could be probably called
+&lt;tt class=&quot;docutils literal&quot;&gt;ISQL&lt;/tt&gt;) is the use of the quotes, whereby the string &lt;tt class=&quot;docutils literal&quot;&gt;O'Connor&lt;/tt&gt; is passed
+to the query as &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;'O''Connor'&lt;/span&gt;&lt;/tt&gt;, with wrapping quotes and doubled-up quotes in
+the content. In &lt;tt class=&quot;docutils literal&quot;&gt;ISQL&lt;/tt&gt; the string wouldn't undergo the same transformation
+to add and escape quotes; other types would only have to be converted into
+strings in the PostgreSQL syntax, but wouldn't need to be wrapped in quotes to
+create a SQL literal. Using &lt;tt class=&quot;docutils literal&quot;&gt;ISQL&lt;/tt&gt; as the fundamental adaptation steps there
+would be some interesting improvements:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;adapting composite types and arrays would be a much more straightforward
+matter,&lt;/li&gt;
+&lt;li&gt;it opens the door to the use of &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQPREPARE&quot;&gt;prepared statements&lt;/a&gt;, but especially&lt;/li&gt;
+&lt;li&gt;the &lt;tt class=&quot;docutils literal&quot;&gt;COPY FROM&lt;/tt&gt; operation could take an iterable object yielding Python
+types instead of a file-like object to read; similarly &lt;tt class=&quot;docutils literal&quot;&gt;COPY TO&lt;/tt&gt; could
+return an iterable object yielding Python types.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I mean: this would be great! &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/sql-copy.html&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;COPY&lt;/tt&gt;&lt;/a&gt; is by far the most efficient way to
+insert data into the database: using it via psycopg2 requires exposing the
+data via a &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/usage.html#using-copy-to-and-copy-from&quot;&gt;file-like object&lt;/a&gt;, which not only is a weird interface, but it
+requires people to roll their own adaptation format. The target for copying
+data into the database using psycopg3 should be as easy as:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;curs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;COPY song (artist, title) FROM STDIN&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Sinead O'Connor&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Nothing Compares 2 U&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'REM'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Losing my Religion&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;context-managers-and-transactions&quot;&gt;
+&lt;h3&gt;Context managers and transactions&lt;/h3&gt;
+&lt;p&gt;psycopg2 follows a de-facto standard (which was &lt;a class=&quot;reference external&quot; href=&quot;https://mail.python.org/pipermail/db-sig/2012-November/thread.html&quot;&gt;widely discussed&lt;/a&gt; but which
+never landed in the &lt;a class=&quot;reference external&quot; href=&quot;https://www.python.org/dev/peps/pep-0249/&quot;&gt;DBAPI specs&lt;/a&gt;), whereby connections used as context
+managers wrap a transaction, committing it if exiting on success or rolling it
+back in case of error. So the way to use it is something like:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DSN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# these are two separate transactions&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_something&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_something_else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;This idea has its usefulness,  but it is a &lt;em&gt;very&lt;/em&gt; surprising behaviour:
+developers usually expect the same resources released by &lt;tt class=&quot;docutils literal&quot;&gt;close()&lt;/tt&gt; to be
+released on context exit (as files, sockets, and even DBAPI cursors do). It
+also gets in the way of managing different life cycles on the connection, for
+instance if there is the connection is taken from a pool:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pool&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getconn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;curs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_someting&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;curs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;then it is expected (and &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/pull/17&quot;&gt;reasonably requested&lt;/a&gt;) that the connection is
+returned to the pool at the end of the block.&lt;/p&gt;
+&lt;p&gt;Talking about transactions, PostgreSQL support for &lt;tt class=&quot;docutils literal&quot;&gt;SAVEPOINT&lt;/tt&gt; makes
+possible to implement nested transactions (already implemented on top of
+psycopg2 e.g. &lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/topics/db/transactions/#django.db.transaction.atomic&quot;&gt;by Django&lt;/a&gt; and &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/asqui/psycopg-nestedtransactions&quot;&gt;in a stand-alone module&lt;/a&gt;). This seems to
+ask for a different context than the connection-scope one. So maybe it would
+be useful to leave the latter to the management of the resource, releasing
+them on connection context exit, and to add an explicit method to start an
+atomic block (either a transaction or a savepoint, according to the current
+connection state):&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DSN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_something&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;do_something_nested&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tx&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;do_something_else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;# we were just testing and we don't really want to do this&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;tx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rollback&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# and here the connection is closed&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;optional-c-module&quot;&gt;
+&lt;h3&gt;Optional C module&lt;/h3&gt;
+&lt;p&gt;psycopg2 is a C extension module wrapping the &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq.html&quot;&gt;libpq&lt;/a&gt;, the PostgreSQL client
+library. As such, in order to build, it requires a C compiler, Python, and
+libpq development packages. It is a relatively low bar, but it can be a pain
+nonetheless for beginner users.&lt;/p&gt;
+&lt;p&gt;We tried to avoid the problem by shipping a &lt;a class=&quot;reference external&quot; href=&quot;https://pythonwheels.com/&quot;&gt;wheel package&lt;/a&gt;, but the
+experience has been &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues?utf8=%E2%9C%93&amp;amp;q=+label%3Awheel&quot;&gt;far from being a success&lt;/a&gt;,  marred by diverse issues
+such as the possible incompatibility between the libcrypto used by Python and
+by the libpq, the lack of support for musl libc/Alpine Linux (much in demand
+in Docker images), broken assumptions (like &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/pypa/manylinux/issues/305&quot;&gt;glibc breaking backwards
+compatibility&lt;/a&gt;)... There's just too much magic needed to work smoothly.&lt;/p&gt;
+&lt;p&gt;In the past years, mostly in order to support &lt;a class=&quot;reference external&quot; href=&quot;https://www.pypy.org/&quot;&gt;PyPy&lt;/a&gt;, a few &amp;quot;python-only&amp;quot;
+psycopg2 implementations have been developed: first a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/mvantellingen/psycopg2-ctypes&quot;&gt;ctypes
+implementation&lt;/a&gt;, to which I contributed but which hasn't been maintained at
+the same feature level of the reference C psycopg2. This package was further
+forked into a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/chtd/psycopg2cffi&quot;&gt;cffi implementation&lt;/a&gt;, which seems to be more active, but
+whose release numbers don't follow the original ones, which is mighty
+confusing.&lt;/p&gt;
+&lt;p&gt;psycopg3 might follow an approach I've seen used in other extension modules
+such as PyYAML, which try to compile an optimized version of the library and
+fall back to a Python implementation if that fails. Using the C module over
+the Python module would be a preference at import time, but if could still be
+possible to enforce the use of one specific implementation, for instance using
+a &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;PSYCOPG3_IMPL={C|PYTHON}&lt;/span&gt;&lt;/tt&gt; environment variable, which would make the lack
+of the requested implementation an import time error.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;async-from-the-ground-up&quot;&gt;
+&lt;h3&gt;Async from the ground up&lt;/h3&gt;
+&lt;p&gt;The DBAPI interface is synchronous and blocking by design: &lt;tt class=&quot;docutils literal&quot;&gt;connect()&lt;/tt&gt;
+blocks until a connection is open, &lt;tt class=&quot;docutils literal&quot;&gt;execute()&lt;/tt&gt; blocks until the query is
+completed etc. This didn't stop psycopg2 to work asynchronously, exposing two
+different interfaces for it:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/advanced.html#asynchronous-support&quot;&gt;a purely asynchronous one&lt;/a&gt; where the application must explicitly
+&lt;tt class=&quot;docutils literal&quot;&gt;poll()&lt;/tt&gt; to bring forward the connection/execution process: it breaks the
+DBAPI interface but allows frameworks who can't make blocking calls anyway
+(such as the revered &lt;a class=&quot;reference external&quot; href=&quot;https://twistedmatrix.com/&quot;&gt;Twisted&lt;/a&gt;) to use it;&lt;/li&gt;
+&lt;li&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/advanced.html#support-for-coroutine-libraries&quot;&gt;a coroutine-based one&lt;/a&gt; where the DBAPI blocking interface is respected
+but behind the scene psycopg2 collaborates with coroutine libraries such as
+&lt;a class=&quot;reference external&quot; href=&quot;https://eventlet.net/&quot;&gt;Eventlet&lt;/a&gt; and &lt;a class=&quot;reference external&quot; href=&quot;http://www.gevent.org/&quot;&gt;gevent&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Needless to say, the world has gone forward, and Python now offers core
+support in its syntax and library to &lt;a class=&quot;reference external&quot; href=&quot;https://docs.python.org/3.8/library/asyncio.html&quot;&gt;asyncio&lt;/a&gt;: this is the foundation that
+newer Python async frameworks, such as &lt;a class=&quot;reference external&quot; href=&quot;https://aiohttp.readthedocs.io/&quot;&gt;aiohttp&lt;/a&gt;, are built upon. A third-part
+wrapper, &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/aio-libs/aiopg&quot;&gt;aiopg&lt;/a&gt;, currently helps to bridge the async mode of psycopg2 with the
+asyncio machinery, but of course there is some overhead, mostly caused by the
+fact that the C implementation of psycopg2 is a relatively thick layer, with
+the libpq async calls deeply buried under the C implementation of the Python
+&lt;tt class=&quot;docutils literal&quot;&gt;connection&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;cursor&lt;/tt&gt; objects and behind their interfaces.&lt;/p&gt;
+&lt;p&gt;There is a chance now to rethink how thick the C libpq wrapper should be. We
+can reduce the C implementation to a minimal wrapper around the libpq
+(replaceable by a CFFI Python wrapper if compiling C is not available on the
+client), using it as a foundation to build a familiar DBAPI blocking
+interface. A blocking behaviour is not bad in itself: it allows to write most
+of the programs, the ones which don't need crazy concurrency, in a simple and
+familiar paradigm; the async layer would be available under the hood to
+squeeze the best performance in programs who have embraced an asynchronous
+pattern and framework. Time for a picture:&lt;/p&gt;
+&lt;img alt=&quot;Proposed architecture for psycopg3&quot; class=&quot;mb10 align-center&quot; src=&quot;architecture.jpg&quot; /&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;other-improvements&quot;&gt;
+&lt;h3&gt;Other improvements&lt;/h3&gt;
+&lt;p&gt;I've written down some of the ideas to implement on &lt;a class=&quot;reference external&quot; href=&quot;https://trello.com/b/6tF2oHJ0/psycopg3&quot;&gt;a Trello board&lt;/a&gt; and in
+&lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/milestone/4&quot;&gt;an issues milestone&lt;/a&gt;. As the board shows, some of the improvements weren't
+actually incompatible with psycopg2 and over the years they have already
+landed in in its releases; some other ones will have to wait.&lt;/p&gt;
+&lt;p&gt;Some of what could be improved over psycopg2:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;async COPY methods (see &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues/428&quot;&gt;issue #428&lt;/a&gt;);&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;better support for SQL_ASCII databases (which, unlike what their name
+suggests, are actually unencoded 8 bits, see &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues/519&quot;&gt;issue #519&lt;/a&gt;);&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://gist.github.com/dvarrazzo/3797445&quot;&gt;preparing cursors&lt;/a&gt;;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;return value on &lt;tt class=&quot;docutils literal&quot;&gt;execute()&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# ...&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;connection and cursor-scoped adapters (currently you can scope the
+adaptation rules from Postgres to Python but the rules from Python to
+Postgres can only be global);&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;reorganising the &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/extensions.html&quot;&gt;extensions&lt;/a&gt; and &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/docs/extras.html&quot;&gt;extras&lt;/a&gt; module, which at the moment contain
+an heterogeneous assortment of objects, functions, constants...&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I would be interested in starting the development of this project soon. If you
+have opinions, or interest in the project, please let us know on the &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/list/psycopg/&quot;&gt;Mailing
+List&lt;/a&gt; (you can &lt;a class=&quot;reference external&quot; href=&quot;https://lists.postgresql.org/&quot;&gt;subscribe here&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;...and if psycopg2 has been useful so far for you and for your business and
+would love to see a psycopg3 even more performing and easier to use, please
+consider &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/sponsors/dvarrazzo/&quot;&gt;sponsoring the development&lt;/a&gt;, thank you! 💜&lt;/p&gt;
+&lt;/div&gt;
+</content>
+  </entry>
   <entry xml:base="https://www.varrazzo.com/blog/2020/02/29/adventures-in-yaml-config/">
     <title type="text">Adventures in YAML config</title>
     <id>urn:uuid:a325926a-9137-3067-8700-5917960f7b5f</id>
