@@ -45,7 +45,7 @@ anymore to send a batch of queries separated by semicolon in a single
 &lt;tt class=&quot;docutils literal&quot;&gt;execute()&lt;/tt&gt; call.&lt;/li&gt;
 &lt;li&gt;psycopg2 helps solving some type casting ambiguities by attaching casts to
 the types represented as strings (e.g. the date 1/1/2020 is currently merged
-to the query as &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;'2010-01-01'::date&lt;/span&gt;&lt;/tt&gt;); using &lt;tt class=&quot;docutils literal&quot;&gt;PQexecParams&lt;/tt&gt; the trick
+to the query as &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;'2020-01-01'::date&lt;/span&gt;&lt;/tt&gt;); using &lt;tt class=&quot;docutils literal&quot;&gt;PQexecParams&lt;/tt&gt; the trick
 wouldn't be available anymore. It might be possible maybe to suggest the
 type in other ways, but if that's not the case then queries should be
 modified by applying explicit casts next to their placeholders (e.g.
