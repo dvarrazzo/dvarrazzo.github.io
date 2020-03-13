@@ -11,4 +11,3 @@ This website is built from the `www.varrazzo.com`__ repos using Lektor_.
 
 .. _Lektor: https://www.getlektor.com/
 .. __: https://github.com/dvarrazzo/www.varrazzo.com
-
