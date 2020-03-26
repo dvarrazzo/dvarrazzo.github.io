@@ -2,13 +2,392 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">Blog</title>
   <id>urn:uuid:345e7579-5b16-39e4-9f1d-2a4bff93035d</id>
-  <updated>2020-03-06T00:00:00Z</updated>
+  <updated>2020-03-26T00:00:00Z</updated>
   <link href="https://www.varrazzo.com/blog/" />
   <link href="https://www.varrazzo.com/blog.xml" rel="self" />
   <author>
     <name></name>
   </author>
   <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/03/26/psycopg3-first-report/">
+    <title type="text">psycopg3: a first report</title>
+    <id>urn:uuid:cd45e5f7-7cb3-3a72-920a-00567e28dbd5</id>
+    <updated>2020-03-26T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/03/26/psycopg3-first-report/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/25/life-covid-nz/&quot;&gt;In the most unusual conditions&lt;/a&gt; I started hacking on
+psycopg3 roughly following the plan sketched in &lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/06/thinking-psycopg3/&quot;&gt;Thinking psycopg3&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The first step was to create a package, &lt;tt class=&quot;docutils literal&quot;&gt;psycopg3.pq&lt;/tt&gt;, allowing a low level
+access to the libpq from Python. The package is a façade to several
+implementations: the one I started implementing is a &lt;a class=&quot;reference external&quot; href=&quot;https://docs.python.org/3/library/ctypes.html&quot;&gt;ctypes&lt;/a&gt;-based one, so
+pure Python. Others can be implemented using &lt;a class=&quot;reference external&quot; href=&quot;https://pypi.org/project/cffi/&quot;&gt;CFFI&lt;/a&gt; or pure C, but for the
+moment we can already access the libpq without external dependencies (useful
+when you hack from a van without internet connection and you only have offline
+Python documentation available).&lt;/p&gt;
+&lt;p&gt;The package is pure mechanism, no policy, so it is entirely based on &lt;tt class=&quot;docutils literal&quot;&gt;bytes&lt;/tt&gt;
+instead of unicode strings. Among its responsibilities there is to &lt;tt class=&quot;docutils literal&quot;&gt;free()&lt;/tt&gt;
+the libpq C structures on &lt;tt class=&quot;docutils literal&quot;&gt;__del__()&lt;/tt&gt;, so that resources such as connections
+and results are tied to Python objects refcount, in &lt;a class=&quot;reference external&quot; href=&quot;https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization&quot;&gt;RAII style&lt;/a&gt;. It is not
+complete yet, but it already exposes everything needed for the psycopg3
+implementation so far, and wrapping further functions is straightforward.&lt;/p&gt;
+&lt;pre class=&quot;code pycon literal-block&quot;&gt;
+&lt;span class=&quot;kn&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;psycopg3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pq&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pqconn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PGconn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;dbname=psycopg3_test&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pqconn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;exec_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select 'hello' || ' world!'&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;b'hello world!'&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Among the libpq functions exposed there are the non-blocking ones for
+connecting and for querying. The blocking ones are exposed too, but the idea
+is to avoid using them altogether in &amp;quot;real code&amp;quot;, leaving to Python the
+responsibility to coordinate and wait. This would allow writing the whole
+adapter without juggling with the GIL and without losing control during long
+operations. In other words, &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/articles/2014/07/20/cancelling-postgresql-statements-python/&quot;&gt;Ctrl-C would just work&lt;/a&gt;, no &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues/333&quot;&gt;issue #333&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;As explained in the previous article, both a synchronous and an asynchronous
+interface should be exposed: the sync one blocking as per DBAPI specs, the
+async one based on asyncio and coroutines. What I don't want to do instead is
+to have to write everything twice.&lt;/p&gt;
+&lt;p&gt;About the async interface, there is no guidance from the DBAPI about what it
+should present, but the most natural way (which is what &lt;a class=&quot;reference external&quot; href=&quot;https://aiopg.readthedocs.io/&quot;&gt;AIOPG&lt;/a&gt; exposes, in my
+understanding) is to replicate exactly the blocking interface, &lt;tt class=&quot;docutils literal&quot;&gt;await&lt;/tt&gt;ing
+whenever it would block. So what may it look like is:&lt;/p&gt;
+&lt;pre class=&quot;code pycon literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cnn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;psycopg3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect_async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cnn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select 'hello' || ' mum!'&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;# &amp;gt;&amp;gt;&amp;gt; await cur.fetchone()  # TODO: not implemented yet
+# but the result is on the client already
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_result&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;b'hello mum!'&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;The async interaction with the libpq is a delicate matter and surely not
+something I would like to repeat with different flavours in several parts of
+the code. So the guiding forces of the design are:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;there are different types of connections and cursors: a blocking sync one
+you can use as &lt;tt class=&quot;docutils literal&quot;&gt;cur.execute(query)&lt;/tt&gt; and an &lt;tt class=&quot;docutils literal&quot;&gt;async def&lt;/tt&gt; one you must call
+as &lt;tt class=&quot;docutils literal&quot;&gt;await cur.execute(query)&lt;/tt&gt;, so they must actually be two different
+methods;&lt;/li&gt;
+&lt;li&gt;the &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq-async.html&quot;&gt;intricate async machinery&lt;/a&gt; of the libpq, and the state keeping
+it needs between calls, should be wrapped only once;&lt;/li&gt;
+&lt;li&gt;how to wait should be selectable (no Unix pun intended) and injected around
+the libpq according to the different Python environment.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So, hum... how to do a thing, ask someone else to wait, then go back at work?&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Coroutines!&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;More precisely, because in modern Python &lt;em&gt;coroutine&lt;/em&gt; acquired a different and
+more specific meaning, what I refer to is to the old plain generators, i.e.
+the functions with &lt;tt class=&quot;docutils literal&quot;&gt;yield&lt;/tt&gt;, not the functions with &lt;tt class=&quot;docutils literal&quot;&gt;async def&lt;/tt&gt;. So the
+exclamation should be:&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Generators!&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;This is the idea: showing a simplified connection procedure (the query
+procedure is more complicated but it follow a similar collaboration pattern):&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;c1&quot;&gt;# simplified `psycopg3.connection.BaseConnection._connect_gen()`&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;connect_gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conninfo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;sd&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+    Generator to create a database connection without blocking.
+
+    Yield pairs (fileno, `Wait`) whenever an operation would block. The
+    generator can be restarted sending the appropriate `Ready` state when
+    the file descriptor is ready.
+    &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PGconn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect_start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conninfo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;status&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect_poll&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PollingStatus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;OK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PollingStatus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;READING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;yield&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;socket&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wait&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;status&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PollingStatus&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;WRITING&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;yield&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;socket&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wait&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;This generator yields as soon as it would block, asking the consumer to be
+awaken as soon as the connection is ready to read or write. This generator
+can be consumed in a blocking way using a procedure such as:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;select&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;select&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# simplified `psycopg3.waiting.wait_select()`&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;wait_select&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;sd&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+    Wait on the behalf of a generator using select().
+
+    *gen* is expected to generate tuples (fd, status). consume it and block
+    according to the status until fd is ready. Send back the ready state
+    to the generator.
+
+    Return what the generator eventually returned.
+    &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;next&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wait&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;rf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[])&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wait&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;rf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[])&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wait&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;rf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[])&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                    &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;ne&quot;&gt;StopIteration&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;With these two functions happily collaborating the blocking call
+&lt;tt class=&quot;docutils literal&quot;&gt;psycopg3.connect()&lt;/tt&gt; can be implemented with something like:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dsn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;connect_gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dsn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pgconn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wait_select&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;# the low-level libpq connection&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Connection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pgconn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;# the high-level DBAPI connection&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;What about the async connection? I'm relatively new to asyncio, so I'm not
+sure if this is the most idiomatic way to do it, but at the moment it looks
+like:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;asyncio&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_event_loop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Event&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# simplified `psycopg3.waiting.wait_async()`&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;wait_async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ev&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_event_loop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;wakeup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;nonlocal&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;ev&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;next&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;ev&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wait&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add_reader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wakeup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ev&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;wait&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remove_reader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wait&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add_writer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wakeup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ev&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;wait&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remove_writer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Wait&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add_reader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wakeup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add_writer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wakeup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ev&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;wait&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remove_reader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;loop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remove_writer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;ne&quot;&gt;StopIteration&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;which allows to implement an asyncio-friendly connection function with:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;connect_async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dsn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;connect_gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dsn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;pgconn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wait_async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# the low-level libpq connection&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AsyncConnection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pgconn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# an AIOPG-style high-level connection&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;The same &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;wait_*()&lt;/span&gt;&lt;/tt&gt; functions are used to wrap a send-query-fetch-result
+generator underlying &lt;tt class=&quot;docutils literal&quot;&gt;cursor.execute()&lt;/tt&gt; and friends:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BaseCursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;# ignoring values for now&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_execute_send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;results&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wait_select&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_execute_results&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;results&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# process the result to python&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;AsyncCursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BaseCursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_execute_send&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;results&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;await&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wait_async&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_execute_results&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;results&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Minimal code duplication, different high level interface. Symmetry. I like it!&lt;/p&gt;
+&lt;p&gt;What's left? Well, a lot! Now that the basic machinery is in place, and Python
+can send and retrieve bytes to and from Postgres, it's time to attack the
+adaptation layer.&lt;/p&gt;
+&lt;p&gt;Feedback is welcome: as &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues/1057&quot;&gt;someone suggested&lt;/a&gt; it would be useful to be
+friendly with other async frameworks such as &lt;a class=&quot;reference external&quot; href=&quot;https://trio.readthedocs.io/en/stable/&quot;&gt;trio&lt;/a&gt;; maybe my async code is not
+the best around and AIOPG or &lt;a class=&quot;reference external&quot; href=&quot;https://lwn.net/Articles/814822/#CommAnchor814868&quot;&gt;asyncpg hackers&lt;/a&gt; have something to suggest.
+Please let me know: the code so far is &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/&quot;&gt;online already&lt;/a&gt;, with &lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/github/psycopg/psycopg3/builds/666294186&quot;&gt;141 tests&lt;/a&gt;
+testing Python from 3.6 to 3.8 and PostgreSQL from 9.5 to 12.&lt;/p&gt;
+&lt;p&gt;I would be extremely grateful if you would like to support the development of
+the project! Please make me feel your warmth in this antipodean month of
+lockdown with your &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/sponsors/dvarrazzo/&quot;&gt;development sponsorship&lt;/a&gt;, thank you! 💜&lt;/p&gt;
+</content>
+  </entry>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/03/25/vita-covid-nz/">
+    <title type="text">Vita, Nuova Zelanda, Covid</title>
+    <id>urn:uuid:d11b9092-650a-31bc-9445-85a5b42d1e79</id>
+    <updated>2020-03-25T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/03/25/vita-covid-nz/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;div class=&quot;admonition admonition-note&quot;&gt;
+&lt;p class=&quot;first admonition-title&quot;&gt;Note:&lt;/p&gt;
+&lt;p class=&quot;last&quot;&gt;You can read this &lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/25/life-covid-nz/&quot;&gt;in English&lt;/a&gt; too.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;In un tempo che ora sembra un milione di anni fa, io e Gabri avevamo
+organizzato un viaggio di due settimane in Nuova Zelanda, perché un marzo
+antipodico ci sembrava meglio di uno a Londra ed avevo ancora un accordo col
+mio datore di lavoro di avere il 25% del tempo libero.&lt;/p&gt;
+&lt;p&gt;Poi sono cambiate un po' di cose. A febbraio, io e la il suddetto datore di
+lavoro ci siamo, diciamo, accordati per avere il 100% del tempo libero, in
+cambio di un taglio del 100% di stipendio. Un po' di giorni dopo le notizie del
+Covid-19 avevano cominciato a sembrare fantascienza scadente. La famiglia e gli
+amici in Italia erano bloccati in casa, il governo inglese non sapeva che palle
+inventarsi ma riusciva a contraddirsi lo stesso. Avevamo la scelta di non
+partire, &amp;quot;per sicurezza&amp;quot;, come suggerito da un po' di amici, o di partire per
+più tempo, visto che non c'era molto altro da fare a Londra.&lt;/p&gt;
+&lt;p&gt;Ci abbiamo pensato forse addirittura per un minuto intero e il giorno stesso
+della partenza abbiamo posticipato il ritorno.&lt;/p&gt;
+&lt;p&gt;La nostra casa e mezzo di trasporto sono stati un furgone equipaggiato con un
+letto, fornelli e un piccolo frigo. Un vasino chimico lo permetteva di
+dichiarare &lt;em&gt;self-contained&lt;/em&gt; (forse nel senso di tenersela?), il che vuol dire
+poter dormire in diverse in parchi e riserve naturali. Questo ci ha dato il
+massimo della flessibilità: il livello di dettaglio del nostro piano di viaggio
+era &amp;quot;in senso orario&amp;quot;.&lt;/p&gt;
+&lt;p&gt;Vasino o no, ovunque abbiamo dormito c'erano sempre gabinetti pubblici, sempre
+puliti, anche nel caso fossero solo latrine senz'acqua. Nel furgone non c'era
+doccia, per cui ogni tanto ci siamo fermati in qualche campeggio per farne una.&lt;/p&gt;
+&lt;p&gt;La routine quotidiana consisteva in caffè e colazione, poi esplorare l'area
+dove ci svegliavamo. Sono riuscito a fare un po' della fotografia che mi piace,
+quella che prevede scarponi e treppiede. Se ci capitava una pausa per pranzo o
+da bere in qualche paese cercavamo un posto dove ricaricare la batteria del
+portatile.&lt;/p&gt;
+&lt;p&gt;A metà giornata pensavamo ad una direzione dove guidare e dove passare la notte
+successiva. Abbiamo provato a tenere il tempo di guida basso, meno di due ore
+al giorno, e fermate improvvise per una foto o cambi di piano erano una cosa
+regolare.&lt;/p&gt;
+&lt;p&gt;Dopo cena, tempo di un hack: ho cominciato a lavorare al mio progetto
+&lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/06/thinking-psycopg3/&quot;&gt;psycopg3&lt;/a&gt;, e sono riuscito a programmare
+abbastanza regolarmente, usando la luminosità del portatile al minimo per
+risparmiare batterie e solo con la documentazione scaricata, senza internet,
+per cui bello concentrato. Il progetto sta prendendo una bella forma, ma
+preferisco &lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/26/psycopg3-first-report/&quot;&gt;parlarne a parte&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Dopo poco più di una settimana di viaggio, il governo neozelandese ha imposto
+due settimane di isolamento a chiunque venisse da fuori, per cui è stato un
+grande tempismo riuscire ad entrare e godersi il paese. Non molti giorni più
+tardi l'impiegato di un parco incontrato per caso ci ha avvisato che la nazione
+aveva appena passato la soglia dei 100 casi ed era scattato il &amp;quot;livello 3&amp;quot;, con
+il &amp;quot;livello 4&amp;quot;, lockdown, annunciato in 48 ore.&lt;/p&gt;
+&lt;p&gt;Siamo subito andati in un paese vicino per cercare una scheda telefonica per
+organizzarci meglio, e da quelle parti abbiamo capito cosa volesse dire
+&amp;quot;livello 3&amp;quot;: già a poche ore dall'annuncio la serenità precedente era scomparsa
+e tutto quello che non fosse essenziale - caffè, ristoranti, barbiere, negozi -
+era già chiuso. La cosa sarebbe stata seria: se qui dicono un mese in casa sarà
+un mese in casa.&lt;/p&gt;
+&lt;p&gt;La prima scelta fatta è stata di dove passare il periodo di lockdown: tra
+Auckland ed una città più piccola abbiamo scelto quest'ultima: Whangarei, il
+capoluogo del Northland. La prima notte l'abbiamo passata in furgone, e abbiamo
+avuto modo di vedere che il supermercato locale era ben fornito ed organizzato
+per evitare il saccheggio. Il giorno dopo siamo riusciti a trovare un alloggio
+per il mese successivo.&lt;/p&gt;
+&lt;p&gt;A parte la bellezza di questo posto, c'è qualcosa che ci ha colpito è stato la
+gentilezza e l'affetto dei neozelandesi che abbiamo incontrato. Dalla signora
+delle pulizie che ci ha regalato un ventaglio di paglia contro le mosche in una
+giornata afosa all'agente immobilare che ci ha richiamato per assicurarsi che
+avessimo trovato dove stare in isolamento. La sensazione che ci hanno dato,
+tutti, è quanto ognuno tenga al benessere dell'altro.&lt;/p&gt;
+&lt;p&gt;In questo momento è passata la mezzanotte da pochi minuti: il lockdown è in
+atto e l'idea è che qui le persone saranno serie a rispettarlo. Abbiamo ancora
+il furgone, quindi potremo fare la spesa quando servirà. Abbiamo da leggere e
+da disegnare, io ho un lavoro remoto da cercare e un po' di progetti personali
+da sviluppare.&lt;/p&gt;
+&lt;p&gt;Un abbraccio a tutti gli amici e le famiglie. In bocca al lupo e speriamo di
+rivederci presto!&lt;/p&gt;
+</content>
+  </entry>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/03/25/life-covid-nz/">
+    <title type="text">Life, New Zealand, Covid</title>
+    <id>urn:uuid:b602c25a-0b82-3626-8d05-a7f8013b8119</id>
+    <updated>2020-03-25T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/03/25/life-covid-nz/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;div class=&quot;admonition admonition-attenzione&quot;&gt;
+&lt;p class=&quot;first admonition-title&quot;&gt;Attenzione:&lt;/p&gt;
+&lt;p class=&quot;last&quot;&gt;Questo articolo è anche &lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/25/vita-covid-nz/&quot;&gt;in Italiano&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;In a time that now feels a million of years ago, Gabri and I organised a
+two-weeks trip in New Zealand, because an Antipodean March sounded better than
+one in London, and I still had an agreement of 25% time off work with my
+employer.&lt;/p&gt;
+&lt;p&gt;Then a few things changed. My employer and I, let's say, agreed to move to a
+100% time off arrangement in February, in exchange of a 100% pay cut. A few
+days later, news of the Covid-19 started resembling bad science fiction ones.
+My family and friends in Italy were in locked down at home, the UK government
+was going in all the directions at once. We had the option of not leaving, as
+suggested by some friends, &amp;quot;to be safe&amp;quot;, or the one of leaving for longer, as
+we didn't have much to do in London.&lt;/p&gt;
+&lt;p&gt;We might have thought about it maybe even for a whole minute, and the same day
+of our flight we called the flight company to postpone our return.&lt;/p&gt;
+&lt;p&gt;Our home and transportation have been a van equipped with a bed, hobs, and a
+small fridge. A chemical porta-potty allowed to call it &lt;em&gt;self contained&lt;/em&gt;
+(probably meaning that you prefer holding it), which allowed us to sleep in
+several parks and natural reserves. It gave us the most of freedom in our
+journey: our grand total of route planning was &amp;quot;clockwise&amp;quot;.&lt;/p&gt;
+&lt;p&gt;Potty or not, everywhere we have slept there were public toilets available,
+always clean, even if it was a latrine in the middle of nowhere. In the van
+there was no shower so we stopped in equipped camping grounds every few days.&lt;/p&gt;
+&lt;p&gt;The daily routine started with a coffee in our bar at the back of the van and
+then exploring the area where we would have woken up. I managed to do some of
+the photography I love, the one consisting of hiking boots and tripod. If we
+stopped somewhere for a lunch or a drink we would have looked for a place where
+to recharge the laptop.&lt;/p&gt;
+&lt;p&gt;In the afternoon we would have thought about the direction where to drive and
+where to spend the night. We have tried to keep the driving time low, less than
+2 hours daily, with unexpected stops for a shot or change of plans as a regular
+occurrence.&lt;/p&gt;
+&lt;p&gt;After dinner it was hack time: I started working on my &lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/06/thinking-psycopg3/&quot;&gt;psycopg3 project&lt;/a&gt; and I managed to hack regularly enough, using the
+dimmest display setting to save as battery as possible, with only offline
+documentation, no network: all in all a lot of focus. The project is taking a
+nice shape, but I'd rather avoid tech speak for this entry: you can read more
+&lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/26/psycopg3-first-report/&quot;&gt;in another article&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;About one week into our journey the New Zealand government imposed two weeks of
+isolation to everybody coming from abroad, so our arrival was well timed to
+manage to enjoy the country. After a few more days, a park warden stopped by to
+break the news that the country had moved to &amp;quot;level 3&amp;quot;, just passed the
+threshold of 100 cases, and the &amp;quot;level 4&amp;quot; lockdown was announced in 48 hours.&lt;/p&gt;
+&lt;p&gt;We went quickly to a nearby town to look for a SIM phone to organise better and
+there about we understood what &amp;quot;level 3&amp;quot; meant: just a few hours after the
+announce the previous serenity was gone and everything that wasn't essential -
+cafes, restaurants, barber shops - was closed already. We had the hunch that
+the thing would have been serious: a month locked down meant a month locked at
+down here.&lt;/p&gt;
+&lt;p&gt;The first choice we made was where to spend the lockdown: between Auckland and
+a smaller town we preferred the latter: we weren't far from Whangarei, the
+Northland Region capital. We spent a first night there in the van and we could
+assess that the local supermarket was well stocked and equipped for eventual
+hoarders. The day after we managed to find a place to rent for the upcoming
+month.&lt;/p&gt;
+&lt;p&gt;Aside of the natural beauty of this country, what stroke us was the kindness
+and care of the Kiwi people we met. From the cleaning lady who gifted us a
+straw fan against the flies in a torrid day to the real estate agent who called
+us back to make sure we had found a place where to stay. The feeling everyone
+gave us was about how much they cared for each other's wellbeing.&lt;/p&gt;
+&lt;p&gt;Midnight has passed a few minutes ago: lockdown is in place and we understand
+that people will respect it seriously. We kept our van so we can move to buy
+groceries when we will need them. We have stuff to read and to draw, I have a
+remote job to look for and a few personal projects to hack on.&lt;/p&gt;
+&lt;p&gt;Sending a big hug to all our friends and families. We wish you the best and we
+hope to see you again soon!&lt;/p&gt;
+</content>
+  </entry>
   <entry xml:base="https://www.varrazzo.com/blog/2020/03/06/thinking-psycopg3/">
     <title type="text">Thinking psycopg3</title>
     <id>urn:uuid:c38c961a-a398-3c96-8a19-53e5ce15189e</id>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <title>psycopg3: a first report &mdash; Daniele Varrazzo</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-158968242-1');
+    </script>
+    <link rel="shortcut icon" href="img/favicon.png">
+    <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/main.css?h=ece9dae4">
+    <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
+    <link rel="stylesheet" href="/css/custom.css?h=d27930ad">
+    <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
+  </head>
+
+  <body>
+    <div class="main-wrapper">
+<header id="header" class="">
+  <a href="/about/" class="logo">
+    <img src="/img/logo.png?h=0ad960b2" class="logo-dark" alt="">
+    <img src="/img/logo-light.png?h=cb66caa4" class="logo-light" alt="">
+  </a>
+  <a href="#" class="mob-menu"><i class="fa fa-bars"></i></a>
+  <nav>
+    <ul class="main-menu">
+<li>
+  <a href="/about/">About</a>
+</li>
+<li>
+  <a href="/software/">Software</a>
+  <ul>
+<li>
+  <a href="https://www.psycopg.org/" target="_blank">psycopg <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://www.varrazzo.com/pgmp/" target="_blank">pgmp <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://pgxn.github.io/pgxnclient/" target="_blank">PGXN Client <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://reorg.github.io/pg_repack/" target="_blank">pg_repack <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/photo/">Photography</a>
+  <ul>
+<li>
+  <a href="/photo/longexp/">Long exposures</a>
+</li>
+<li>
+  <a href="/photo/ireland/">Ireland, 2019</a>
+</li>
+<li>
+  <a href="/photo/japan/">Japan, 2019</a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/blog/">Blog</a>
+</li>
+<li>
+  <a href="/contact/">Contact</a>
+</li>
+    </ul>
+  </nav>
+</header>
+<div class="container fullwidth pt140 pb140" data-background="/img/blog/nz-laptop.jpg">
+  <div class="pt140 pb140">
+    <div class="entrance">
+      <h2 class="title">psycopg3: a first report</h2>
+      <p class="separator"></p>
+      <p class="small capitalize serif">2020-03-26</p>
+      
+        <div class="bumper">
+          <p class="small">
+          
+            <a href="/blog/tag/software/">#software</a>
+          
+            <a href="/blog/tag/design/">#design</a>
+          
+            <a href="/blog/tag/psycopg/">#psycopg</a>
+          
+          </p>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+<div class="container mt70 mb70">
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2"><p><a class="reference external" href="/blog/2020/03/25/life-covid-nz/">In the most unusual conditions</a> I started hacking on
+psycopg3 roughly following the plan sketched in <a class="reference external" href="/blog/2020/03/06/thinking-psycopg3/">Thinking psycopg3</a>.</p>
+<p>The first step was to create a package, <tt class="docutils literal">psycopg3.pq</tt>, allowing a low level
+access to the libpq from Python. The package is a façade to several
+implementations: the one I started implementing is a <a class="reference external" href="https://docs.python.org/3/library/ctypes.html">ctypes</a>-based one, so
+pure Python. Others can be implemented using <a class="reference external" href="https://pypi.org/project/cffi/">CFFI</a> or pure C, but for the
+moment we can already access the libpq without external dependencies (useful
+when you hack from a van without internet connection and you only have offline
+Python documentation available).</p>
+<p>The package is pure mechanism, no policy, so it is entirely based on <tt class="docutils literal">bytes</tt>
+instead of unicode strings. Among its responsibilities there is to <tt class="docutils literal">free()</tt>
+the libpq C structures on <tt class="docutils literal">__del__()</tt>, so that resources such as connections
+and results are tied to Python objects refcount, in <a class="reference external" href="https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization">RAII style</a>. It is not
+complete yet, but it already exposes everything needed for the psycopg3
+implementation so far, and wrapping further functions is straightforward.</p>
+<pre class="code pycon literal-block">
+<span class="kn"></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psycopg3</span> <span class="kn">import</span> <span class="n">pq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pqconn</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">PGconn</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;dbname=psycopg3_test&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">pqconn</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;select 'hello' || ' world!'&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">b'hello world!'</span>
+</pre>
+<p>Among the libpq functions exposed there are the non-blocking ones for
+connecting and for querying. The blocking ones are exposed too, but the idea
+is to avoid using them altogether in &quot;real code&quot;, leaving to Python the
+responsibility to coordinate and wait. This would allow writing the whole
+adapter without juggling with the GIL and without losing control during long
+operations. In other words, <a class="reference external" href="https://www.psycopg.org/articles/2014/07/20/cancelling-postgresql-statements-python/">Ctrl-C would just work</a>, no <a class="reference external" href="https://github.com/psycopg/psycopg2/issues/333">issue #333</a>.</p>
+<p>As explained in the previous article, both a synchronous and an asynchronous
+interface should be exposed: the sync one blocking as per DBAPI specs, the
+async one based on asyncio and coroutines. What I don't want to do instead is
+to have to write everything twice.</p>
+<p>About the async interface, there is no guidance from the DBAPI about what it
+should present, but the most natural way (which is what <a class="reference external" href="https://aiopg.readthedocs.io/">AIOPG</a> exposes, in my
+understanding) is to replicate exactly the blocking interface, <tt class="docutils literal">await</tt>ing
+whenever it would block. So what may it look like is:</p>
+<pre class="code pycon literal-block">
+<span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cnn</span> <span class="o">=</span> <span class="k">await</span> <span class="n">psycopg3</span><span class="o">.</span><span class="n">connect_async</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span> <span class="o">=</span> <span class="n">cnn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select 'hello' || ' mum!'&quot;</span><span class="p">)</span>
+<span class="go"># &gt;&gt;&gt; await cur.fetchone()  # TODO: not implemented yet
+# but the result is on the client already
+</span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">b'hello mum!'</span>
+</pre>
+<p>The async interaction with the libpq is a delicate matter and surely not
+something I would like to repeat with different flavours in several parts of
+the code. So the guiding forces of the design are:</p>
+<ul class="simple">
+<li>there are different types of connections and cursors: a blocking sync one
+you can use as <tt class="docutils literal">cur.execute(query)</tt> and an <tt class="docutils literal">async def</tt> one you must call
+as <tt class="docutils literal">await cur.execute(query)</tt>, so they must actually be two different
+methods;</li>
+<li>the <a class="reference external" href="https://www.postgresql.org/docs/current/libpq-async.html">intricate async machinery</a> of the libpq, and the state keeping
+it needs between calls, should be wrapped only once;</li>
+<li>how to wait should be selectable (no Unix pun intended) and injected around
+the libpq according to the different Python environment.</li>
+</ul>
+<p>So, hum... how to do a thing, ask someone else to wait, then go back at work?</p>
+<p><em>Coroutines!</em></p>
+<p>More precisely, because in modern Python <em>coroutine</em> acquired a different and
+more specific meaning, what I refer to is to the old plain generators, i.e.
+the functions with <tt class="docutils literal">yield</tt>, not the functions with <tt class="docutils literal">async def</tt>. So the
+exclamation should be:</p>
+<p><em>Generators!</em></p>
+<p>This is the idea: showing a simplified connection procedure (the query
+procedure is more complicated but it follow a similar collaboration pattern):</p>
+<pre class="code python literal-block">
+<span class="c1"># simplified `psycopg3.connection.BaseConnection._connect_gen()`</span>
+<span class="k">def</span> <span class="nf">connect_gen</span><span class="p">(</span><span class="n">conninfo</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;
+    Generator to create a database connection without blocking.
+
+    Yield pairs (fileno, `Wait`) whenever an operation would block. The
+    generator can be restarted sending the appropriate `Ready` state when
+    the file descriptor is ready.
+    &quot;&quot;&quot;</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">PGconn</span><span class="o">.</span><span class="n">connect_start</span><span class="p">(</span><span class="n">conninfo</span><span class="p">)</span>
+    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">connect_poll</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">OK</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">READING</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">conn</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span>
+        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">WRITING</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">conn</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span>
+
+    <span class="k">return</span> <span class="n">conn</span>
+</pre>
+<p>This generator yields as soon as it would block, asking the consumer to be
+awaken as soon as the connection is ready to read or write. This generator
+can be consumed in a blocking way using a procedure such as:</p>
+<pre class="code python literal-block">
+<span class="kn">from</span> <span class="nn">select</span> <span class="kn">import</span> <span class="n">select</span>
+
+<span class="c1"># simplified `psycopg3.waiting.wait_select()`</span>
+<span class="k">def</span> <span class="nf">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;
+    Wait on the behalf of a generator using select().
+
+    *gen* is expected to generate tuples (fd, status). consume it and block
+    according to the status until fd is ready. Send back the ready state
+    to the generator.
+
+    Return what the generator eventually returned.
+    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span><span class="p">:</span>
+                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">fd</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[])</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">s</span> <span class="ow">is</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span><span class="p">:</span>
+                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([],</span> <span class="p">[</span><span class="n">fd</span><span class="p">],</span> <span class="p">[])</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">s</span> <span class="ow">is</span> <span class="n">Wait</span><span class="o">.</span><span class="n">RW</span><span class="p">:</span>
+                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">fd</span><span class="p">],</span> <span class="p">[</span><span class="n">fd</span><span class="p">],</span> <span class="p">[])</span>
+                <span class="k">if</span> <span class="n">rf</span><span class="p">:</span>
+                    <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre>
+<p>With these two functions happily collaborating the blocking call
+<tt class="docutils literal">psycopg3.connect()</tt> can be implemented with something like:</p>
+<pre class="code python literal-block">
+<span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="n">dsn</span><span class="p">):</span>
+    <span class="n">gen</span> <span class="o">=</span> <span class="n">connect_gen</span><span class="p">(</span><span class="n">dsn</span><span class="p">)</span>
+    <span class="n">pgconn</span> <span class="o">=</span> <span class="n">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>   <span class="c1"># the low-level libpq connection</span>
+    <span class="k">return</span> <span class="n">Connection</span><span class="p">(</span><span class="n">pgconn</span><span class="p">)</span>   <span class="c1"># the high-level DBAPI connection</span>
+</pre>
+<p>What about the async connection? I'm relatively new to asyncio, so I'm not
+sure if this is the most idiomatic way to do it, but at the moment it looks
+like:</p>
+<pre class="code python literal-block">
+<span class="kn">from</span> <span class="nn">asyncio</span> <span class="kn">import</span> <span class="n">get_event_loop</span><span class="p">,</span> <span class="n">Event</span>
+
+<span class="c1"># simplified `psycopg3.waiting.wait_async()`</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">):</span>
+    <span class="n">ev</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">get_event_loop</span><span class="p">()</span>
+    <span class="n">ready</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">wakeup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+        <span class="k">nonlocal</span> <span class="n">ready</span>
+        <span class="n">ready</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+            <span class="n">ev</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span><span class="p">:</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">add_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">remove_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">ready</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">s</span> <span class="ow">is</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span><span class="p">:</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">add_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">remove_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">ready</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">s</span> <span class="ow">is</span> <span class="n">Wait</span><span class="o">.</span><span class="n">RW</span><span class="p">:</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">add_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">add_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">remove_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                <span class="n">loop</span><span class="o">.</span><span class="n">remove_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">ready</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre>
+<p>which allows to implement an asyncio-friendly connection function with:</p>
+<pre class="code python literal-block">
+<span class="k">async</span> <span class="k">def</span> <span class="nf">connect_async</span><span class="p">(</span><span class="n">dsn</span><span class="p">):</span>
+    <span class="n">gen</span> <span class="o">=</span> <span class="n">connect_gen</span><span class="p">(</span><span class="n">dsn</span><span class="p">)</span>
+    <span class="n">pgconn</span> <span class="o">=</span> <span class="k">await</span> <span class="n">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>  <span class="c1"># the low-level libpq connection</span>
+    <span class="k">return</span> <span class="n">AsyncConnection</span><span class="p">(</span><span class="n">pgconn</span><span class="p">)</span>  <span class="c1"># an AIOPG-style high-level connection</span>
+</pre>
+<p>The same <tt class="docutils literal"><span class="pre">wait_*()</span></tt> functions are used to wrap a send-query-fetch-result
+generator underlying <tt class="docutils literal">cursor.execute()</tt> and friends:</p>
+<pre class="code python literal-block">
+<span class="k">class</span> <span class="nc">Cursor</span><span class="p">(</span><span class="n">BaseCursor</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>   <span class="c1"># ignoring values for now</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="n">gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_send</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>  <span class="c1"># process the result to python</span>
+
+<span class="k">class</span> <span class="nc">AsyncCursor</span><span class="p">(</span><span class="n">BaseCursor</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="n">gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_send</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+</pre>
+<p>Minimal code duplication, different high level interface. Symmetry. I like it!</p>
+<p>What's left? Well, a lot! Now that the basic machinery is in place, and Python
+can send and retrieve bytes to and from Postgres, it's time to attack the
+adaptation layer.</p>
+<p>Feedback is welcome: as <a class="reference external" href="https://github.com/psycopg/psycopg2/issues/1057">someone suggested</a> it would be useful to be
+friendly with other async frameworks such as <a class="reference external" href="https://trio.readthedocs.io/en/stable/">trio</a>; maybe my async code is not
+the best around and AIOPG or <a class="reference external" href="https://lwn.net/Articles/814822/#CommAnchor814868">asyncpg hackers</a> have something to suggest.
+Please let me know: the code so far is <a class="reference external" href="https://github.com/psycopg/psycopg3/">online already</a>, with <a class="reference external" href="https://travis-ci.org/github/psycopg/psycopg3/builds/666294186">141 tests</a>
+testing Python from 3.6 to 3.8 and PostgreSQL from 9.5 to 12.</p>
+<p>I would be extremely grateful if you would like to support the development of
+the project! Please make me feel your warmth in this antipodean month of
+lockdown with your <a class="reference external" href="https://github.com/sponsors/dvarrazzo/">development sponsorship</a>, thank you! 💜</p>
+
+      <script src="https://utteranc.es/client.js"
+        repo="dvarrazzo/www.varrazzo.com"
+        issue-term="pathname"
+        label="comments"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+</div>
+
+<footer id="footer" class="">
+  <div class="footer-links">
+    &copy; 2020. By Daniele Varrazzo. |
+    <a target="_blank" href="https://github.com/dvarrazzo/">GitHub</a> |
+    <a target="_blank" href="https://www.linkedin.com/in/danielevarrazzo/">LinkedIn</a> |
+    <a target="_blank" href="https://www.instagram.com/dvarrazzo/">Instagram</a> |
+    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/">Flickr</a>
+  </div>
+
+</footer>
+    </div>
+    <script src="/js/lib/jquery.min.js?h=d6c1f419"></script>
+    <script src="/js/lib/scripts.js?h=e59b43e0"></script>
+    <script src="/js/main.js?h=4b3e78de"></script>
+  </body>
+</html>
