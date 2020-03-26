@@ -154,7 +154,7 @@ you can use as <tt class="docutils literal">cur.execute(query)</tt> and an <tt c
 as <tt class="docutils literal">await cur.execute(query)</tt>, so they must actually be two different
 methods;</li>
 <li>the <a class="reference external" href="https://www.postgresql.org/docs/current/libpq-async.html">intricate async machinery</a> of the libpq, and the state keeping
-it needs between calls, should be wrapped only once;</li>
+it needs between calls, should be implemented only once;</li>
 <li>how to wait should be selectable (no Unix pun intended) and injected around
 the libpq according to the different Python environment.</li>
 </ul>
@@ -234,7 +234,10 @@ can be consumed in a blocking way using a procedure such as:</p>
 </pre>
 <p>What about the async connection? I'm relatively new to asyncio, so I'm not
 sure if this is the most idiomatic way to do it, but at the moment it looks
-like:</p>
+like the following block. <a class="reference external" href="https://docs.python.org/3/library/asyncio-eventloop.html#watching-file-descriptors">add_reader/add_writer()</a> are the mechanism to
+wait collaboratively for a file descriptor to become ready, but they only take
+a callback, they don't block the coroutine. So we block it against an <a class="reference external" href="https://docs.python.org/3/library/asyncio-sync.html#event">Event</a>,
+and use the callback to free it.</p>
 <pre class="code python literal-block">
 <span class="kn">from</span> <span class="nn">asyncio</span> <span class="kn">import</span> <span class="n">get_event_loop</span><span class="p">,</span> <span class="n">Event</span>
 
@@ -298,6 +301,19 @@ generator underlying <tt class="docutils literal">cursor.execute()</tt> and frie
             <span class="bp">self</span><span class="o">.</span><span class="n">_execute_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre>
 <p>Minimal code duplication, different high level interface. Symmetry. I like it!</p>
+<p>Furthermore, unpacking the query mechanism allowed the library to gain a new
+feature: it is now possible with a single roundtrip to return more than one
+result, implementing the <a class="reference external" href="https://www.python.org/dev/peps/pep-0249/#nextset">nextset()</a> method, which isn't available in
+psycopg2:</p>
+<pre class="code pycon literal-block">
+<span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select 10; select 20&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">b'10'
+</span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">nextset</span><span class="p">()</span>
+<span class="go">True
+</span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">b'20'</span>
+</pre>
 <p>What's left? Well, a lot! Now that the basic machinery is in place, and Python
 can send and retrieve bytes to and from Postgres, it's time to attack the
 adaptation layer.</p>
@@ -305,7 +321,7 @@ adaptation layer.</p>
 friendly with other async frameworks such as <a class="reference external" href="https://trio.readthedocs.io/en/stable/">trio</a>; maybe my async code is not
 the best around and AIOPG or <a class="reference external" href="https://lwn.net/Articles/814822/#CommAnchor814868">asyncpg hackers</a> have something to suggest.
 Please let me know: the code so far is <a class="reference external" href="https://github.com/psycopg/psycopg3/">online already</a>, with <a class="reference external" href="https://travis-ci.org/github/psycopg/psycopg3/builds/666294186">141 tests</a>
-testing Python from 3.6 to 3.8 and PostgreSQL from 9.5 to 12.</p>
+in a grid testing Python from 3.6 to 3.8 and PostgreSQL from 9.5 to 12.</p>
 <p>I would be extremely grateful if you would like to support the development of
 the project! Please make me feel your warmth in this antipodean month of
 lockdown with your <a class="reference external" href="https://github.com/sponsors/dvarrazzo/">development sponsorship</a>, thank you! 💜</p>

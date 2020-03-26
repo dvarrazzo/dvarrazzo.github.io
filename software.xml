@@ -71,7 +71,7 @@ you can use as &lt;tt class=&quot;docutils literal&quot;&gt;cur.execute(query)&l
 as &lt;tt class=&quot;docutils literal&quot;&gt;await cur.execute(query)&lt;/tt&gt;, so they must actually be two different
 methods;&lt;/li&gt;
 &lt;li&gt;the &lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/libpq-async.html&quot;&gt;intricate async machinery&lt;/a&gt; of the libpq, and the state keeping
-it needs between calls, should be wrapped only once;&lt;/li&gt;
+it needs between calls, should be implemented only once;&lt;/li&gt;
 &lt;li&gt;how to wait should be selectable (no Unix pun intended) and injected around
 the libpq according to the different Python environment.&lt;/li&gt;
 &lt;/ul&gt;
@@ -151,7 +151,10 @@ can be consumed in a blocking way using a procedure such as:&lt;/p&gt;
 &lt;/pre&gt;
 &lt;p&gt;What about the async connection? I'm relatively new to asyncio, so I'm not
 sure if this is the most idiomatic way to do it, but at the moment it looks
-like:&lt;/p&gt;
+like the following block. &lt;a class=&quot;reference external&quot; href=&quot;https://docs.python.org/3/library/asyncio-eventloop.html#watching-file-descriptors&quot;&gt;add_reader/add_writer()&lt;/a&gt; are the mechanism to
+wait collaboratively for a file descriptor to become ready, but they only take
+a callback, they don't block the coroutine. So we block it against an &lt;a class=&quot;reference external&quot; href=&quot;https://docs.python.org/3/library/asyncio-sync.html#event&quot;&gt;Event&lt;/a&gt;,
+and use the callback to free it.&lt;/p&gt;
 &lt;pre class=&quot;code python literal-block&quot;&gt;
 &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;asyncio&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_event_loop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Event&lt;/span&gt;
 
@@ -215,6 +218,19 @@ generator underlying &lt;tt class=&quot;docutils literal&quot;&gt;cursor.execute
             &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_execute_results&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;results&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/pre&gt;
 &lt;p&gt;Minimal code duplication, different high level interface. Symmetry. I like it!&lt;/p&gt;
+&lt;p&gt;Furthermore, unpacking the query mechanism allowed the library to gain a new
+feature: it is now possible with a single roundtrip to return more than one
+result, implementing the &lt;a class=&quot;reference external&quot; href=&quot;https://www.python.org/dev/peps/pep-0249/#nextset&quot;&gt;nextset()&lt;/a&gt; method, which isn't available in
+psycopg2:&lt;/p&gt;
+&lt;pre class=&quot;code pycon literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select 10; select 20&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_result&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;b'10'
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nextset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;True
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;&lt;/span&gt;&lt;span class=&quot;gp&quot;&gt;&amp;gt;&amp;gt;&amp;gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_result&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;go&quot;&gt;b'20'&lt;/span&gt;
+&lt;/pre&gt;
 &lt;p&gt;What's left? Well, a lot! Now that the basic machinery is in place, and Python
 can send and retrieve bytes to and from Postgres, it's time to attack the
 adaptation layer.&lt;/p&gt;
@@ -222,7 +238,7 @@ adaptation layer.&lt;/p&gt;
 friendly with other async frameworks such as &lt;a class=&quot;reference external&quot; href=&quot;https://trio.readthedocs.io/en/stable/&quot;&gt;trio&lt;/a&gt;; maybe my async code is not
 the best around and AIOPG or &lt;a class=&quot;reference external&quot; href=&quot;https://lwn.net/Articles/814822/#CommAnchor814868&quot;&gt;asyncpg hackers&lt;/a&gt; have something to suggest.
 Please let me know: the code so far is &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/&quot;&gt;online already&lt;/a&gt;, with &lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/github/psycopg/psycopg3/builds/666294186&quot;&gt;141 tests&lt;/a&gt;
-testing Python from 3.6 to 3.8 and PostgreSQL from 9.5 to 12.&lt;/p&gt;
+in a grid testing Python from 3.6 to 3.8 and PostgreSQL from 9.5 to 12.&lt;/p&gt;
 &lt;p&gt;I would be extremely grateful if you would like to support the development of
 the project! Please make me feel your warmth in this antipodean month of
 lockdown with your &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/sponsors/dvarrazzo/&quot;&gt;development sponsorship&lt;/a&gt;, thank you! 💜&lt;/p&gt;
