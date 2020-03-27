@@ -250,7 +250,7 @@ different interfaces for it:</p>
 <ul class="simple">
 <li><a class="reference external" href="https://www.psycopg.org/docs/advanced.html#asynchronous-support">a purely asynchronous one</a> where the application must explicitly
 <tt class="docutils literal">poll()</tt> to bring forward the connection/execution process: it breaks the
-DBAPI interface but allows frameworks who can't make blocking calls anyway
+DBAPI interface but allows frameworks which can't make blocking calls anyway
 (such as the revered <a class="reference external" href="https://twistedmatrix.com/">Twisted</a>) to use it;</li>
 <li><a class="reference external" href="https://www.psycopg.org/docs/advanced.html#support-for-coroutine-libraries">a coroutine-based one</a> where the DBAPI blocking interface is respected
 but behind the scene psycopg2 collaborates with coroutine libraries such as
