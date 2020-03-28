@@ -414,7 +414,12 @@ hope to see you again soon!&lt;/p&gt;
     <author>
       <name>Daniele Varrazzo</name>
     </author>
-    <content type="html">&lt;p&gt;I have been &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/&quot;&gt;psycopg2&lt;/a&gt; maintainer since 2010; before that, &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/commit/4805a935690b1d618247267318a0ef7aa06c2378&quot;&gt;git says&lt;/a&gt; that my
+    <content type="html">&lt;div class=&quot;admonition admonition-note&quot;&gt;
+&lt;p class=&quot;first admonition-title&quot;&gt;Note:&lt;/p&gt;
+&lt;p class=&quot;last&quot;&gt;Development of psycopg3 started: you can read something in
+&lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/26/psycopg3-first-report/&quot;&gt;psycopg3: a first report&lt;/a&gt;!&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;I have been &lt;a class=&quot;reference external&quot; href=&quot;https://www.psycopg.org/&quot;&gt;psycopg2&lt;/a&gt; maintainer since 2010; before that, &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/commit/4805a935690b1d618247267318a0ef7aa06c2378&quot;&gt;git says&lt;/a&gt; that my
 first contribution was in 2005. At that time, psycopg (one) was the tool to
 use, and psycopg2 was an interesting experiment.&lt;/p&gt;
 &lt;p&gt;In several years of using psycopg2 daily and reading about expectations,
