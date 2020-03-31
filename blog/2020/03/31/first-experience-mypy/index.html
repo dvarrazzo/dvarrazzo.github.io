@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <title>First Experience with Mypyt &mdash; Daniele Varrazzo</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-158968242-1');
+    </script>
+    <link rel="shortcut icon" href="img/favicon.png">
+    <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/main.css?h=ece9dae4">
+    <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
+    <link rel="stylesheet" href="/css/custom.css?h=d27930ad">
+    <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
+  </head>
+
+  <body>
+    <div class="main-wrapper">
+<header id="header" class="">
+  <a href="/about/" class="logo">
+    <img src="/img/logo.png?h=0ad960b2" class="logo-dark" alt="">
+    <img src="/img/logo-light.png?h=cb66caa4" class="logo-light" alt="">
+  </a>
+  <a href="#" class="mob-menu"><i class="fa fa-bars"></i></a>
+  <nav>
+    <ul class="main-menu">
+<li>
+  <a href="/about/">About</a>
+</li>
+<li>
+  <a href="/software/">Software</a>
+  <ul>
+<li>
+  <a href="https://www.psycopg.org/" target="_blank">psycopg <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://www.varrazzo.com/pgmp/" target="_blank">pgmp <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://pgxn.github.io/pgxnclient/" target="_blank">PGXN Client <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://reorg.github.io/pg_repack/" target="_blank">pg_repack <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/photo/">Photography</a>
+  <ul>
+<li>
+  <a href="/photo/longexp/">Long exposures</a>
+</li>
+<li>
+  <a href="/photo/ireland/">Ireland, 2019</a>
+</li>
+<li>
+  <a href="/photo/japan/">Japan, 2019</a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/blog/">Blog</a>
+</li>
+<li>
+  <a href="/contact/">Contact</a>
+</li>
+    </ul>
+  </nav>
+</header>
+<div class="container fullwidth pt140 pb140" data-background="/img/blog/cubes.jpg">
+  <div class="pt140 pb140">
+    <div class="entrance">
+      <h2 class="title">First Experience with Mypyt</h2>
+      <p class="separator"></p>
+      <p class="small capitalize serif">2020-03-31</p>
+      
+        <div class="bumper">
+          <p class="small">
+          
+            <a href="/blog/tag/psycopg/">#psycopg</a>
+          
+            <a href="/blog/tag/software/">#software</a>
+          
+            <a href="/">#development</a>
+          
+          </p>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+<div class="container mt70 mb70">
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2"><p>I have a trello board with a <em>to Learn</em> column, and <a class="reference external" href="https://mypy.readthedocs.io/en/stable/">Mypy</a> was featuring
+prominently.</p>
+<p>For those who are not aware, Mypy is a <em>static checker for Python</em>. The idea
+is to annotate Python objects and functions with indications about what type
+an object can be (a string, an &quot;integer or None&quot;, etc.). You can then run a
+checker on the codebase and it will warn you about wrong type usage. At
+runtime nothing change: Python is still Python, not another language, and the
+type annotations are just ignored.</p>
+<pre class="code python literal-block">
+<span class="k">def</span> <span class="nf">greeting</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s1">'Hello '</span> <span class="o">+</span> <span class="n">name</span>
+</pre>
+<p>It's like using a language less flexible than Python, but it still runs as slow
+as Python, because it's not compiled. Ehm... the worst of two world? 😬</p>
+<p>So, why people do it? Well, people do weird things. But the idea behind it is
+that there is a certain class of bugs that Mypy checker would catch. The lack
+of type checking in Python is at the heart of its philosophy (<em>duck typing</em>
+and all that stuff). On the other hand many people, and I amongst them, can be
+nervous in putting in production code with little formal assurance about its
+correctness. My personal way to cope with the uneasiness of a language without
+compiler is to resort to write unit tests. Frameworks like <a class="reference external" href="https://docs.pytest.org/">pytest</a> make
+writing and running tests a joy, reducing to almost zero the need of fiddling
+interactively into an interactive console while developing. I also find that
+writing tests before writing the code they are supposed to test helps in
+thinking what do you want your code to look like and to design more usable
+interfaces.</p>
+<p>So, big proposer of TDD here, stressing on the second D because writing test
+while you develop can actually happen and is useful; writing &quot;the program now,
+the tests later&quot; can be dismissed with a laugh: I have <em>never</em> seen that
+happening.</p>
+<p>As I started writing <a class="reference external" href="/blog/2020/03/26/psycopg3-first-report/">psycopg3</a>, tests were
+committed together with the code and, on a codebase of less than 3000 lines of
+code, there are already some 150 of them. They get written to help with
+development but they are also run at every commit <a class="reference external" href="https://travis-ci.org/psycopg/psycopg3">on Travis CI</a>, making
+sure that changes in the code don't introduce breakage in any of the supported
+versions of Python (from 3.6 to 3.8) and PostgreSQL (from 9.5 to 12).</p>
+<p>While this is a strong position from which to say &quot;who needs a compiler?&quot; and
+to laugh smugly at developers over-relying on a compiler and tripping in
+<tt class="docutils literal">java.lang.NullPointerException</tt>s I don't think being complacent is any
+useful for the quality of a codebase, or of a person for what matters. And if
+so much research is being done on the Python objects model it surely deserves
+a look.</p>
+<p>Just running <tt class="docutils literal">mypy</tt> on the whole codebase produces little of interest.
+Running <tt class="docutils literal">mypy <span class="pre">--strict</span></tt> is a different story, because it is expected every
+function to be annotated. I started at a 250 errors mark:</p>
+<pre class="literal-block">
+(env) piro&#64;makkuro:~/dev/psycopg3$ mypy --strict psycopg3
+psycopg3/exceptions.py:35: error: Function is missing a type annotation
+psycopg3/exceptions.py:103: error: Function is missing a type annotation
+[... skipping pain here]
+psycopg3/types/numeric.py:21: error: Call to untyped function &quot;register&quot; of &quot;Typecaster&quot; in typed context
+psycopg3/types/numeric.py:22: error: Function is missing a type annotation
+Found 253 errors in 13 files (checked 20 source files)
+</pre>
+<p>Fast forward 6 hours of hacking, not solid but surely intense and:</p>
+<pre class="literal-block">
+(env) piro&#64;makkuro:~/dev/psycopg3$ mypy --strict psycopg3
+Success: no issues found in 21 source files
+</pre>
+<p>What did I learn from the experience?</p>
+<div class="section" id="the-changes">
+<h3>The changes</h3>
+<p>In all its glory, this is <a class="reference external" href="https://github.com/psycopg/psycopg3/compare/f9884ab...474483e?expand=1">the whole changeset</a> to go from no type to a clean
+<tt class="docutils literal"><span class="pre">--strict</span></tt> pass.</p>
+<p>It's a whopping 794 additions and 365 deletions, which is a relevant amount of
+changes for a codebase of less than 3000 lines. What was that for? Here are
+some of the changes I ended up making, and some observations about them.</p>
+</div>
+<div class="section" id="local-and-class-variables">
+<h3>Local and class variables</h3>
+<p>You don't have to annotate every single variable: the types are inferred
+automatically. But when things cannot be inferred from the first value assumed
+by a variable it is necessary to add a type. That's fair.</p>
+<pre class="code diff literal-block">
+  def _reset(self) -&gt; None:
+<span class="gd">-     self._results = []
+-     self._result = None
+</span><span class="gi">+     self._results: List[PGresult] = []
++     self._result: Optional[PGresult] = None</span>
+</pre>
+</div>
+<div class="section" id="out-of-domain-values">
+<h3>Out-of-domain values</h3>
+<p>A type of change I wasn't especially keen on initially was in situations like:</p>
+<pre class="code python literal-block">
+<span class="n">ready</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">something_happens</span><span class="p">():</span>
+        <span class="n">ready</span> <span class="o">=</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ready</span> <span class="o">=</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span>
+
+    <span class="k">if</span> <span class="n">we_have_done</span><span class="p">(</span><span class="n">ready</span><span class="p">):</span>
+        <span class="k">break</span>
+</pre>
+<p>Mypy would complain along the lines of:</p>
+<pre class="literal-block">
+Argument 1 to &quot;<strong>we_have_done</strong>&quot; has incompatible type &quot;<strong>Optional[Ready]</strong>&quot;; expected &quot;<strong>Ready</strong>&quot;
+</pre>
+<p>Uhm. In my book a <tt class="docutils literal">None</tt> will never reach <tt class="docutils literal">we_have_done()</tt>. However go
+tell the analyzer. In order to make the checker happy I changed the above
+to:</p>
+<pre class="code diff literal-block">
+<span class="gd">- ready = None
+</span><span class="gi">+ ready = Ready.R</span>
+</pre>
+<p>which is not something that made me happy. It gives the wrong idea that the
+initial <tt class="docutils literal">Ready.R</tt> state is actually meaningful, when all it means instead is
+&quot;shut up, Mypy&quot;. Only later it occurred to me that a better fix is probably:</p>
+<pre class="code diff literal-block">
+<span class="gd">- ready = None
+</span><span class="gi">+ ready: Ready</span>
+</pre>
+<p>meaning that the type is declared although it doesn't have a value yet. In
+case a later refactoring was botched, the code would explode here, with a
+<tt class="docutils literal">NameError</tt> in this function, where the bug actually is, rather than
+somewhere in the depths of the innocent <tt class="docutils literal">we_have_done()</tt>. So I think this is
+a positive change, bringing a possible manifestation of an error closer to its
+cause.</p>
+</div>
+<div class="section" id="too-creative-decorators">
+<h3>Too creative decorators?</h3>
+<p>Adaptation of Python objects to PostgreSQL types happens via adapters, for
+which I'm toying with various choices to make them easy to define, easier than
+what it is in psycopg2 and covering tricky corner cases more naturally. In
+one way or another, the need is to store in a registry the association from a
+Python <tt class="docutils literal">type</tt> to an adapter object, let's say a function for simplicity.</p>
+<p>In the form I had when I started introducing types, a static method
+<tt class="docutils literal">Adapter.register()</tt> could be used in both ways: as a function, e.g.:</p>
+<pre class="code python literal-block">
+<span class="k">def</span> <span class="nf">adapt_number</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="o">...</span>
+
+<span class="n">Adapter</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">adapt_number</span><span class="p">)</span>
+</pre>
+<p>or as a decorator:</p>
+<pre class="code python literal-block">
+<span class="nd">&#64;Adapter</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">adapt_number</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre>
+<p>both are useful in different situations: the former is useful when defining or
+registering the adapter at import time is not convenient, the latter is a
+matter of convenience, as all decorators are.</p>
+<p>But what's the price of this convenience? In this implementation the function
+has a signature of the likes of <tt class="docutils literal">Adapt.register(</tt><em>type</em><tt class="docutils literal">,</tt><em>obj</em><tt class="docutils literal">=None)</tt>, behaving in radically different ways according to whether <em>obj</em> is
+<tt class="docutils literal">None</tt> or not. If it's not <tt class="docutils literal">None</tt> (the function call case) then it
+registers the function and it doesn't have to return anything; if it's
+<tt class="docutils literal">None</tt>  then it returns a decorator function that will take the object
+<em>obj</em>, do its registration thing, and return it unchanged.</p>
+<p>Now, that's a pretty complicated signature. It can still be done - at least
+defining the return value, not attaching it to the nullness of the second
+argument. But... is it worth? If this function is so complicated to describe,
+maybe the request of asking what type it is just makes this complexity to
+stand in its ugliness. Instead of insisting on the original idea and fighting
+Mypy to craft an overly complicated return value, splitting it into two
+simpler functions seemed to me the right choice. Now <tt class="docutils literal">register()</tt>'s second
+argument is no more optional and its return value is always <tt class="docutils literal">None</tt>; the
+decorator is just a separate method.</p>
+<pre class="code python literal-block">
+<span class="c1"># The function is called one way</span>
+<span class="n">Adapter</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">adapt_number</span><span class="p">)</span>
+
+<span class="c1"># The decorator another way</span>
+<span class="nd">&#64;Adapter</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>  <span class="c1"># can be 'text()' or 'binary()'</span>
+<span class="k">def</span> <span class="nf">adapt_number</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre>
+<p>It also makes sense from the naming point of view: <tt class="docutils literal">register()</tt> is an active
+verb, <tt class="docutils literal">text</tt> is a sort of declaration. The function can expose other
+optional arguments, for instance a scope where to register the adapter,
+whereas the decorator couldn't make use of them. They are two functions
+instead of one, but each one does only one thing, and with fewer parameters.</p>
+<p>I hate when a program tells me my design is wrong. But maybe it has a point.
+Complicating the design for syntactic sugar maybe is not a healthy thing to do
+(someone said <a class="reference external" href="https://www.goodreads.com/quotes/7205613-syntactic-sugar-causes-cancer-of-the-semicolon">syntactic sugar causes cancer of the semicolon</a>)</p>
+</div>
+<div class="section" id="ctypes-integration">
+<h3>ctypes integration</h3>
+<p>ctypes allows to bind to C functions defined in external libraries and it has
+its  types annotation and automatic conversion to Python (or to segfault if
+you get it wrong).</p>
+<p>Mypy doesn't know much about it, so even in a simple case such as:</p>
+<pre class="code python literal-block">
+<span class="c1"># ctypes wrapper</span>
+<span class="n">PQhost</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">PQhost</span>
+<span class="n">PQhost</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">PGconn_ptr</span><span class="p">]</span>
+<span class="n">PQhost</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+
+<span class="c1"># later on, a wrapper object</span>
+<span class="nd">&#64;property</span>
+<span class="k">def</span> <span class="nf">host</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">PQhost</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pgconn_ptr</span><span class="p">)</span>
+</pre>
+<p>it will complain of</p>
+<pre class="literal-block">
+Returning <strong>Any</strong> from function declared to return &quot;<strong>bytes</strong>&quot;
+</pre>
+<p>Unfortunately <tt class="docutils literal">PQhost</tt> is a callable object, not a function, and it's of the
+same type of all the other functions with different signatures, so it cannot
+be annotated.</p>
+<p>What helped in this situation was to define a <a class="reference external" href="https://mypy.readthedocs.io/en/stable/stubs.html">stub</a>, which is a <tt class="docutils literal">.pyi</tt> file
+containing only the types and no definition, and it is the mechanism to add
+annotations to stuff that is not pure Python code; in this case:</p>
+<pre class="code python literal-block">
+<span class="k">def</span> <span class="nf">PQhost</span><span class="p">(</span><span class="n">arg1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PGconn_struct</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span> <span class="o">...</span>
+</pre>
+<p>Writing a stub to pretend that those callables are function is simple enough.
+What is painful is having to define all the signatures pretty much twice:
+error prone and numbingly boring. This calls for the mythical lazy programmer
+which, given a boring task, writes a program to do it for them. It's simple
+enough to write a script inspecting the module containing the ctypes
+definition and generating the repetitive part of the stub, leaving to write
+manually only the delicate cases (e.g. to disambiguate between a pointer and
+an array): if you find them useful you can find the script as <a class="reference external" href="https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/_pq_ctypes.py#L419">part of the
+ctype module itself</a> here and <a class="reference external" href="https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/_pq_ctypes.pyi#L43">here is the stub generated</a>.</p>
+</div>
+<div class="section" id="it-found-two-bugs">
+<h3>It found two bugs!</h3>
+<p>Most of my time was spent adding types to every function. A bit of refactoring
+here and there to remove variables reuse etc. A lot was spent learning how to
+use the whole thing. But actually two errors reported by Mypy were actual
+bugs.</p>
+<p>One was with the choice of the codec to use. There is a <a class="reference external" href="https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/encodings.py">map of encodings</a>
+from Postgres names to Python names which we use to convert the connection
+encoding to a Python codec. Some of the Postgres encodings are unknown to
+Python, and SQL_ASCII is a bit special (<a class="reference external" href="https://www.postgresql.org/docs/current/multibyte.html">it actually means &quot;no encoding&quot;</a>)
+and <a class="reference external" href="https://github.com/psycopg/psycopg2/issues/519">it needs to be special-cased</a> when reading from the db, so I left it as
+<tt class="docutils literal">None</tt> in the encodings map.</p>
+<p>But because of that <tt class="docutils literal">None</tt> my code was wrong:</p>
+<pre class="code python literal-block">
+<span class="c1"># for unknown encodings and SQL_ASCII be strict and use ascii</span>
+<span class="n">pyenc</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">py_codecs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pgenc</span><span class="p">,</span> <span class="s2">&quot;ascii&quot;</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">_codec</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="n">pyenc</span><span class="p">)</span>
+</pre>
+<p>This bit of code wanted to deal both with a missing encoding and with
+SQL_ASCII, but it does it wrong. If <tt class="docutils literal">pgenc</tt> is <tt class="docutils literal">None</tt> then <tt class="docutils literal">pyenc</tt> is
+<tt class="docutils literal">None</tt>, not <tt class="docutils literal">&quot;ascii&quot;</tt>, and <tt class="docutils literal">codecs.lookup()</tt> will go boom. What the
+above really needs to be is more:</p>
+<pre class="code diff literal-block">
+ # for unknown encodings and SQL_ASCII be strict and use ascii
+<span class="gd">- pyenc = pq.py_codecs.get(pgenc, &quot;ascii&quot;)
+</span><span class="gi">+ pyenc = pq.py_codecs.get(pgenc) or &quot;ascii&quot;
+</span> self._codec = codecs.lookup(pyenc)
+</pre>
+<p>Another bug was a pasto: every connection and every cursor have two mappings:
+<tt class="docutils literal">adapters</tt> and <tt class="docutils literal">casters</tt> to customize the conversions respectively to and
+from the database, and there are global mappings as a fallback. Sure enough I
+copypasted some of it, and sure enough I forgot to change a bit:</p>
+<pre class="code diff literal-block">
+<span class="gd">- where = context.adapters if context is not None else Typecaster.globals
+</span><span class="gi">+ where = context.casters if context is not None else Typecaster.globals
+</span>  where[oid, format] = caster
+  return caster
+</pre>
+<p>But because I had added something similar to the following definitions:</p>
+<pre class="code python literal-block">
+<span class="k">class</span> <span class="nc">Typecaster</span><span class="p">:</span>
+    <span class="nb">globals</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Oid</span><span class="p">,</span> <span class="n">Format</span><span class="p">],</span> <span class="n">TypecasterFunc</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">class</span> <span class="nc">Connection</span><span class="p">:</span>   <span class="c1"># a context</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">adapters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="n">Format</span><span class="p">],</span> <span class="n">AdapterFunc</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">casters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Oid</span><span class="p">,</span> <span class="n">Format</span><span class="p">],</span> <span class="n">TypecasterFunc</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</pre>
+<p>the type system couldn't find a type for where to reconcile the two sides of
+the if: even if both values are dicts they won't contain the same types.</p>
+<p>Now, I can find plenty of excuses to justify these two errors: they were in a
+part of the codebase still stubbed out because it's a design phase and tests
+for them are not written yet (at the moment there are only two adapters, for
+string and numbers, just to play with the whole adaptation stack). I'm sure
+tests finding the issues would have been added later during development. But
+my excuses don't change an important matter: those bugs were there. In TDD, if
+you don't have a test, you don't have anything: your program is wrong pretty
+much by definition.</p>
+</div>
+<div class="section" id="conclusions">
+<h3>Conclusions</h3>
+<p>What I have experienced is that most people say &quot;tests are useful&quot;, usually
+followed by &quot;but we don't have time to write them&quot;. Or something funny like
+&quot;let's write this quickly and release, then we'll write the tests&quot;.</p>
+<p>If this is the case Mypy can actually be quite useful: adding types is a quick
+matter once you have familiarity with the type system and if you annotate as
+the code as you write it instead of, as I did, as a second pass. It's easy to
+run Mypy in CI and make sure the program still &quot;compiles ok&quot;. You can make
+sure that a whole program is completely type-checked much more easily than to
+make sure there are enough tests (no, code-coverage is no such a measure).</p>
+<p>Is Mypy enough to be confident about a program's behaviour? Not at all, not in
+my book, as much as bugs do exist in compiled programs - boy if exist.
+Mypy+pytest is a great team though: they pretty much complement each other,
+one giving a shred of a sort of formal proof that what you wrote is
+consistent, the other helping to deal with testing things for real.</p>
+<p>Is the extra time spent writing annotation and wrestling the type system a
+good investment? I think in itself you can dismiss the use of Mypy only if
+your test-writing practice is between &quot;high&quot; and &quot;obsessive&quot;. But if you also
+factor in other side effects such as having to think harder about types and
+functions interfaces, having the signatures as part of the documentation
+(<a class="reference external" href="https://en.wikiquote.org/wiki/Fred_Brooks">show me your tables...</a>), then the benefits start stacking up and I think
+it makes the use of Mypy quite compelling.</p>
+<p>After my annotation marathon I have been thinking for a while if it was worth:
+I did it as an experiment, giving myself the option to abandon that branch,
+because I've only started with this project and I don't want annotating to
+become a time sink as the codebase grow. But I think writing down this
+write-up helped me clarifying my ideas about Mypy, and I think it will stay
+here and be a <tt class="docutils literal"><span class="pre">--strict</span></tt> part of psycopg3.</p>
+<p>Just now, please, go write those tests.</p>
+</div>
+
+      <script src="https://utteranc.es/client.js"
+        repo="dvarrazzo/www.varrazzo.com"
+        issue-term="pathname"
+        label="comments"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+      </script>
+    </div>
+</div>
+
+<footer id="footer" class="">
+  <div class="footer-links">
+    &copy; 2020. By Daniele Varrazzo. |
+    <a target="_blank" href="https://github.com/dvarrazzo/">GitHub</a> |
+    <a target="_blank" href="https://www.linkedin.com/in/danielevarrazzo/">LinkedIn</a> |
+    <a target="_blank" href="https://www.instagram.com/dvarrazzo/">Instagram</a> |
+    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/">Flickr</a>
+  </div>
+
+</footer>
+    </div>
+    <script src="/js/lib/jquery.min.js?h=d6c1f419"></script>
+    <script src="/js/lib/scripts.js?h=e59b43e0"></script>
+    <script src="/js/main.js?h=4b3e78de"></script>
+  </body>
+</html>
