@@ -366,8 +366,9 @@ copypasted some of it, and sure enough I forgot to change a bit:</p>
         <span class="n">adapters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="n">Format</span><span class="p">],</span> <span class="n">AdapterFunc</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">casters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Oid</span><span class="p">,</span> <span class="n">Format</span><span class="p">],</span> <span class="n">TypecasterFunc</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 </pre>
-<p>the type system couldn't find a type for where to reconcile the two sides of
-the if: even if both values are dicts they won't contain the same types.</p>
+<p>the type system couldn't find a type for <tt class="docutils literal">where</tt> to reconcile the two sides
+of the <tt class="docutils literal">if</tt>: even if both values are dicts they won't contain the same
+types.</p>
 <p>Now, I can find plenty of excuses to justify these two errors: they were in a
 part of the codebase still stubbed out because it's a design phase and tests
 for them are not written yet (at the moment there are only two adapters, for
@@ -406,7 +407,7 @@ because I've only started with this project and I don't want annotating to
 become a time sink as the codebase grow. But I think writing down this
 write-up helped me clarifying my ideas about Mypy, and I think it will stay
 here and be a <tt class="docutils literal"><span class="pre">--strict</span></tt> part of psycopg3.</p>
-<p>Just now, please, go write those tests.</p>
+<p>Bud now, please, just go and write those tests.</p>
 </div>
 
       <script src="https://utteranc.es/client.js"
