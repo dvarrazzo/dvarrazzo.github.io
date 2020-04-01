@@ -47,12 +47,13 @@ interfaces.&lt;/p&gt;
 while you develop can actually happen and is useful; writing &amp;quot;the program now,
 the tests later&amp;quot; can be dismissed with a laugh: I have &lt;em&gt;never&lt;/em&gt; seen that
 happening.&lt;/p&gt;
-&lt;p&gt;As I started writing &lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/26/psycopg3-first-report/&quot;&gt;psycopg3&lt;/a&gt;, tests were
-committed together with the code and, on a codebase of less than 3000 lines of
-code, there are already some 150 of them. They get written to help with
-development but they are also run at every commit &lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/psycopg/psycopg3&quot;&gt;on Travis CI&lt;/a&gt;, making
-sure that changes in the code don't introduce breakage in any of the supported
-versions of Python (from 3.6 to 3.8) and PostgreSQL (from 9.5 to 12).&lt;/p&gt;
+&lt;p&gt;As I started writing &lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/26/psycopg3-first-report/&quot;&gt;psycopg3&lt;/a&gt;, tests have
+been committed together with the code and, on a codebase of less than 3000
+lines of code, there are already some 150 of them. They get written to help
+with development but they are also run at every commit &lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/psycopg/psycopg3&quot;&gt;on Travis CI&lt;/a&gt;,
+making sure that changes in the code don't introduce breakage in any of the
+supported versions of Python (from 3.6 to 3.8) and PostgreSQL (from 9.5 to
+12).&lt;/p&gt;
 &lt;p&gt;While this is a strong position from which to say &amp;quot;who needs a compiler?&amp;quot; and
 to laugh smugly at developers over-relying on a compiler and tripping in
 &lt;tt class=&quot;docutils literal&quot;&gt;java.lang.NullPointerException&lt;/tt&gt;s I don't think being complacent is any

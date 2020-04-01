@@ -130,12 +130,13 @@ interfaces.</p>
 while you develop can actually happen and is useful; writing &quot;the program now,
 the tests later&quot; can be dismissed with a laugh: I have <em>never</em> seen that
 happening.</p>
-<p>As I started writing <a class="reference external" href="/blog/2020/03/26/psycopg3-first-report/">psycopg3</a>, tests were
-committed together with the code and, on a codebase of less than 3000 lines of
-code, there are already some 150 of them. They get written to help with
-development but they are also run at every commit <a class="reference external" href="https://travis-ci.org/psycopg/psycopg3">on Travis CI</a>, making
-sure that changes in the code don't introduce breakage in any of the supported
-versions of Python (from 3.6 to 3.8) and PostgreSQL (from 9.5 to 12).</p>
+<p>As I started writing <a class="reference external" href="/blog/2020/03/26/psycopg3-first-report/">psycopg3</a>, tests have
+been committed together with the code and, on a codebase of less than 3000
+lines of code, there are already some 150 of them. They get written to help
+with development but they are also run at every commit <a class="reference external" href="https://travis-ci.org/psycopg/psycopg3">on Travis CI</a>,
+making sure that changes in the code don't introduce breakage in any of the
+supported versions of Python (from 3.6 to 3.8) and PostgreSQL (from 9.5 to
+12).</p>
 <p>While this is a strong position from which to say &quot;who needs a compiler?&quot; and
 to laugh smugly at developers over-relying on a compiler and tripping in
 <tt class="docutils literal">java.lang.NullPointerException</tt>s I don't think being complacent is any
