@@ -88,7 +88,7 @@
           
             <a href="/blog/tag/software/">#software</a>
           
-            <a href="/">#development</a>
+            <a href="/blog/tag/development/">#development</a>
           
           </p>
         </div>
@@ -315,15 +315,15 @@ which, given a boring task, writes a program to do it for them. It's simple
 enough to write a script inspecting the module containing the ctypes
 definition and generating the repetitive part of the stub, leaving to write
 manually only the delicate cases (e.g. to disambiguate between a pointer and
-an array): if you find them useful you can find the script as <a class="reference external" href="https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/_pq_ctypes.py#L419">part of the
-ctype module itself</a> here and <a class="reference external" href="https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/_pq_ctypes.pyi#L43">here is the stub generated</a>.</p>
+an array): if you find it useful you can find the <a class="reference external" href="https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/_pq_ctypes.py#L419">interface generator</a> in
+this function, and here is <a class="reference external" href="https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/_pq_ctypes.pyi#L43">the stub generated</a>.</p>
 </div>
 <div class="section" id="it-found-two-bugs">
 <h3>It found two bugs!</h3>
 <p>Most of my time was spent adding types to every function. A bit of refactoring
 here and there to remove variables reuse etc. A lot was spent learning how to
-use the whole thing. But actually two errors reported by Mypy were actual
-bugs.</p>
+use the whole thing. But apart from complaining about the lack of signatures,
+two errors reported by Mypy were actual bugs.</p>
 <p>One was with the choice of the codec to use. There is a <a class="reference external" href="https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/encodings.py">map of encodings</a>
 from Postgres names to Python names which we use to convert the connection
 encoding to a Python codec. Some of the Postgres encodings are unknown to

@@ -2,13 +2,332 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">Blog</title>
   <id>urn:uuid:345e7579-5b16-39e4-9f1d-2a4bff93035d</id>
-  <updated>2020-03-26T00:00:00Z</updated>
+  <updated>2020-03-31T00:00:00Z</updated>
   <link href="https://www.varrazzo.com/blog/" />
   <link href="https://www.varrazzo.com/blog.xml" rel="self" />
   <author>
     <name></name>
   </author>
   <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/03/31/first-experience-mypy/">
+    <title type="text">First Experience with Mypyt</title>
+    <id>urn:uuid:e1b4e13d-b7b4-3d61-ac91-b45c5c982cfa</id>
+    <updated>2020-03-31T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/03/31/first-experience-mypy/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;p&gt;I have a trello board with a &lt;em&gt;to Learn&lt;/em&gt; column, and &lt;a class=&quot;reference external&quot; href=&quot;https://mypy.readthedocs.io/en/stable/&quot;&gt;Mypy&lt;/a&gt; was featuring
+prominently.&lt;/p&gt;
+&lt;p&gt;For those who are not aware, Mypy is a &lt;em&gt;static checker for Python&lt;/em&gt;. The idea
+is to annotate Python objects and functions with indications about what type
+an object can be (a string, an &amp;quot;integer or None&amp;quot;, etc.). You can then run a
+checker on the codebase and it will warn you about wrong type usage. At
+runtime nothing change: Python is still Python, not another language, and the
+type annotations are just ignored.&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;greeting&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'Hello '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;It's like using a language less flexible than Python, but it still runs as slow
+as Python, because it's not compiled. Ehm... the worst of two world? 😬&lt;/p&gt;
+&lt;p&gt;So, why people do it? Well, people do weird things. But the idea behind it is
+that there is a certain class of bugs that Mypy checker would catch. The lack
+of type checking in Python is at the heart of its philosophy (&lt;em&gt;duck typing&lt;/em&gt;
+and all that stuff). On the other hand many people, and I amongst them, can be
+nervous in putting in production code with little formal assurance about its
+correctness. My personal way to cope with the uneasiness of a language without
+compiler is to resort to write unit tests. Frameworks like &lt;a class=&quot;reference external&quot; href=&quot;https://docs.pytest.org/&quot;&gt;pytest&lt;/a&gt; make
+writing and running tests a joy, reducing to almost zero the need of fiddling
+interactively into an interactive console while developing. I also find that
+writing tests before writing the code they are supposed to test helps in
+thinking what do you want your code to look like and to design more usable
+interfaces.&lt;/p&gt;
+&lt;p&gt;So, big proposer of TDD here, stressing on the second D because writing test
+while you develop can actually happen and is useful; writing &amp;quot;the program now,
+the tests later&amp;quot; can be dismissed with a laugh: I have &lt;em&gt;never&lt;/em&gt; seen that
+happening.&lt;/p&gt;
+&lt;p&gt;As I started writing &lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/26/psycopg3-first-report/&quot;&gt;psycopg3&lt;/a&gt;, tests were
+committed together with the code and, on a codebase of less than 3000 lines of
+code, there are already some 150 of them. They get written to help with
+development but they are also run at every commit &lt;a class=&quot;reference external&quot; href=&quot;https://travis-ci.org/psycopg/psycopg3&quot;&gt;on Travis CI&lt;/a&gt;, making
+sure that changes in the code don't introduce breakage in any of the supported
+versions of Python (from 3.6 to 3.8) and PostgreSQL (from 9.5 to 12).&lt;/p&gt;
+&lt;p&gt;While this is a strong position from which to say &amp;quot;who needs a compiler?&amp;quot; and
+to laugh smugly at developers over-relying on a compiler and tripping in
+&lt;tt class=&quot;docutils literal&quot;&gt;java.lang.NullPointerException&lt;/tt&gt;s I don't think being complacent is any
+useful for the quality of a codebase, or of a person for what matters. And if
+so much research is being done on the Python objects model it surely deserves
+a look.&lt;/p&gt;
+&lt;p&gt;Just running &lt;tt class=&quot;docutils literal&quot;&gt;mypy&lt;/tt&gt; on the whole codebase produces little of interest.
+Running &lt;tt class=&quot;docutils literal&quot;&gt;mypy &lt;span class=&quot;pre&quot;&gt;--strict&lt;/span&gt;&lt;/tt&gt; is a different story, because it is expected every
+function to be annotated. I started at a 250 errors mark:&lt;/p&gt;
+&lt;pre class=&quot;literal-block&quot;&gt;
+(env) piro&amp;#64;makkuro:~/dev/psycopg3$ mypy --strict psycopg3
+psycopg3/exceptions.py:35: error: Function is missing a type annotation
+psycopg3/exceptions.py:103: error: Function is missing a type annotation
+[... skipping pain here]
+psycopg3/types/numeric.py:21: error: Call to untyped function &amp;quot;register&amp;quot; of &amp;quot;Typecaster&amp;quot; in typed context
+psycopg3/types/numeric.py:22: error: Function is missing a type annotation
+Found 253 errors in 13 files (checked 20 source files)
+&lt;/pre&gt;
+&lt;p&gt;Fast forward 6 hours of hacking, not solid but surely intense and:&lt;/p&gt;
+&lt;pre class=&quot;literal-block&quot;&gt;
+(env) piro&amp;#64;makkuro:~/dev/psycopg3$ mypy --strict psycopg3
+Success: no issues found in 21 source files
+&lt;/pre&gt;
+&lt;p&gt;What did I learn from the experience?&lt;/p&gt;
+&lt;div class=&quot;section&quot; id=&quot;the-changes&quot;&gt;
+&lt;h3&gt;The changes&lt;/h3&gt;
+&lt;p&gt;In all its glory, this is &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/compare/f9884ab...474483e?expand=1&quot;&gt;the whole changeset&lt;/a&gt; to go from no type to a clean
+&lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;--strict&lt;/span&gt;&lt;/tt&gt; pass.&lt;/p&gt;
+&lt;p&gt;It's a whopping 794 additions and 365 deletions, which is a relevant amount of
+changes for a codebase of less than 3000 lines. What was that for? Here are
+some of the changes I ended up making, and some observations about them.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;local-and-class-variables&quot;&gt;
+&lt;h3&gt;Local and class variables&lt;/h3&gt;
+&lt;p&gt;You don't have to annotate every single variable: the types are inferred
+automatically. But when things cannot be inferred from the first value assumed
+by a variable it is necessary to add a type. That's fair.&lt;/p&gt;
+&lt;pre class=&quot;code diff literal-block&quot;&gt;
+  def _reset(self) -&amp;gt; None:
+&lt;span class=&quot;gd&quot;&gt;-     self._results = []
+-     self._result = None
+&lt;/span&gt;&lt;span class=&quot;gi&quot;&gt;+     self._results: List[PGresult] = []
++     self._result: Optional[PGresult] = None&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;out-of-domain-values&quot;&gt;
+&lt;h3&gt;Out-of-domain values&lt;/h3&gt;
+&lt;p&gt;A type of change I wasn't especially keen on initially was in situations like:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;something_happens&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;R&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Ready&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;W&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;we_have_done&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ready&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Mypy would complain along the lines of:&lt;/p&gt;
+&lt;pre class=&quot;literal-block&quot;&gt;
+Argument 1 to &amp;quot;&lt;strong&gt;we_have_done&lt;/strong&gt;&amp;quot; has incompatible type &amp;quot;&lt;strong&gt;Optional[Ready]&lt;/strong&gt;&amp;quot;; expected &amp;quot;&lt;strong&gt;Ready&lt;/strong&gt;&amp;quot;
+&lt;/pre&gt;
+&lt;p&gt;Uhm. In my book a &lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt; will never reach &lt;tt class=&quot;docutils literal&quot;&gt;we_have_done()&lt;/tt&gt;. However go
+tell the analyzer. In order to make the checker happy I changed the above
+to:&lt;/p&gt;
+&lt;pre class=&quot;code diff literal-block&quot;&gt;
+&lt;span class=&quot;gd&quot;&gt;- ready = None
+&lt;/span&gt;&lt;span class=&quot;gi&quot;&gt;+ ready = Ready.R&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;which is not something that made me happy. It gives the wrong idea that the
+initial &lt;tt class=&quot;docutils literal&quot;&gt;Ready.R&lt;/tt&gt; state is actually meaningful, when all it means instead is
+&amp;quot;shut up, Mypy&amp;quot;. Only later it occurred to me that a better fix is probably:&lt;/p&gt;
+&lt;pre class=&quot;code diff literal-block&quot;&gt;
+&lt;span class=&quot;gd&quot;&gt;- ready = None
+&lt;/span&gt;&lt;span class=&quot;gi&quot;&gt;+ ready: Ready&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;meaning that the type is declared although it doesn't have a value yet. In
+case a later refactoring was botched, the code would explode here, with a
+&lt;tt class=&quot;docutils literal&quot;&gt;NameError&lt;/tt&gt; in this function, where the bug actually is, rather than
+somewhere in the depths of the innocent &lt;tt class=&quot;docutils literal&quot;&gt;we_have_done()&lt;/tt&gt;. So I think this is
+a positive change, bringing a possible manifestation of an error closer to its
+cause.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;too-creative-decorators&quot;&gt;
+&lt;h3&gt;Too creative decorators?&lt;/h3&gt;
+&lt;p&gt;Adaptation of Python objects to PostgreSQL types happens via adapters, for
+which I'm toying with various choices to make them easy to define, easier than
+what it is in psycopg2 and covering tricky corner cases more naturally. In
+one way or another, the need is to store in a registry the association from a
+Python &lt;tt class=&quot;docutils literal&quot;&gt;type&lt;/tt&gt; to an adapter object, let's say a function for simplicity.&lt;/p&gt;
+&lt;p&gt;In the form I had when I started introducing types, a static method
+&lt;tt class=&quot;docutils literal&quot;&gt;Adapter.register()&lt;/tt&gt; could be used in both ways: as a function, e.g.:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;adapt_number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;Adapter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;adapt_number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;or as a decorator:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;nd&quot;&gt;&amp;#64;Adapter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;adapt_number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;both are useful in different situations: the former is useful when defining or
+registering the adapter at import time is not convenient, the latter is a
+matter of convenience, as all decorators are.&lt;/p&gt;
+&lt;p&gt;But what's the price of this convenience? In this implementation the function
+has a signature of the likes of &lt;tt class=&quot;docutils literal&quot;&gt;Adapt.register(&lt;/tt&gt;&lt;em&gt;type&lt;/em&gt;&lt;tt class=&quot;docutils literal&quot;&gt;,&lt;/tt&gt;&lt;em&gt;obj&lt;/em&gt;&lt;tt class=&quot;docutils literal&quot;&gt;=None)&lt;/tt&gt;, behaving in radically different ways according to whether &lt;em&gt;obj&lt;/em&gt; is
+&lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt; or not. If it's not &lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt; (the function call case) then it
+registers the function and it doesn't have to return anything; if it's
+&lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt;  then it returns a decorator function that will take the object
+&lt;em&gt;obj&lt;/em&gt;, do its registration thing, and return it unchanged.&lt;/p&gt;
+&lt;p&gt;Now, that's a pretty complicated signature. It can still be done - at least
+defining the return value, not attaching it to the nullness of the second
+argument. But... is it worth? If this function is so complicated to describe,
+maybe the request of asking what type it is just makes this complexity to
+stand in its ugliness. Instead of insisting on the original idea and fighting
+Mypy to craft an overly complicated return value, splitting it into two
+simpler functions seemed to me the right choice. Now &lt;tt class=&quot;docutils literal&quot;&gt;register()&lt;/tt&gt;'s second
+argument is no more optional and its return value is always &lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt;; the
+decorator is just a separate method.&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;c1&quot;&gt;# The function is called one way&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Adapter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;register&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;adapt_number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# The decorator another way&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;&amp;#64;Adapter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# can be 'text()' or 'binary()'&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;adapt_number&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;It also makes sense from the naming point of view: &lt;tt class=&quot;docutils literal&quot;&gt;register()&lt;/tt&gt; is an active
+verb, &lt;tt class=&quot;docutils literal&quot;&gt;text&lt;/tt&gt; is a sort of declaration. The function can expose other
+optional arguments, for instance a scope where to register the adapter,
+whereas the decorator couldn't make use of them. They are two functions
+instead of one, but each one does only one thing, and with fewer parameters.&lt;/p&gt;
+&lt;p&gt;I hate when a program tells me my design is wrong. But maybe it has a point.
+Complicating the design for syntactic sugar maybe is not a healthy thing to do
+(it &lt;a class=&quot;reference external&quot; href=&quot;https://www.goodreads.com/quotes/7205613-syntactic-sugar-causes-cancer-of-the-semicolon&quot;&gt;causes cancer of the semicolon&lt;/a&gt; someone said...)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;ctypes-integration&quot;&gt;
+&lt;h3&gt;ctypes integration&lt;/h3&gt;
+&lt;p&gt;ctypes allows to bind to C functions defined in external libraries and it has
+its  types annotation and automatic conversion to Python (or to segfault if
+you get it wrong).&lt;/p&gt;
+&lt;p&gt;Mypy doesn't know much about it, so even in a simple case such as:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;c1&quot;&gt;# ctypes wrapper&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;PQhost&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PQhost&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;PQhost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argtypes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PGconn_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;PQhost&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;restype&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c_char_p&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# later on, a wrapper object&lt;/span&gt;
+&lt;span class=&quot;nd&quot;&gt;&amp;#64;property&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;host&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PQhost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pgconn_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;it will complain of&lt;/p&gt;
+&lt;pre class=&quot;literal-block&quot;&gt;
+Returning &lt;strong&gt;Any&lt;/strong&gt; from function declared to return &amp;quot;&lt;strong&gt;bytes&lt;/strong&gt;&amp;quot;
+&lt;/pre&gt;
+&lt;p&gt;Unfortunately &lt;tt class=&quot;docutils literal&quot;&gt;PQhost&lt;/tt&gt; is a callable object, not a function, and it's of the
+same type of all the other functions with different signatures, so it cannot
+be annotated.&lt;/p&gt;
+&lt;p&gt;What helped in this situation was to define a &lt;a class=&quot;reference external&quot; href=&quot;https://mypy.readthedocs.io/en/stable/stubs.html&quot;&gt;stub&lt;/a&gt;, which is a &lt;tt class=&quot;docutils literal&quot;&gt;.pyi&lt;/tt&gt; file
+containing only the types and no definition, and it is the mechanism to add
+annotations to stuff that is not pure Python code; in this case:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PQhost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Optional&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PGconn_struct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Writing a stub to pretend that those callables are function is simple enough.
+What is painful is having to define all the signatures pretty much twice:
+error prone and numbingly boring. This calls for the mythical lazy programmer
+which, given a boring task, writes a program to do it for them. It's simple
+enough to write a script inspecting the module containing the ctypes
+definition and generating the repetitive part of the stub, leaving to write
+manually only the delicate cases (e.g. to disambiguate between a pointer and
+an array): if you find it useful you can find the &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/_pq_ctypes.py#L419&quot;&gt;interface generator&lt;/a&gt; in
+this function, and here is &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/_pq_ctypes.pyi#L43&quot;&gt;the stub generated&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;it-found-two-bugs&quot;&gt;
+&lt;h3&gt;It found two bugs!&lt;/h3&gt;
+&lt;p&gt;Most of my time was spent adding types to every function. A bit of refactoring
+here and there to remove variables reuse etc. A lot was spent learning how to
+use the whole thing. But apart from complaining about the lack of signatures,
+two errors reported by Mypy were actual bugs.&lt;/p&gt;
+&lt;p&gt;One was with the choice of the codec to use. There is a &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/blob/474483ed223a28f867e9d2f220ce6d6c6a4fd11c/psycopg3/pq/encodings.py&quot;&gt;map of encodings&lt;/a&gt;
+from Postgres names to Python names which we use to convert the connection
+encoding to a Python codec. Some of the Postgres encodings are unknown to
+Python, and SQL_ASCII is a bit special (&lt;a class=&quot;reference external&quot; href=&quot;https://www.postgresql.org/docs/current/multibyte.html&quot;&gt;it actually means &amp;quot;no encoding&amp;quot;&lt;/a&gt;)
+and &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg2/issues/519&quot;&gt;it needs to be special-cased&lt;/a&gt; when reading from the db, so I left it as
+&lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt; in the encodings map.&lt;/p&gt;
+&lt;p&gt;But because of that &lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt; my code was wrong:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;c1&quot;&gt;# for unknown encodings and SQL_ASCII be strict and use ascii&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;pyenc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;py_codecs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pgenc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;ascii&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_codec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codecs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lookup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pyenc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;This bit of code wanted to deal both with a missing encoding and with
+SQL_ASCII, but it does it wrong. If &lt;tt class=&quot;docutils literal&quot;&gt;pgenc&lt;/tt&gt; is &lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt; then &lt;tt class=&quot;docutils literal&quot;&gt;pyenc&lt;/tt&gt; is
+&lt;tt class=&quot;docutils literal&quot;&gt;None&lt;/tt&gt;, not &lt;tt class=&quot;docutils literal&quot;&gt;&amp;quot;ascii&amp;quot;&lt;/tt&gt;, and &lt;tt class=&quot;docutils literal&quot;&gt;codecs.lookup()&lt;/tt&gt; will go boom. What the
+above really needs to be is more:&lt;/p&gt;
+&lt;pre class=&quot;code diff literal-block&quot;&gt;
+ # for unknown encodings and SQL_ASCII be strict and use ascii
+&lt;span class=&quot;gd&quot;&gt;- pyenc = pq.py_codecs.get(pgenc, &amp;quot;ascii&amp;quot;)
+&lt;/span&gt;&lt;span class=&quot;gi&quot;&gt;+ pyenc = pq.py_codecs.get(pgenc) or &amp;quot;ascii&amp;quot;
+&lt;/span&gt; self._codec = codecs.lookup(pyenc)
+&lt;/pre&gt;
+&lt;p&gt;Another bug was a pasto: every connection and every cursor have two mappings:
+&lt;tt class=&quot;docutils literal&quot;&gt;adapters&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;casters&lt;/tt&gt; to customize the conversions respectively to and
+from the database, and there are global mappings as a fallback. Sure enough I
+copypasted some of it, and sure enough I forgot to change a bit:&lt;/p&gt;
+&lt;pre class=&quot;code diff literal-block&quot;&gt;
+&lt;span class=&quot;gd&quot;&gt;- where = context.adapters if context is not None else Typecaster.globals
+&lt;/span&gt;&lt;span class=&quot;gi&quot;&gt;+ where = context.casters if context is not None else Typecaster.globals
+&lt;/span&gt;  where[oid, format] = caster
+  return caster
+&lt;/pre&gt;
+&lt;p&gt;But because I had added something similar to the following definitions:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Typecaster&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;globals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Tuple&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Oid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TypecasterFunc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Connection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;# a context&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;fm&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;adapters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Tuple&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AdapterFunc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;casters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Tuple&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Oid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TypecasterFunc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;the type system couldn't find a type for &lt;tt class=&quot;docutils literal&quot;&gt;where&lt;/tt&gt; to reconcile the two sides
+of the &lt;tt class=&quot;docutils literal&quot;&gt;if&lt;/tt&gt;: even if both values are dicts they won't contain the same
+types.&lt;/p&gt;
+&lt;p&gt;Now, I can find plenty of excuses to justify these two errors: they were in a
+part of the codebase still stubbed out because it's a design phase and tests
+for them are not written yet (at the moment there are only two adapters, for
+string and numbers, just to play with the whole adaptation stack). I'm sure
+tests finding the issues would have been added later during development. But
+my excuses don't change an important matter: those bugs were there. In TDD, if
+you don't have a test, you don't have anything: your program is wrong pretty
+much by definition.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;conclusions&quot;&gt;
+&lt;h3&gt;Conclusions&lt;/h3&gt;
+&lt;p&gt;What I have experienced is that most people say &amp;quot;tests are useful&amp;quot;, usually
+followed by &amp;quot;but we don't have time to write them&amp;quot;. Or something funny like
+&amp;quot;let's write this quickly and release, then we'll write the tests&amp;quot;.&lt;/p&gt;
+&lt;p&gt;If this is the case Mypy can actually be quite useful: adding types is a quick
+matter once you have familiarity with the type system and if you annotate as
+the code as you write it instead of, as I did, as a second pass. It's easy to
+run Mypy in CI and make sure the program still &amp;quot;compiles ok&amp;quot;. You can make
+sure that a whole program is completely type-checked much more easily than to
+make sure there are enough tests (no, code-coverage is no such a measure).&lt;/p&gt;
+&lt;p&gt;Is Mypy enough to be confident about a program's behaviour? Not at all, not in
+my book, as much as bugs do exist in compiled programs - boy if exist.
+Mypy+pytest is a great team though: they pretty much complement each other,
+one giving a shred of a sort of formal proof that what you wrote is
+consistent, the other helping to deal with testing things for real.&lt;/p&gt;
+&lt;p&gt;Is the extra time spent writing annotation and wrestling the type system a
+good investment? I think in itself you can dismiss the use of Mypy only if
+your test-writing practice is between &amp;quot;high&amp;quot; and &amp;quot;obsessive&amp;quot;. But if you also
+factor in other side effects such as having to think harder about types and
+functions interfaces, having the signatures as part of the documentation
+(&lt;a class=&quot;reference external&quot; href=&quot;https://en.wikiquote.org/wiki/Fred_Brooks&quot;&gt;&amp;quot;show me your tables...&amp;quot;&lt;/a&gt;), then the benefits start stacking up and I
+think it makes the use of Mypy quite compelling.&lt;/p&gt;
+&lt;p&gt;After my annotation marathon I have been thinking for a while if it was worth:
+I did it as an experiment, giving myself the option to abandon that branch,
+because I've only started with this project and I don't want annotating to
+become a time sink as the codebase grow. But I think writing down this
+write-up helped me clarifying my ideas about Mypy, and I think it will stay
+here and be a &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;--strict&lt;/span&gt;&lt;/tt&gt; part of psycopg3.&lt;/p&gt;
+&lt;p&gt;Bud now, please, just go and write those tests.&lt;/p&gt;
+&lt;/div&gt;
+</content>
+  </entry>
   <entry xml:base="https://www.varrazzo.com/blog/2020/03/26/psycopg3-first-report/">
     <title type="text">psycopg3: a first report</title>
     <id>urn:uuid:cd45e5f7-7cb3-3a72-920a-00567e28dbd5</id>
