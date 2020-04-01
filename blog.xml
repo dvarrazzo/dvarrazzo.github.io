@@ -225,7 +225,7 @@ annotations to stuff that is not pure Python code; in this case:&lt;/p&gt;
 &lt;pre class=&quot;code python literal-block&quot;&gt;
 &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PQhost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Optional&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PGconn_struct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
 &lt;/pre&gt;
-&lt;p&gt;Writing a stub to pretend that those callables are function is simple enough.
+&lt;p&gt;Writing a stub to pretend that those callables are functions is simple enough.
 What is painful is having to define all the signatures pretty much twice:
 error prone and numbingly boring. This calls for the mythical lazy programmer
 which, given a boring task, writes a program to do it for them. It's simple
