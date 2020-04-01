@@ -10,7 +10,7 @@
   </author>
   <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
   <entry xml:base="https://www.varrazzo.com/blog/2020/03/31/first-experience-mypy/">
-    <title type="text">First Experience with Mypyt</title>
+    <title type="text">First Experience with Mypy</title>
     <id>urn:uuid:e1b4e13d-b7b4-3d61-ac91-b45c5c982cfa</id>
     <updated>2020-03-31T00:00:00Z</updated>
     <link href="https://www.varrazzo.com/blog/2020/03/31/first-experience-mypy/" />
