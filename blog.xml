@@ -55,7 +55,7 @@ making sure that changes in the code don't introduce breakage in any of the
 supported versions of Python (from 3.6 to 3.8) and PostgreSQL (from 9.5 to
 12).&lt;/p&gt;
 &lt;p&gt;While this is a strong position from which to say &amp;quot;who needs a compiler?&amp;quot; and
-to laugh smugly at developers over-relying on a compiler and tripping in
+to laugh smugly at developers over-relying on a compiler and tripping on
 &lt;tt class=&quot;docutils literal&quot;&gt;java.lang.NullPointerException&lt;/tt&gt;s I don't think being complacent is any
 useful for the quality of a codebase, or of a person for what matters. And if
 so much research is being done on the Python objects model it surely deserves
