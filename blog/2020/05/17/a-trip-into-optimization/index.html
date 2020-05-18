@@ -488,8 +488,8 @@ process, but because of that bug the code was actually running somewhat faster
 <div class="section" id="current-state-future-improvements">
 <h3>Current state, future improvements</h3>
 <p>The diagrams above show that there is still space for improvements:
-<tt class="docutils literal">fetchall()</tt> seems to have some overhead which can be solved moving a
-&quot;fetchsome&quot; function in C. There is a lot of overhead around waiting,
+<tt class="docutils literal">fetchall()</tt> seems to have some overhead which can be solved by introducing
+a &quot;fetchsome&quot; function in C. There is a lot of overhead around waiting,
 especially in the process of registering/unregistering listeners: the best
 gains can be probably obtained by creating a wait loop tightly integrated with
 the current reactor bypassing some of the higher <tt class="docutils literal">asyncio</tt> abstractions. Any
