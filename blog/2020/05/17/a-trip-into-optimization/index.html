@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <title>A trip into optimization &mdash; Daniele Varrazzo</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-158968242-1');
+    </script>
+    <link rel="shortcut icon" href="img/favicon.png">
+    <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/main.css?h=af85dcae">
+    <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
+    <link rel="stylesheet" href="/css/custom.css?h=0cc8bf61">
+    <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
+  </head>
+
+  <body>
+    <div class="main-wrapper">
+<header id="header" class="">
+  <a href="/about/" class="logo">
+    <img src="/img/logo.png?h=0ad960b2" class="logo-dark" alt="">
+    <img src="/img/logo-light.png?h=cb66caa4" class="logo-light" alt="">
+  </a>
+  <a href="#" class="mob-menu"><i class="fa fa-bars"></i></a>
+  <nav>
+    <ul class="main-menu">
+<li>
+  <a href="/about/">About</a>
+</li>
+<li>
+  <a href="/software/">Software</a>
+  <ul>
+<li>
+  <a href="https://www.psycopg.org/" target="_blank">psycopg <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://www.varrazzo.com/pgmp/" target="_blank">pgmp <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://pgxn.github.io/pgxnclient/" target="_blank">PGXN Client <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://reorg.github.io/pg_repack/" target="_blank">pg_repack <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/photo/">Photography</a>
+  <ul>
+<li>
+  <a href="/photo/longexp/">Long exposures</a>
+</li>
+<li>
+  <a href="/photo/ireland/">Ireland, 2019</a>
+</li>
+<li>
+  <a href="/photo/japan/">Japan, 2019</a>
+</li>
+<li>
+  <a href="/photo/whangarei/">Isolation diaries</a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/blog/">Blog</a>
+</li>
+<li>
+  <a href="/contact/">Contact</a>
+</li>
+    </ul>
+  </nav>
+</header>
+<div class="container fullwidth pt140 pb140" data-background="">
+  <div class="pt140 pb140">
+    <div class="entrance">
+      <h2 class="title">A trip into optimization</h2>
+      <p class="separator"></p>
+      <p class="small capitalize serif">2020-05-17</p>
+      
+        <div class="bumper">
+          <p class="small">
+          
+            <a href="/blog/tag/software/">#software</a>
+          
+            <a href="/blog/tag/psycopg/">#psycopg</a>
+          
+            <a href="/blog/tag/development/">#development</a>
+          
+          </p>
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="container mt70 mb70">
+  <div class="row">
+    <div id="content" class="col-md-9"><p>I have been cheerfully hacking on psycopg3 features for a while: reached the
+symbolic but important milestone of <a class="reference external" href="https://github.com/psycopg/psycopg3/commit/be4e3ee85dc773878d67edf0b7880824bf7059aa">DBAPI 2.0 compatibility</a>, and using the
+psycopg2 guidelines to add features progressively.</p>
+<p>Then I thought about checking how it was doing about speed... it wasn't a happy
+day.</p>
+<p>A few years ago, a new PostgreSQL driver was released: <a class="reference external" href="https://magicstack.github.io/asyncpg/">asyncpg</a>. It is
+designed to be <em>just fast</em>, bar nothing else. It parses the <a class="reference external" href="https://www.postgresql.org/docs/current/protocol.html">PostgreSQL
+frontend/backend protocol</a> using its own implementation (as opposite as
+using the <a class="reference external" href="https://www.postgresql.org/docs/current/libpq.html">libpq</a>, the PostgreSQL client library). asyncpg is designed to be
+streamlined within the flow of the line protocol rather to have a
+developer-friendly or recognisable interface: it doesn't follow a <a class="reference external" href="https://www.python.org/dev/peps/pep-0249/">DBAPI</a>
+design, it uses PostgreSQL native placeholders for queries, i.e. <tt class="docutils literal">where
+someting = $1</tt>, no positional or named ones (the familiar <tt class="docutils literal">%s</tt> and
+<tt class="docutils literal">%(thing)s</tt>). It is definitely a fast library, but like a Formula 1 not for
+everybody to drive. Dropping it in your existing project means having to
+rewrite all your queries and all the Python code interacting with the
+database; no Django, no SQLAlchemy, and of course it's only asynchronous, so
+not the natural choice if your program uses a different concurrency model or
+needs none at all.</p>
+<p>Anyway I thought to use <a class="reference external" href="https://github.com/magicstack/pgbench">the toolbench they wrote</a> to compare the speed so
+far against psycopg2 and asyncpg. How bad was my day?</p>
+<!-- for d in asyncpg aiopg-tuples psycopg3-async; do \
+    python pgbench_python.py $d -C1 ../queries/1-pg_type.json -D 10 - -warmup-time 1 \
+    - - -pghost localhost - -pgport 5432 - -pguser piro - -output-format json \
+    | jq -j "\"$d \" ,  .queries , \"\n\"" ; \
+done -->
+<table border="1" class="docutils">
+<colgroup>
+<col width="70%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Driver</th>
+<th class="head">Queries</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>asyncpg</td>
+<td>15263</td>
+</tr>
+<tr><td>psycopg2 + aiopg</td>
+<td>8871</td>
+</tr>
+<tr><td>psycopg3 async</td>
+<td>426</td>
+</tr>
+</tbody>
+</table>
+<p>...this bad.</p>
+<p>These are the number of queries run in 10 seconds. These numbers should be
+taken with a pinch of salt: they are obtaining connecting the driver to
+localhost so they are more CPU-bound than the environment a database driver
+lives into, they are <em>one query</em> (the first in their toolbench), nothing
+statistically sound... but still a pretty depressing picture.</p>
+<p>Back then the implementation of psycopg3 was pure Python, using ctypes to call
+into the libpq shared library. The plan of writing an optimised C
+implementation was already there, but this gave a measure of how badly needed
+it is.</p>
+<div class="section" id="profiling">
+<h3>Profiling</h3>
+<p>First step to climb such a mountain is to look at profiling information, which
+can show function by function where time is spent.</p>
+<div class="figure align-center">
+<a class="reference external image-reference" href="profile-7b3b7f9.svg"><img alt="profile-7b3b7f9.png" src="profile-7b3b7f9.png" /></a>
+<p class="caption">Profile graph at commit <tt class="docutils literal">7b3b7f9</tt></p>
+</div>
+<p>The graph is generated by <a class="reference external" href="https://github.com/jrfonseca/gprof2dot">gprof2dot</a> using something like:</p>
+<pre class="code bash literal-block">
+python -m cProfile -o OUT.pstat script.py
+gprof2dot -f pstats OUT.pstat <span class="p">|</span> dot -Tsvg &gt; OUT.svg
+</pre>
+<!-- python -m cProfile -o psycopg3-async.pstat pgbench_python.py psycopg3-async \
+    -C1 ../queries/1-pg_type.json -D 10 - -warmup-time 1 \
+    - - -pghost localhost - -pgport 5432 - -pguser piro - -output-format json
+gprof2dot -f pstats psycopg3-async.pstat | dot -Tsvg > psycopg3-async-prof.svg -->
+<p>You can see more details clicking on the above graph. The left branch is
+initialisation faff; the interesting part is on the right, following the path
+of orange, yellow, green, showing the function callss where the program spent
+most of its time. <tt class="docutils literal">get_value</tt> is a pretty hot one, taking about the 50% of
+the run time. It is called very often, once per every field of every record,
+1.6M times in this graph. At that point it looked like:</p>
+<pre class="code python literal-block">
+<span class="k">def</span> <span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="n">impl</span><span class="o">.</span><span class="n">PQgetlength</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pgresult_ptr</span><span class="p">,</span> <span class="n">row_number</span><span class="p">,</span> <span class="n">column_number</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">length</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">impl</span><span class="o">.</span><span class="n">PQgetvalue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pgresult_ptr</span><span class="p">,</span> <span class="n">row_number</span><span class="p">,</span> <span class="n">column_number</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">string_at</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">impl</span><span class="o">.</span><span class="n">PQgetisnull</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pgresult_ptr</span><span class="p">,</span> <span class="n">row_number</span><span class="p">,</span> <span class="n">column_number</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span>
+</pre>
+<p>This function returns the content in bytes of a field. If it's 0-length it
+checks if it's a NULL. The <tt class="docutils literal">impl</tt> functions are ctypes calls to the libpq.
+This made me think that the overhead of ctypes is not so tiny after all.</p>
+</div>
+<div class="section" id="the-cffi-attempt">
+<h3>The cffi attempt</h3>
+<p>One thing I thought about doing was also to provide a <a class="reference external" href="https://cffi.readthedocs.io/">cffi</a> wrapper for the
+libpq. cffi is a more popular choice than ctypes and PyPy can also make good
+use of it. ctypes has the advantage of being packaged in the standard library
+and not require an external dependency. However, unlike ctypes, cffi still
+requires a compiler to create more efficient wrapper.</p>
+<p>Porting the libpq wrapper to cffi was relatively straightforward and the
+number of queries run was more than twice:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Implementation</th>
+<th class="head">Commit</th>
+<th class="head">Queries</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>ctypes</td>
+<td>7b3b7f9</td>
+<td>426</td>
+</tr>
+<tr><td>cffi</td>
+<td>dfe2893</td>
+<td>902</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference external" href="profile-cffi-dfe2893.svg">Profiling</a> showed that the time spent in get_value was down from the 50% to
+the 35%, suggesting that cffi overhead is lower than ctypes. However
+installing the cffi package already requires the presence of a C compiler, the
+<tt class="docutils literal"><span class="pre">libpq-dev</span></tt> package, and finding the dreaded <tt class="docutils literal">pg_config</tt> executable: the
+same requirements a C extension implementation would have, but with less
+possibilities for optimization. For this reason probably cffi will remain a
+side thing (possibly if the PyPy folks will be interested in it) and this code
+is now parked <a class="reference external" href="https://github.com/psycopg/psycopg3/tree/cffi">into a branch</a>.</p>
+</div>
+<div class="section" id="the-cython-attempt">
+<h3>The Cython attempt</h3>
+<p>The next and more reasonable way to step up performance is to create a C
+extension. As highlighted in <a class="reference external" href="/blog/2020/03/06/thinking-psycopg3/">Thinking psycopg3</a> the idea was
+already in place, allowing to choose between simple to install vs. fast. A
+Python C extension can be written in pure C, as psycopg2 is, but there are
+languages helping to handle some of the tedious aspects: the boilerplate
+required to create objects and module and the reference count in particular.
+The most current of such languages is <a class="reference external" href="https://cython.readthedocs.io/">Cython</a>, an evolution of <a class="reference external" href="https://www.cosc.canterbury.ac.nz/greg.ewing/python/Pyrex/">Pyrex</a>, which I
+had used a ridiculous number of years ago.</p>
+<p>The first step was a straightforward porting of the <tt class="docutils literal">psycogp3.pq</tt> module:
+that alone showed a promising class of results:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Implementation</th>
+<th class="head">Commit</th>
+<th class="head">Queries</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>ctypes</td>
+<td>7b3b7f9</td>
+<td>426</td>
+</tr>
+<tr><td>cffi</td>
+<td>dfe2893</td>
+<td>902</td>
+</tr>
+<tr><td>Cython pq</td>
+<td>6c6cbe3</td>
+<td>1618</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="speeding-up-adaptation">
+<h3>Speeding up adaptation</h3>
+<p><a class="reference external" href="profile-c-6c6cbe3.svg">Profiling</a> now showed that the time spent in <tt class="docutils literal">get_value()</tt> was now reduced
+to a paltry 6% of the whole runtime: this means that that the hot path of the
+program had moved to a different place.</p>
+<p>The entire adaptation of the returned dataset takes the 60% which is a likely
+next candidate, visible in lime/green. The <tt class="docutils literal">&lt;genexpr&gt;</tt> box has a large
+number of called functions: that function is the dispatcher choosing a
+different adapter function for each PostgreSQL data type, and these were still
+written in Python.</p>
+<p>There is probably some value in creating analogous conversion functions in C,
+but it wouldn't be the best way to optimise this job: the loader function have
+all the same signature, for instance the loader for the binary representation
+of a 32 bits integer is:</p>
+<pre class="code python literal-block">
+<span class="n">_int4_struct</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span><span class="s2">&quot;!i&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">load_int4_binary</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">_int4_struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre>
+<p>In order to feed data to this function it is necessary to:</p>
+<ul class="simple">
+<li>get the pointer and length to the returned data from the <tt class="docutils literal">PGresult</tt>
+struct (calls to <tt class="docutils literal">PQgetvalue</tt> and <tt class="docutils literal">PQgetlength</tt>, which are lightweight);</li>
+<li>convert it to a Python <tt class="docutils literal">bytes</tt> object, meaning a <tt class="docutils literal">memcpy</tt> and a Python
+object allocation;</li>
+<li>calling the adaptation function (Python or C).</li>
+</ul>
+<p>If we decide to not leave the C layer in the adaptation phase, then a better
+signature can be used:</p>
+<pre class="code pyrex literal-block">
+<span class="k">cdef</span> <span class="kt">object</span> <span class="nf">load_int4_binary_c</span><span class="p">(</span><span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">length</span><span class="p">,</span> <span class="n">void</span> <span class="o">*</span><span class="n">context</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">PyLong_FromLong</span><span class="p">(</span><span class="o">&lt;</span><span class="n">int32_t</span><span class="o">&gt;</span><span class="n">be32toh</span><span class="p">((</span><span class="o">&lt;</span><span class="n">uint32_t</span> <span class="o">*&gt;</span><span class="n">data</span><span class="p">)[</span><span class="mf">0</span><span class="p">]))</span>
+</pre>
+<p>This allows reaching the loader functions making no extra copy of the data
+received from the network and without creating intermediate Python object.
+However, because the C functions are not accessible from Python, it opens the
+question about how to customize the adapter, in case someone wanted to replace
+a builtin one (a typical case is wanting to convert <tt class="docutils literal">numeric</tt> into Python
+<tt class="docutils literal">float</tt> instead of <tt class="docutils literal">Decimal</tt>). For the moment the mechanism works this
+way:</p>
+<ul>
+<li><p class="first">At import time the Python adapters are associated to data types OIDs; the
+current mechanism is through a decorator:</p>
+<pre class="code python literal-block">
+<span class="c1"># in psycopg3/types/numeric.py</span>
+
+<span class="nd">&#64;Loader</span><span class="o">.</span><span class="n">binary</span><span class="p">(</span><span class="n">builtins</span><span class="p">[</span><span class="s2">&quot;int4&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">oid</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">load_int4_binary</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">_int4_struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre>
+</li>
+<li><p class="first">If the C extension module is to be used, a C function exposed to Python is
+called, <tt class="docutils literal">register_builtin_c_loaders()</tt>.</p>
+<pre class="code python literal-block">
+<span class="c1"># in psycopg3/__init__.py</span>
+
+<span class="c1"># register default adapters</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">types</span>
+
+<span class="c1"># Override adapters with fast version if available</span>
+<span class="k">if</span> <span class="n">pq</span><span class="o">.</span><span class="n">__impl__</span> <span class="o">==</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">._psycopg3</span> <span class="kn">import</span> <span class="n">register_builtin_c_loaders</span>
+    <span class="n">register_builtin_c_loaders</span><span class="p">()</span>
+</pre>
+</li>
+<li><p class="first">This in turns calls a registration
+function for all the loaders for which there is a C implementation:</p>
+<pre class="code pyrex literal-block">
+<span class="c"># in psycopg3/types/numeric.pyx</span>
+
+<span class="k">from</span> <span class="nn">psycopg3.types</span> <span class="k">import</span> <span class="n">numeric</span>
+<span class="n">register_c_loader</span><span class="p">(</span><span class="n">numeric</span><span class="o">.</span><span class="n">load_int4_binary</span><span class="p">,</span> <span class="n">load_int4_binary_c</span><span class="p">)</span>
+</pre>
+</li>
+<li><p class="first">When the result of a query is returned to the client, the OIDs of the
+columns are used to select a Python loader. In Python the loaders are put
+into a list having as many items as the columns number; in Cython they are
+put into a C array of structures holding both a Python function and
+optionally a C function as members: If a Python loader has an optimized
+version registered, then that function is added to the array of loaders.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="6%" />
+<col width="39%" />
+<col width="43%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Type</th>
+<th class="head">OID</th>
+<th class="head">Python loader</th>
+<th class="head">C loader</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>text</td>
+<td>25</td>
+<td><tt class="docutils literal">load_text_binary</tt></td>
+<td><tt class="docutils literal">load_text_binary_c</tt></td>
+</tr>
+<tr><td>int4</td>
+<td>23</td>
+<td><tt class="docutils literal">load_int4_binary</tt></td>
+<td><tt class="docutils literal">load_int4_binary_c</tt></td>
+</tr>
+<tr><td>custom</td>
+<td>??</td>
+<td><tt class="docutils literal">load_custom_type</tt></td>
+<td><tt class="docutils literal">NULL</tt></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first">When the data is converted to Python, for each column the corresponding
+loader is used:</p>
+<ul class="simple">
+<li>if it has a C loader, the value and lengths are read from the result and
+passed to the function;</li>
+<li>if it hasn't one, a <tt class="docutils literal">bytes</tt> object is created and passed to the Python
+function.</li>
+</ul>
+</li>
+</ul>
+<p>This mechanism allows overriding the mapping from OID to types in Python and
+to duplicate it in C. It has the disadvantage that if someone wanted to derive
+an adapter for a custom data type (e.g. calling the text adapter and then
+parsing the result) then the Python adapter would be used. There are probably
+chances to improve this design, but it is a good starting point for the
+moment.</p>
+<p>It <em>might</em> be possible to avoid the <tt class="docutils literal">memcpy</tt> by creating a memory view
+instead of a bytes array, but I haven't quite figured out how to do it in
+ctypes.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Implementation</th>
+<th class="head">Commit</th>
+<th class="head">Queries</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>ctypes</td>
+<td>7b3b7f9</td>
+<td>426</td>
+</tr>
+<tr><td>cffi</td>
+<td>dfe2893</td>
+<td>902</td>
+</tr>
+<tr><td>Cython pq</td>
+<td>6c6cbe3</td>
+<td>1618</td>
+</tr>
+<tr><td>Cython adapt</td>
+<td>b28b389</td>
+<td>7511</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="profiling-against-psycopg2">
+<h3>Profiling against psycopg2</h3>
+<p>I was having concerns for a while that there was something stupidly wrong in
+psycopg3 code, for instance in the way e.g. waiting was performed, or some
+other silly mistake. asyncpg is too radically different to provide a direct
+comparison, but a comparison with psycopg2 would have been interesting.
+Unfortunately psycopg2, being pure C code, doesn't allow profiling with a
+Python profiler (Cython explicitly provides hooks for that). But where a
+tracing profiler cannot trace, a sampling profiler can sample: <a class="reference external" href="https://github.com/benfred/py-spy">py-spy</a> is
+such a profiler. The principle is to interrupt a process several times per
+second to look at its call stack to infer what it is doing: as long as enough
+debug informations are compiled in, it is possible to obtain clear information
+about C processes too. And of course, the most important property good software
+should have: it produces pretty graphs:</p>
+<div class="figure align-center">
+<a class="reference external image-reference" href="flame-psycopg3-b662c9d.svg?x=7.7301%25&amp;y=196"><img alt="flame-psycopg3-b662c9d.png" src="flame-psycopg3-b662c9d.png" /></a>
+<p class="caption"><a class="reference external" href="http://www.brendangregg.com/flamegraphs.html">Flame graph</a> for psycopg3 at commit <tt class="docutils literal">b662c9d</tt>. Come and click around:
+it's interactive! 🍬</p>
+<div class="legend">
+</div>
+</div>
+<div class="figure align-center">
+<a class="reference external image-reference" href="flame-psycopg2-2.8.5.svg?x=12.2885%25&amp;y=196"><img alt="flame-psycopg2-2.8.5.png" src="flame-psycopg2-2.8.5.png" /></a>
+<p class="caption">Flame graph for psycopg2 2.8.5.</p>
+</div>
+<!-- for d in aiopg-tuples psycopg3-async; do
+    py-spy record -r 500 -o $d.svg -F - -native - - python pgbench_python.py $d \
+        -C1 ../queries/1-pg_type.json -D 10 - -warmup-time 1 \
+        - - -pghost localhost - -pgport 5432 - -pguser piro - -output-format json;
+done -->
+<p>The comparison shows that the time around the libpq is roughly comparable
+(psycopg2 calls the chubby <tt class="docutils literal">pqParseInput3</tt> as a consequence of calling
+<tt class="docutils literal">PQnotifies</tt>, for psycopg3 it happens in <tt class="docutils literal">PQisBusy</tt> because it lacks a
+notifications handler yet). There was actually <a class="reference external" href="https://github.com/psycopg/psycopg3/commit/f9bd81d7e61628f619f39d399532fc4dedfab256">a bug</a> in the querying
+process, but because of that bug the code was actually running somewhat faster
+(it would have likely hurt concurrent performance by blocking though).</p>
+</div>
+<div class="section" id="current-state-future-improvements">
+<h3>Current state, future improvements</h3>
+<p>The diagrams above show that there is still space for improvements:
+<tt class="docutils literal">fetchall()</tt> seems to have some overhead which can be solved moving a
+&quot;fetchsome&quot; function in C. There is a lot of overhead around waiting,
+especially in the process of registering/unregistering listeners: the best
+gains can be probably obtained by creating a wait loop tightly integrated with
+the current reactor bypassing some of the higher <tt class="docutils literal">asyncio</tt> abstractions. Any
+takers?</p>
+<p>These are the numbers, as of the current <tt class="docutils literal">master</tt> (<tt class="docutils literal">b662c9d</tt>). The Python
+implementation has also improved somewhat thanks to some tweaking happened
+since the first test).</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="75%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Driver</th>
+<th class="head">Queries</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>asyncpg</td>
+<td>15263</td>
+</tr>
+<tr><td>psycopg2 + aiopg</td>
+<td>8871</td>
+</tr>
+<tr><td>psycopg3 async Python</td>
+<td>517</td>
+</tr>
+<tr><td>psycopg3 async C</td>
+<td>8424</td>
+</tr>
+</tbody>
+</table>
+<p>Again, this is just as a rough indication: the type of data types in the query
+and different concurrency patterns create different pictures; for instance
+psycopg3 is already faster than psycopg2 in benchmarks involving <tt class="docutils literal">bytea</tt>
+thanks to the use of binary protocol:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="70%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Driver</th>
+<th class="head">Queries</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>asyncpg</td>
+<td>41330</td>
+</tr>
+<tr><td>psycopg2 + aiopg</td>
+<td>12396</td>
+</tr>
+<tr><td>psycopg3 async C</td>
+<td>19164</td>
+</tr>
+</tbody>
+</table>
+<p>I think for the moment the search for speed can be concluded and it is time to
+go back progressing with the features. I doubt that asyncpg's stellar
+performances can be passed, but I don't want performance to be the sole goal:
+I am fine with psycopg3 being somewhat slower than asyncpg if it has the
+advantage to be easier to use and to behave pretty much as a drop-in
+replacement for psycopg2. In my view a driver with a lower adoption barrier
+would be more directly beneficial for everyone using it, either in existing
+frameworks or on its own. By the time the project will be released I'm
+confident that its performance will consistently pass the psycopg2 level.</p>
+</div>
+
+<script src="https://utteranc.es/client.js"
+  repo="dvarrazzo/www.varrazzo.com"
+  issue-term="pathname"
+  label="comments"
+  theme="github-light"
+  crossorigin="anonymous"
+  async>
+</script>
+    </div>
+    <div id="sidebar" class="col-md-3">
+      <div class="sidebar-inner">
+        <div class="widget-area">
+          
+<aside class="widget">
+  <h3 class=widget-title>Recent posts</h3>
+  <ul>
+    <li><a href="/blog/2020/04/26/pinhole-day/">Pinhole Day</a></li>
+    <li><a href="/blog/2020/04/15/isolation-diaries/">Isolation Diaries</a></li>
+    <li><a href="/blog/2020/03/31/first-experience-mypy/">First Experience with Mypy</a></li>
+    <li><a href="/blog/2020/03/26/psycopg3-first-report/">psycopg3: a first report</a></li>
+    <li><a href="/blog/2020/03/25/life-covid-nz/"><img class="flag" src="/img/flags/uk-round.png?h=36ae6a5d">&nbsp;Life, New Zealand, Covid</a></li>
+  </ul>
+</aside>
+        </div>
+      </div>
+    </div>
+</div>
+
+<footer id="footer" class="">
+  <div class="footer-links">
+    &copy; 2020. By Daniele Varrazzo. |
+    <a target="_blank" href="https://github.com/dvarrazzo/">GitHub</a> |
+    <a target="_blank" href="https://www.linkedin.com/in/danielevarrazzo/">LinkedIn</a> |
+    <a target="_blank" href="https://www.instagram.com/dvarrazzo/">Instagram</a> |
+    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/">Flickr</a>
+  </div>
+
+</footer>
+    </div>
+    <script src="/js/lib/jquery.min.js?h=d6c1f419"></script>
+    <script src="/js/lib/scripts.js?h=e59b43e0"></script>
+    <script src="/js/main.js?h=4b3e78de"></script>
+  </body>
+</html>
