@@ -151,11 +151,12 @@ done -->
 </tbody>
 </table>
 <p>...this bad.</p>
-<p>These are the number of queries run in 10 seconds. These numbers should be
-taken with a pinch of salt: they are obtaining connecting the driver to
-localhost so they are more CPU-bound than the environment a database driver
-lives into, they are <em>one query</em> (the first in their toolbench), nothing
-statistically sound... but still a pretty depressing picture.</p>
+<p>These are the number of queries run in 10 seconds. The numbers in themselves
+are to be taken with a big pinch of salt: they are obtaining connecting the
+driver to localhost so they are more CPU-bound than the environment a database
+driver usually lives into, they are <em>one specific query</em> (the first in their
+toolbench), nothing statistically sound... but still a pretty depressing
+picture.</p>
 <p>Back then the implementation of psycopg3 was pure Python, using ctypes to call
 into the libpq shared library. The plan of writing an optimised C
 implementation was already there, but this gave a measure of how badly needed
