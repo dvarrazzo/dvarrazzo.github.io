@@ -2,18 +2,18 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">Blog</title>
   <id>urn:uuid:345e7579-5b16-39e4-9f1d-2a4bff93035d</id>
-  <updated>2020-05-17T00:00:00Z</updated>
+  <updated>2020-05-19T00:00:00Z</updated>
   <link href="https://www.varrazzo.com/blog/" />
   <link href="https://www.varrazzo.com/blog.xml" rel="self" />
   <author>
     <name></name>
   </author>
   <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
-  <entry xml:base="https://www.varrazzo.com/blog/2020/05/17/a-trip-into-optimisation/">
+  <entry xml:base="https://www.varrazzo.com/blog/2020/05/19/a-trip-into-optimisation/">
     <title type="text">A trip into optimisation</title>
     <id>urn:uuid:848be87a-855e-3b2b-aecf-2911693199f2</id>
-    <updated>2020-05-17T00:00:00Z</updated>
-    <link href="https://www.varrazzo.com/blog/2020/05/17/a-trip-into-optimisation/" />
+    <updated>2020-05-19T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/05/19/a-trip-into-optimisation/" />
     <author>
       <name>Daniele Varrazzo</name>
     </author>
