@@ -793,7 +793,7 @@ because I've only started with this project and I don't want annotating to
 become a time sink as the codebase grow. But I think writing down this
 write-up helped me clarifying my ideas about Mypy, and I think it will stay
 here and be a &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;--strict&lt;/span&gt;&lt;/tt&gt; part of psycopg3.&lt;/p&gt;
-&lt;p&gt;Bud now, please, just go and write those tests.&lt;/p&gt;
+&lt;p&gt;But now, please, just go and write those tests.&lt;/p&gt;
 &lt;/div&gt;
 </content>
   </entry>
