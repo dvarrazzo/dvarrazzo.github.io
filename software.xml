@@ -114,7 +114,7 @@ record, or 1.6M times in this graph. At this point, it looked like this:&lt;/p&g
 &lt;/pre&gt;
 &lt;p&gt;This function returns the content in bytes of a field. If it's 0-length, it
 checks if it's NULL. The &lt;tt class=&quot;docutils literal&quot;&gt;impl&lt;/tt&gt; functions are ctypes calls to the libpq.
-This made me think that the overhead of ctypes calls are not so tiny after
+This made me think that the overhead of ctypes calls is not so tiny after
 all.&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;section&quot; id=&quot;the-cffi-attempt&quot;&gt;
