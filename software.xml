@@ -200,7 +200,7 @@ that alone showed a promising class of results:&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;section&quot; id=&quot;speeding-up-adaptation&quot;&gt;
 &lt;h3&gt;Speeding up adaptation&lt;/h3&gt;
-&lt;p&gt;&lt;a class=&quot;reference external&quot; href=&quot;profile-c-6c6cbe3.svg&quot;&gt;Profiling&lt;/a&gt; now showed that the time spent in &lt;tt class=&quot;docutils literal&quot;&gt;get_value()&lt;/tt&gt; was now reduced
+&lt;p&gt;&lt;a class=&quot;reference external&quot; href=&quot;profile-c-6c6cbe3.svg&quot;&gt;New profiling&lt;/a&gt; showed that the time spent in &lt;tt class=&quot;docutils literal&quot;&gt;get_value()&lt;/tt&gt; was now reduced
 to a paltry 6% of the whole runtime: this means that that the hot path of the
 program had moved to a different place.&lt;/p&gt;
 &lt;p&gt;The entire adaptation of the returned dataset, visible in green, takes 60% of
