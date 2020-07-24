@@ -227,7 +227,7 @@ wrong, which will result in an error 500 and a Python traceback, ugly, but
 better than bad data in the database. And it won't see your procedures
 proceeding, your domains dominating... you get the idea.</p>
 <p>Using psql to import the schema into an empty database you can modularize the
-code and use <cite>i</cite> to import &quot;submodules&quot;. A typical pattern for me is to have:
+code and use <tt class="docutils literal">\i</tt> to import &quot;submodules&quot;. A typical pattern for me is to have:
 a <tt class="docutils literal">database.sql</tt> to create global objects (users, extensions, schemas),
 sets the basic permissions, and import the details into target schemas.</p>
 <pre class="code postgres literal-block">
