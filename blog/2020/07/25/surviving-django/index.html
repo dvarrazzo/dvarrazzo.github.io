@@ -17,7 +17,7 @@
     <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="/css/main.css?h=af85dcae">
     <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
-    <link rel="stylesheet" href="/css/custom.css?h=0cc8bf61">
+    <link rel="stylesheet" href="/css/custom.css?h=7c0a27a5">
     <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
   </head>
 
@@ -104,39 +104,39 @@
   <div class="row">
     <div id="content" class="col-md-9"><p>Django is currently the most used full-stack web framework for Python. It has
 been around for a good 15 years, emerging as a winner from a period in which
-Python was already mature but its web development tools were relatively
-immature and fragmented.</p>
+Python was already mature but its web development tools were comparatively
+much more immature and fragmented.</p>
 <p>Django allows to define the objects in your program as &quot;models&quot;, using the
-<tt class="docutils literal">Model</tt> base class: they behave largely like normal Python classes but with
-added support for saving and retrieval into the relational database backing
-your application. If you don't need this database support, well, you didn't
+<tt class="docutils literal">Model</tt> base class: they behave largely like normal Python classes, with
+added support to save into, and retrieve from, the relational database backing
+your application. If you don't need such database support, well, you didn't
 need a full-stack web framework in first place.</p>
 <p>Django tries to be independent from the database you choose. It sounds like
-good idea, until it stays on paper, but after working several years with
-Django systems, both written from scratch or inherited and to maintain, I am
-feeling more and more that the &quot;blessed&quot; way of working with databases and
+good idea, but only as long as it stays on paper. After working several years
+with Django systems, both written from scratch or inherited and to maintain, I
+am feeling more and more that the &quot;blessed&quot; way of working with databases and
 Django leads to using your database in a sub-optimal way, and to complicate
-unnecessarily the maintenance of your projects.</p>
+unnecessarily the development and maintenance cycle of your project.</p>
 <p>I think the divergence between wishful thinking and reality starts from a
 fundamental misunderstanding between you and Django, which is not written in
 the contract you have never signed anyway:</p>
 <blockquote class="pull-quote">
-&quot;independence from the relational database&quot; is a feature of Django as a
-framework, <em>not of the program you are writing</em>.</blockquote>
+&quot;independence from the relational database&quot; is a feature needed by Django
+as a framework, <em>not by the program you are writing</em>.</blockquote>
 <p>Django needs it, because a web framework not tied to a single database vendor
-is more valuable than one tied to a specific one, fair enough. But <em>you
+is more valuable than one tied to a specific one, that's fair enough. <em>But you
 don't:</em> your web program, most likely than not, will not have to switch from
-one DB to the other. So, <em>You Ain't Gonna Need It™</em>. Portability at all costs
+one DB to the other. So, <a class="reference external" href="https://www.martinfowler.com/bliki/Yagni.html">You Ain't Gonna Need It™</a>. Portability at all costs
 leads to at least two problems:</p>
 <p>1) you will not able to use all the features offered by your relational
 database, and</p>
-<p>2) every change to your models, or to your database schema, is will be more
+<p>2) every change to your models, or to your database schema, will be more
 complicated that it should be.</p>
 <div class="section" id="you-ain-t-gonna-need-it">
 <h3>You ain't gonna need it</h3>
 <p>How many times you have worked to a project and, after 1-2 years of
 development, you have changed database to a different one?</p>
-<p>I can tell you how many times it happened to me, I counted them: exaclty
+<p>I can tell you how many times it happened to me, I counted them: exactly
 never.</p>
 <p>Replacing your database vendor is a major, traumatic occurrence, almost as
 much as rewriting your program in a different language. If you replace your
@@ -154,15 +154,14 @@ That's not gonna happen: you have probably tweaked MySQL, have expertise in
 MySQL; maybe PostgreSQL is a better database in some aspects, but not so much
 that you want to migrate all your data and start from scratch with the
 <a class="reference external" href="http://www.catb.org/jargon/html/F/frobnicate.html">frobbing, twiddling, tweaking</a> the database configuration. Did you say
-you have High Availability and Disaster Recovery configured? Are you going to
-migrate it too?</p>
+you have High Availability and Disaster Recovery configured? That's to be
+converted too of course.</p>
 <p>In the above paragraph, replace the database vendor with all the permutations
 of MySQL, PostgreSQL, MS SQL, Oracle. <em>That's not gonna happen</em>. Except maybe
 if an Oracle salesman gets hold of someone in your project with a modicum of
 decision making and talks them into buying some sort of expensive license, but
-that's not a technical problem, it's a political one. If you care about
-technical matters you will start looking for a new job the afternoon of the
-day the &quot;Migrate DB to Oracle&quot; ticket hits your issues tracker.</p>
+that's not a technical problem, it's a political one, and it's up to you to
+decide if you are comfortable with it.</p>
 <p>Have you got PostgreSQL in production but you want to test with SQLite because
 it's an easier to set up? If so your tests are just a tick-box exercise, you
 are not testing anything remotely plausible and resembling your live system.</p>
@@ -214,41 +213,96 @@ maintenance of the audit triggers and functions.</p>
 <p>Into a SQL file!</p>
 <p>Like, with its tiny <tt class="docutils literal">.sql</tt> extension!</p>
 <p>And with comments! Explaining you why a certain index or constraint exist!</p>
-<p>With constraints named meaningfully, not
+<p>With constraints named meaningfully, available for manipulation, not
 <tt class="docutils literal">auth_group_permissions_group_id_b120cbf9_fk_auth_group_id</tt>.</p>
 <p>Sounds civilised to me.</p>
-<p>The nice thing of it is that, if you do things carefully enough, Django will
-not notice anything at all.</p>
+<p>The nice thing of doing so is that, if you do things carefully enough, Django
+will not notice anything at all.</p>
 <p>Take the above audit examples: Django is not meant to interact with it:
 everything will just happen under its nose. You can use views instead of
 tables for read-only models, you can use domains instead of more basic data
 types for your fields. Django won't see your triggers triggering, your
 constraints constraining, your permissions permitting... Except when things go
-wrong, which will result in a Python traceback, ugly, but better than bad data
-in the database. And it won't see your procedures proceeding, your domains
-dominating... you get the idea.</p>
+wrong, which will result in an error 500 and a Python traceback, ugly, but
+better than bad data in the database. And it won't see your procedures
+proceeding, your domains dominating... you get the idea.</p>
+<p>Using psql to import the schema into an empty database you can modularize the
+code and use <cite>i</cite> to import &quot;submodules&quot;. A typical pattern for me is to have:
+a <tt class="docutils literal">database.sql</tt> to create global objects (users, extensions, schemas),
+sets the basic permissions, and import the details into target schemas.</p>
+<pre class="code postgres literal-block">
+<span class="err">\</span><span class="n">i</span> <span class="n">users</span><span class="mf">.</span><span class="n">sql</span>
+<span class="k">revoke</span> <span class="k">create</span> <span class="k">on</span> <span class="k">schema</span> <span class="n">public</span> <span class="k">from</span> <span class="n">public</span><span class="p">;</span>     <span class="c1">-- safety
+</span>
+<span class="c1">--- create a schema for the django app tables
+</span><span class="k">create</span> <span class="k">schema</span> <span class="n">myapp</span><span class="p">;</span>
+<span class="k">grant</span> <span class="n">usage</span> <span class="k">on</span> <span class="k">schema</span> <span class="n">myapp</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">,</span> <span class="n">backup</span><span class="p">;</span>
+
+<span class="c1">--- set the default permissions for all the object that will be created there
+</span><span class="k">alter</span> <span class="k">default</span> <span class="k">privileges</span> <span class="k">in</span> <span class="k">schema</span> <span class="n">myapp</span>
+    <span class="k">grant</span> <span class="k">select</span><span class="p">,</span> <span class="k">insert</span><span class="p">,</span> <span class="k">update</span><span class="p">,</span> <span class="k">delete</span> <span class="k">on</span> <span class="k">tables</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">;</span>
+<span class="k">alter</span> <span class="k">default</span> <span class="k">privileges</span> <span class="k">in</span> <span class="k">schema</span> <span class="n">myapp</span>
+    <span class="k">grant</span> <span class="k">select</span> <span class="k">on</span> <span class="k">tables</span> <span class="k">to</span> <span class="k">view</span><span class="p">,</span> <span class="n">backup</span><span class="p">;</span>
+<span class="k">alter</span> <span class="k">default</span> <span class="k">privileges</span> <span class="k">in</span> <span class="k">schema</span> <span class="n">myapp</span> <span class="k">grant</span> <span class="k">all</span> <span class="k">on</span> <span class="k">sequences</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">;</span>
+<span class="k">alter</span> <span class="k">default</span> <span class="k">privileges</span> <span class="k">in</span> <span class="k">schema</span> <span class="n">myapp</span> <span class="k">grant</span> <span class="k">select</span> <span class="k">on</span> <span class="k">sequences</span> <span class="k">to</span> <span class="n">backup</span><span class="p">;</span>
+
+<span class="c1">--- import the tables into the schema
+</span><span class="k">set</span> <span class="n">search_path</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">,</span> <span class="n">public</span><span class="p">;</span>
+<span class="err">\</span><span class="n">i</span> <span class="n">django</span><span class="mf">.</span><span class="n">sql</span>   <span class="c1">-- django objects - users, groups, permissions tables
+</span><span class="err">\</span><span class="n">i</span> <span class="n">myapp</span><span class="mf">.</span><span class="n">sql</span>    <span class="c1">-- your app models
+</span><span class="k">reset</span> <span class="n">search_path</span><span class="p">;</span>
+</pre>
+<p>The <tt class="docutils literal">database.sql</tt> doesn't create the database itself, so you can create an
+empty one anywhere it's needed, then you can use <tt class="docutils literal">psql <span class="pre">-f</span> database.sql
+<span class="pre">&quot;postgres://connection/url&quot;</span></tt> to select the right one. The <tt class="docutils literal">myapp.sql</tt>
+shouldn't contain any reference to the schema <tt class="docutils literal">myapp</tt> where the objects are
+created, so it can be easily changed. Postgres doesn't have a statement like
+<tt class="docutils literal">CREATE USER ... IF NOT EXIST</tt>: in <tt class="docutils literal">users.sql</tt> you can simulate it with
+something like:</p>
+<pre class="code postgres literal-block">
+<span class="k">do</span> <span class="s">$</span><span class="dl"></span><span class="s">$</span>
+<span class="k">begin</span>
+    <span class="k">perform</span> <span class="mf">1</span> <span class="k">from</span> <span class="n">pg_user</span> <span class="k">where</span> <span class="n">usename</span> <span class="o">=</span> <span class="s1">'myapp'</span><span class="p">;</span>
+    <span class="k">if</span> <span class="k">not</span> <span class="n">found</span> <span class="k">then</span>
+        <span class="k">create</span> <span class="k">user</span> <span class="n">myapp</span><span class="p">;</span>
+    <span class="k">end</span> <span class="k">if</span><span class="p">;</span>
+<span class="k">end</span>
+<span class="s">$</span><span class="dl"></span><span class="s">$</span> <span class="k">language</span> <span class="n">plpgsql</span><span class="p">;</span>
+</pre>
 </div>
 <div class="section" id="migrations">
 <h3>Migrations</h3>
 <p>Django has an amazingly complex system to <a class="reference external" href="https://docs.djangoproject.com/en/3.0/topics/migrations/">perform model migrations</a>. It is
-complex because:</p>
+complex among the other reasons because:</p>
 <ul>
-<li><p class="first">it actually migrates <em>models</em> not <em>schemas</em>. If you change a field's help
-text it need a migration. That's not useful at all for the database but
-Django will create it for you, and if you remove it, it will add it back.
-Changing a <a class="reference external" href="https://docs.djangoproject.com/en/3.0/ref/models/fields/#choices">choices list</a> results in a migration with no database
-operation, only Python operation, and practically no purpose.</p>
+<li><p class="first">it actually migrates <em>models</em> not <em>schemas</em>. Even if you change a field's help
+text it generates a migration.</p>
+<pre class="code python literal-block">
+<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
+
+    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">migrations</span><span class="o">.</span><span class="n">AlterField</span><span class="p">(</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="s1">'foo'</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">'bar'</span><span class="p">,</span>
+            <span class="n">field</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">help_text</span><span class="o">=</span><span class="s1">'I only changed this'</span><span class="p">),</span>
+        <span class="p">),</span>
+</pre>
+<p>That's not useful at all for the database but Django will create it for you,
+and if you remove it, it will add it back. Similarly, changing a <a class="reference external" href="https://docs.djangoproject.com/en/3.0/ref/models/fields/#choices">choices
+list</a>, a display label, results in migrations with no database operation,
+only Python operation, and practically no SQL purpose.</p>
 </li>
 <li><p class="first">It allows to access the state of the model at times intermediate between
-migrations, using <tt class="docutils literal">get_model(appname, modelname)</tt> and write some Python
-code with the returned model. But if that code also happens to use any code
-inside your application, likely importing models with a normal Python
-<tt class="docutils literal">import</tt> things will crash. But not immediately: only later, when you will
-apply some unrelated migration. And not when that migration is needed: only
-after it has already been applied and it doesn't have anything more to do in
-its lifetime: it is implemented as a model that Django will keep on
-importing over and over. In a project I'm currently working I had to add
-this function to a module:</p>
+migrations, using <a class="reference external" href="https://docs.djangoproject.com/en/3.0/ref/applications/#django.apps.AppConfig.get_models">get_model</a><tt class="docutils literal">(appname, modelname)</tt> and write some
+Python code with the returned model. But if that code also happens to use
+any code inside your application, importing models with a normal Python
+<tt class="docutils literal">import</tt>, things will crash because of a mismatch between model
+definitions and schema in the DB. But they won't crash immediately: only
+later, when you will apply some unrelated migration. And not when that
+migration is needed: only after it has already been applied and it doesn't
+have anything more to do in its lifetime: it is implemented as a model that
+Django will keep on importing over and over. In a project I'm currently
+working I had to add this function into our codebase:</p>
 <pre class="code python literal-block">
 <span class="k">def</span> <span class="nf">can_run</span><span class="p">(</span><span class="o">*</span><span class="n">models</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
@@ -261,7 +315,7 @@ this function to a module:</p>
         <span class="k">return</span> <span class="kc">True</span>
 </pre>
 <p>And use it whack-a-mole to avoid already applied migrations to explode,
-adding early bailouts like:</p>
+adding them early bailouts like:</p>
 <pre class="code python literal-block">
 <span class="k">def</span> <span class="nf">data_migration</span><span class="p">(</span><span class="n">apps</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">can_run</span><span class="p">(</span><span class="n">Model1</span><span class="p">,</span> <span class="n">Model2</span><span class="p">,</span> <span class="n">Model3</span><span class="p">):</span>
@@ -275,32 +329,51 @@ adding early bailouts like:</p>
     <span class="p">]</span>
 </pre>
 </li>
-<li><p class="first">It detects changes to your models and infer how to change the schema. Except
-that not everything always go as expected. In an example my model <tt class="docutils literal">Foo</tt>
-needed some extra pepper to its attribute <tt class="docutils literal">bar</tt>. So we thought to fetch
-the data from the database into a hidden <tt class="docutils literal">_bar</tt> attribute, and then have a
-Python property to expose it. No change needed to the database, but Django
-insisted to create migration consisting pretty much in:</p>
+<li><p class="first">It detects changes to your models and infers how to change the schema.
+This is pretty much impossible to do in automated way, except in the
+simplest cases, so the feature is incomplete, and when it thinks that it
+knows what it's doing, often it doesn't, and it's hard to tell it to stop.</p>
+<p>In a case I had, my model <tt class="docutils literal">Foo</tt> needed some extra pepper to its attribute
+<tt class="docutils literal">bar</tt>. So we thought to fetch the data from the database into a hidden
+<tt class="docutils literal">_bar</tt> attribute, and then have a Python property to expose it:</p>
+<pre class="code diff literal-block">
+ class Foo(models.Model):
+
+<span class="gd">-    bar = models.CharField(
+</span><span class="gi">+    _bar = models.CharField(
+</span>         max_length=255,
+<span class="gi">+        db_column='bar',
+</span>     )
+<span class="gi">+
++    &#64;property
++    def bar(self):
++        return something_more()</span>
+</pre>
+<p>No change needed to the database, but Django insisted to create migration
+consisting pretty much in:</p>
 <pre class="literal-block">
 ALTER TABLE foo DROP COLUMN bar;
 ALTER TABLE foo ADD COLUMN bar;
 </pre>
-<p>and goodbye to your data. But who needs a <tt class="docutils literal">bar</tt>. Well, I could have used a
-bar, and a few drinks, if that migration had hit production.</p>
+<p>and goodbye to your data. But who needs a <tt class="docutils literal">bar</tt>. I think I could have
+used a bar, and a few drinks, if that migration had hit production.</p>
 </li>
 </ul>
 <p>Much of the complexity of this system is designed to give you a specific
-feature: migrations abstracted from your database. But in my view, if there is
+feature: migrations abstracted from your database. In my view, if there is
 something less likely to happen than a to write a complex app to run on
 interchangeable databases, is the need to repeat the same history of
 migrations. The cost you pay for this YAGNI feature is a cumbersome and
-fragile system trying to have a life of its own.</p>
+fragile system trying to have a life of its own, and fighting yours. It is a
+direct application of <a class="reference external" href="https://twitter.com/jeremydmiller/status/568797862441586688">Jeremy Miller's observation</a> that <em>any extensibility
+point that’s never used isn’t just wasted effort, it’s likely to also get in
+your way as well</em>.</p>
 <p>I may be a bit of a control freak, but I think that there is too much magic
 here, and too few hooks to intervene to correct it, playing too close to my
 data to feel comfortable. This comes with the advantage of being able to
 replay your migrations in the future on a different database vendor, but I
-struggle to find a use case for it not involving parallel universes and time
-machines.</p>
+struggle to find a valid use case for it not involving parallel universes and
+time machines.</p>
 </div>
 <div class="section" id="so-what-do-i-use-instead-of-migrations">
 <h3>So what do I use instead of migrations?</h3>
@@ -311,41 +384,44 @@ and the safety of the data. The work involved consist in:</p>
 <li>Knowing your database and its data definition and manipulation language, to
 know how to change the schema and the data associated.</li>
 <li>If you have the database schema in source control, when you change the
-schema you will usually want to associate a similar &quot;schema patch&quot;.</li>
-<li>You can have a table recording the schema patches applied to the database,
-and a script to look for unapplied patches, to run them, and record them on
-deployment.</li>
+schema you will usually want to associate a similar &quot;schema patch&quot;. An ex
+colleague of mine wrote a script to &quot;prime&quot; a migration with the right name
+and a comment containing the diff of the schema, to give an idea of what to
+do.</li>
+<li>You can have a database table recording the schema patches already applied
+to the database, and a script to look for unapplied patches, run them,
+and record them into the table, to run on deployment.</li>
 </ul>
 <p>I have a <a class="reference external" href="https://gist.github.com/dvarrazzo/86b06961fa3278293e193417adbf3daf">patch_db.py</a> script that I have used, with small variations, in
 several projects. It is meant to be executed as a database superuser, so that
-the privileges of the application user can be given only reduced privileges.
-A few features of this script:</p>
+the application user can be given only limited privileges: enough to read and
+change the data it needs, no need to be a superuser or to own the tables be
+able to change their schema. A few features of this simple script:</p>
 <ul class="simple">
-<li>If the database had never been patched, the <tt class="docutils literal">schema_patch</tt> table is
-created and all the patches available are registered as already applied.</li>
-<li>If the table exists, new files are looked for in the patches directory and,
-if not present in the patches table, applied in alphabetical order and
-registered. You can use the date as prefix to make sure they are applied in
-the correct order.</li>
-<li>Only one process at time can run the script: an advisory lock makes sure
-that there won't be two concurrent processes both trying to apply the
-database patches.</li>
+<li>If the database had never been patched, it creates a <tt class="docutils literal">schema_patch</tt> table
+and registers the patches available as already applied.</li>
+<li>If the table exists, it compares the content of the patches directory with
+the table content and applies and registers the missing patches in
+alphabetical order. You can use the date as prefix to make sure they are
+applied in the correct order.</li>
+<li>It keeps an advisory lock for the entire run to make sure that there will
+not be two patching processes running concurrently by mistake.</li>
 <li>The patching process is identifiable in PostgreSQL via its appname, so it
-can be monitored and dealt with in case it gets stuck.</li>
+can be monitored and dealt with in case it behaves funny.</li>
 <li>Patches can be applied one by one, with interactive user confirmation, or
 unattended for automatic deployment.</li>
-<li>You can associate executable scripts to a patch, to run before or after, to
-implement procedures difficult to implement in SQL: you can have
+<li>You can associate executable scripts to a patch, to run before or after it,
+to implement procedures difficult to implement in SQL: you can have
 <tt class="docutils literal">my_patch.pre.sh</tt> and <tt class="docutils literal">my_patch.post.py</tt> to run respectively before and
-after the <tt class="docutils literal">my_patch.sql</tt> is applied, receiving a <tt class="docutils literal">PATCH_DSN</tt> environment
-variable to connect to.</li>
+after <tt class="docutils literal">my_patch.sql</tt> is applied, receiving a <tt class="docutils literal">PATCH_DSN</tt> environment
+variable to know where to connect to.</li>
 </ul>
 <p>The script is independent from Django; if used in a Django project it might be
 reimplemented as a management command, but I have never felt compelled to do
 so.</p>
-<p>Once this script is integrated with your deployment procedures, here are a few
-examples of patches that can be produced, scanning the patches directory of
-projects I have worked with:</p>
+<p>Once this script is integrated with your deployment procedures, these are a
+few examples of patches that can be produced, scanning the patches directory
+of projects I have worked with:</p>
 <ul class="simple">
 <li>Add a field to a table, populate it with data obtained querying other
 database tables.</li>
@@ -355,10 +431,11 @@ relations.</li>
 <li>Partition a previously unpartitioned data by creating partitions, moving
 data into them, and emptying the base table.</li>
 <li>Add a new currency to the currencies table, change the name of that Balkan
-nation there to &quot;Republic of North Macedonia&quot;, or any other change to some
-&quot;configuration table&quot;.</li>
+nation there to &quot;Republic of North Macedonia&quot;, remove that island from the
+list of European Union nations, or any other change to some &quot;configuration
+table&quot;.</li>
 <li>Fix data after a bug producing wrong data was discovered.</li>
-<li>Add a new django group and set the group permissions, or add new objects'
+<li>Add a new Django group and set the group permissions, or add new objects'
 permissions to existing groups.</li>
 <li>Create a normal column for a piece of data that was previously stored in
 unstructured way into a JSON field, remove the data from the JSON and move
@@ -370,18 +447,93 @@ column is already an operation fraught with perils, and manipulating data
 using Python models while the models themselves are being altered is a task of
 Shrödingeranean effort.</p>
 </div>
+<div class="section" id="is-it-difficult-to-write-patches">
+<h3>Is it difficult to write patches?</h3>
+<p>In my view, most of the times, writing a SQL patch is simpler than writing a
+patch in the Django migration system, something that in order to do
+successfully requires knowledge not so much of the database but rather of the
+migration system itself.</p>
+<p>Looking at a few examples, taken directly from Django's own <a class="reference external" href="https://docs.djangoproject.com/en/3.0/howto/writing-migrations/">writing
+migrations</a> page:</p>
+<p><a class="reference external" href="https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#migrations-that-add-unique-fields">Adding a non-nullable field</a> in Django migrations involves creating the
+normal migration, i.e. the one creating a
+<tt class="docutils literal">field=models.UUIDField(default=uuid.uuid4, unique=True)</tt>, creating other
+two empty ones (it is suggested to use <tt class="docutils literal">makemigrations myapp <span class="pre">--empty</span></tt>
+because there is a certain amount of boilerplate involved), and pretty much
+have a sequence of:</p>
+<ul class="simple">
+<li>create a field with the default, but nullable,</li>
+<li>fill it with values (using a <tt class="docutils literal">RunPython</tt> step),</li>
+<li>make it non-nullable.</li>
+</ul>
+<p>There is also a bit of a race condition between object creating whilst the
+migration has been applied.</p>
+<p>The same steps, in SQL, take much less boilerplate: in one patch you can:</p>
+<pre class="code postgres literal-block">
+<span class="k">BEGIN</span><span class="p">;</span>
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">myapp_mymodel</span> <span class="k">ADD</span> <span class="nb">uuid</span> <span class="nb">uuid</span><span class="p">;</span>
+<span class="k">UPDATE</span> <span class="n">myapp_mymodel</span> <span class="k">SET</span> <span class="nb">uuid</span> <span class="o">=</span> <span class="n">uuid_generate_v4</span><span class="p">();</span>
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">myapp_mymodel</span> <span class="k">ALTER</span> <span class="nb">uuid</span> <span class="k">SET</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">;</span>
+<span class="k">COMMIT</span><span class="p">;</span>
+</pre>
+<p>Or variations of the above (if you want the default generated by the
+database, a non-locking operation on a large table, an unique constraint...)</p>
+<hr class="docutils" />
+<p>Writing <a class="reference external" href="https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#non-atomic-migrations">non-atomic migrations</a> can be either dealt with all in one SQL
+script using a PL/pgSQL <tt class="docutils literal">DO</tt> statement, or with an additional script to
+replace the second step in the previous example (untested):</p>
+<pre class="code python literal-block">
+<span class="c1"># migration add_uuid_nullable.post.py</span>
+<span class="n">cur</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;
+        UPDATE myapp_mymodel SET uuid = uuid_generate_v4()
+        FROM (
+            SELECT id FROM myapp_mymodel WHERE uuid IS NULL
+            ORDER BY id LIMIT 1000
+        ) x USING (id)
+        RETURNING id
+        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">():</span>
+            <span class="k">break</span>
+</pre>
+<hr class="docutils" />
+<p><a class="reference external" href="https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#migrating-data-between-third-party-apps">Migrating data between third-party apps</a> gets in the way with the whole
+<tt class="docutils literal">get_model()</tt> machinery and you have to fight its error.</p>
+<p>It's much more simple if you leave Python out of the way:</p>
+<pre class="code postgres literal-block">
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">oldapp_oldmodel</span> <span class="k">RENAME</span> <span class="k">TO</span> <span class="n">newapp_newmodel</span><span class="p">;</span>
+</pre>
+<p>Or whatever <tt class="docutils literal">INSERT</tt> and <tt class="docutils literal">UPDATE</tt> it takes to get data into new tables.</p>
+<hr class="docutils" />
+<p><a class="reference external" href="https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#changing-a-manytomanyfield-to-use-a-through-model">Changing a ManyToManyField to use a through model</a> is another examples when
+Django considers your data expendable and to jump through <a class="reference external" href="https://docs.djangoproject.com/en/3.0/ref/migration-operations/#django.db.migrations.operations.SeparateDatabaseAndState">sophisticated
+hoops</a> if you romantically want to hold on them.</p>
+<p>The whole example is 64 lines of code that make sense only if you know the
+internal model of the schema changing machinery and how to separate schema
+changes and Django models state operations (which IMO had no reason to be
+merged together in first place, and the second has just no reason to exist).</p>
+<p>Dropping the complications, everything you need is:</p>
+<pre class="code postgres literal-block">
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">core_book_authors</span> <span class="k">RENAME</span> <span class="k">TO</span> <span class="n">core_authorbook</span><span class="p">;</span>
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">core_authorbook</span> <span class="k">ADD</span> <span class="n">is_primary</span> <span class="nb">bool</span> <span class="k">default</span> <span class="k">false</span><span class="p">;</span>
+</pre>
+<p>The first statement, by the way, is verbatim in a <tt class="docutils literal">RunSQL</tt> in their example
+so I'd say this example wouldn't have been necessarily portable either. I
+really struggle to see the point of all this.</p>
+</div>
 <div class="section" id="commands-you-don-t-want-to-use">
 <h3>Commands you don't want to use</h3>
-<p>Once you have introduced your patching script and motivated your team in not
-believing in magic, these are a few operation you can do instead of the
-&quot;blessed&quot; ways involving Django migrations:</p>
+<p>Once you have introduced your migration procedures, and motivated your team
+into using them, these are a few operation you can use to replace the
+official ways involving Django migrations:</p>
 <ul>
 <li><p class="first"><tt class="docutils literal">manage.py migrate</tt>: the first time (e.g. new dev setup, unit tests) you
-can run <tt class="docutils literal">psql <span class="pre">-f</span> schema/database.sql</tt>. If you do it in a test suite run
-you will have tested your schema too. The following times (deployment in
-staging and production, distributing changes to other developers) you can
-run something similar to the proposed <a class="reference external" href="https://gist.github.com/dvarrazzo/86b06961fa3278293e193417adbf3daf">patch_db.py</a>, and you have tested
-the patches too.</p>
+can run <tt class="docutils literal">psql <span class="pre">-f</span> database.sql</tt>. If you do it in a test suite run you will
+have tested your schema too. If an initial schema is already in place
+(deployment in staging and production, distributing changes to other
+developers) you can run something similar to the proposed <a class="reference external" href="https://gist.github.com/dvarrazzo/86b06961fa3278293e193417adbf3daf">patch_db.py</a>,
+and you have tested the patches too.</p>
 </li>
 <li><p class="first"><tt class="docutils literal">manage.py makemigrations</tt>: run <tt class="docutils literal">git diff <span class="pre">schema/*.sql</span></tt> and work out
 what you have to do, like all the other times you wanted to use the Django
@@ -389,11 +541,11 @@ command and it didn't do everything you need.</p>
 </li>
 <li><p class="first"><tt class="docutils literal">manage.py sqlmigrate</tt>: replaced by <tt class="docutils literal">cat</tt>.</p>
 </li>
-<li><p class="first"><tt class="docutils literal">manage.py showmigrations</tt>: replaced by <tt class="docutils literal">patch_db.py <span class="pre">--dry-run</span></tt></p>
+<li><p class="first"><tt class="docutils literal">manage.py showmigrations</tt>: you can use <tt class="docutils literal">patch_db.py <span class="pre">--dry-run</span></tt>.</p>
 </li>
 <li><p class="first"><tt class="docutils literal">manage.py squashmigrations</tt>... I am in awe of the complexity of
-<a class="reference external" href="https://docs.djangoproject.com/en/3.0/topics/migrations/#migration-squashing">squashmigraitons</a>. It reduces your many migrations to an indetermined
-number of less migrations, conditioned by the time you have been creative
+<a class="reference external" href="https://docs.djangoproject.com/en/3.0/topics/migrations/#migration-squashing">squashmigraitons</a>. It reduces your many migrations to an undetermined
+number of fewer migrations, conditioned by the time you have been creative
 and have used SQL or Python in them, operations you can mark as &quot;elidable&quot;
 if you want to have them dropped, and be careful of
 <tt class="docutils literal">CircularDependencyError</tt>, although you can use <tt class="docutils literal"><span class="pre">--no-optimize</span></tt>...</p>
@@ -403,41 +555,43 @@ systems and all your developers' databases, just remove them. Or leave them
 where they are: who cares. Even if they stay there, even thousand of them
 won't do any harm to your program start time: they are not automatically
 imported modules. If you want to keep them and not drown in patches you can
-divide them by years and change one line to the <tt class="docutils literal">patch_db</tt> script,
-whatever.</p>
+divide them into month or year directories and change one line of the
+<tt class="docutils literal">patch_db</tt> script to find them, whatever.</p>
 </li>
 </ul>
 </div>
 <div class="section" id="tips-to-write-a-migration">
 <h3>Tips to write a migration</h3>
 <p>Writing a complex migration consists in trying the operations to perform in a
-testing database and it's often an iterative procedure of trial and error,
-with error often destructive and the need of going back to the state before
-migrating and remember to add that semicolon.</p>
-<p>A way to write a migration patch of the type described here consist roughly
+testing database which is often an iterative procedure of trial and error,
+with errors often destructive and the need of going back to the state before
+migrating, and remember to add that semicolon.</p>
+<p>A way to write a migration patch of the type described here consists roughly
 in:</p>
 <ul class="simple">
 <li>create a file in the <tt class="docutils literal">schema/patches/</tt> directory called
 <tt class="docutils literal"><span class="pre">YYYY-MM-DD_some_meaninfgul_description.sql</span></tt>. If you happen to write more
-than one patch in the same day and the order matters you can add a <tt class="docutils literal">~02</tt>
-to the second patch and so on, as <tt class="docutils literal">~</tt> sorts after <tt class="docutils literal">_</tt>.</li>
-<li>Add on top of the file a <tt class="docutils literal">BEGIN;</tt> statement.</li>
-<li>Write the statement you think are valid.</li>
+than one patch in the same day and their order matters you can add a <tt class="docutils literal">~02</tt>
+after the date to the name of the second patch and so on, as <tt class="docutils literal">~</tt> sorts
+after <tt class="docutils literal">_</tt>.</li>
+<li>Add a <tt class="docutils literal">BEGIN;</tt> statement to the top of the file, followed by the
+statements you want to test.</li>
 <li>Connect to your test database with a psql shell and use <tt class="docutils literal">\i
 /path/to/your/patch.sql</tt> to try and apply your patch.</li>
 <li>If applying the patch fails, run a <tt class="docutils literal">ROLLBACK</tt> in psql, fix the error, try
 <tt class="docutils literal">\i</tt> again.</li>
-<li>If applying succeeds, you can explore the database to verify that the
-changes applied have produced the right results. You may want to run a
-<tt class="docutils literal">SAVEPOINT x</tt> command now: in case you mistype a command while verifying
-the results you can run <tt class="docutils literal">ROLLBACK TO SAVEPOINT x</tt> and revert the
-transaction to the state just after the patch was applied.</li>
+<li>If applying succeeds you can explore the database to verify that the changes
+applied have produced the right results. You may want to run a <tt class="docutils literal">SAVEPOINT
+x</tt> command now: in case you mistype a command while verifying the results
+you can run <tt class="docutils literal">ROLLBACK TO SAVEPOINT x</tt> and revert the transaction to the
+state just after the patch was applied.</li>
 <li>Your patch applied ok, but you don't like the result? <tt class="docutils literal">ROLLBACK</tt>, fix the
 patch, try again.</li>
-<li>If you are happy of what you see, you can <tt class="docutils literal">ROLLBACK</tt> this psql transaction
-and add a <tt class="docutils literal">COMMIT;</tt> to the patch script. You can now apply the patch using
-<tt class="docutils literal">patch_db</tt>. If by mistake you commit manually here, you can still run
-<tt class="docutils literal">patch_db</tt> and &quot;skip forever&quot; the patch when asked for confirmation.</li>
+<li>If you are happy of what you see you can <tt class="docutils literal">ROLLBACK</tt> this psql transaction,
+and add a <tt class="docutils literal">COMMIT;</tt> to the end of the patch script, and run <tt class="docutils literal">patch_db</tt>
+to apply for good the patch just created. If by mistake or intention you
+committed the psql changes, you can run <tt class="docutils literal">patch_db</tt> interactively and &quot;skip
+forever&quot; the patch when asked for confirmation.</li>
 </ul>
 </div>
 <div class="section" id="another-random-bit-of-advice">
@@ -446,20 +600,21 @@ and add a <tt class="docutils literal">COMMIT;</tt> to the patch script. You can
 team I'm currently collaborating, which is using Django the canonical way and
 I am convinced they can use the tools they have better. Let's see if they get
 convinced to drop Django migrations...</p>
-<p>As I'm doing this brain dump, there is another trick that I feel to file under
-&quot;know what your tool is doing&quot;: sometimes Django pages get slow because doing
-something apparently harmless like accessing a model attribute results in
-other queries run. If you do it in a loop it results in a &quot;ripple load&quot;: you
-will run 50 queries, each one fetching one record, while you could have run a
-single query fetching 50 records, or just a query with an extra JOIN.</p>
+<p>As I'm writing down this brain dump, there is another trick that I feel to
+file under &quot;know what your tool is doing&quot;: sometimes Django pages get slow
+because adding something apparently harmless such as accessing a model
+attribute results in unexpected queries run behind the scene. If you do it in
+a loop it results in a &quot;ripple load&quot;: you will run 50 queries, each one
+fetching one record, while you could have run a single query fetching 50
+records, or just adding an extra JOIN to another query.</p>
 <p>How to identify this problem? While you are developing using the development
-server, you can log all the operations performed to the database adding this
-logger configuration to your <tt class="docutils literal">settings.py</tt>:</p>
+server you can log all the operations performed to the database adding the
+following logger configuration to your <tt class="docutils literal">settings.py</tt>:</p>
 <pre class="code python literal-block">
 <span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
     <span class="c1"># ...</span>
     <span class="s1">'loggers'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="c1"># ....</span>
+        <span class="c1"># ...</span>
         <span class="s1">'django.db'</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">'handlers'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'console'</span><span class="p">],</span>
             <span class="s1">'level'</span><span class="p">:</span> <span class="s1">'DEBUG'</span><span class="p">,</span>
@@ -467,32 +622,36 @@ logger configuration to your <tt class="docutils literal">settings.py</tt>:</p>
     <span class="p">},</span>
 <span class="p">}</span>
 </pre>
-<p>You will get used to the rhythm of blobs of SQL popping into the log at each
-request. But if you introduce by mistake a ripple load it will be very easy to
-spot: a fast train of short statement will blaze in the log console. Either it
-happens in Python code, or in a template, or as a result of an asynchronous
-ajax calls (so not counted in request-oriented tools such as the Django Debug
-Toolbar) it will be unmissable; looking at these statements it will be easy to
-understand what model caused it and the right <a class="reference external" href="https://docs.djangoproject.com/en/3.0/ref/models/querysets/#select-related">select_related()</a> to add.</p>
+<p>You will get used to the rhythm of blobs of SQL popping into the dev server
+log at each request. If you introduce by mistake a ripple load it will be
+very easy to spot: a fast train of short statement will blaze in the log
+console. Either it happens in Python code, or in a template, or as a result of
+an asynchronous ajax calls (so not included in request-oriented tools such as
+the Django Debug Toolbar) it will be unmissable; looking at these statements
+it will be easy to understand what model caused it and the right
+<a class="reference external" href="https://docs.djangoproject.com/en/3.0/ref/models/querysets/#select-related">select_related()</a> to add.</p>
 <p>You are welcome.</p>
 </div>
 <div class="section" id="do-you-hate-django">
-<h3>Do you hate Django?</h3>
+<h3>&quot;Do you hate Django?&quot;</h3>
 <p>No, I don't, I still like it, although, with Python moving towards asyncio and
 <a class="reference external" href="/blog/2020/03/31/first-experience-mypy/">static typing</a>, and with the established
-web architecture of a JSON API consumed by a JavaScript front-end, the
-appeal for other frameworks such as <a class="reference external" href="https://fastapi.tiangolo.com/">FastAPI</a> is increasing. As opinionated as I am, I
-quite like the Django ORM: very simple to use, well integrated with the Python
-objects it produces, and it allows to write monsters of nested queries with
-great ease.</p>
+web architecture of JSON APIs consumed by JavaScript front-ends, the appeal
+for other frameworks such as <a class="reference external" href="https://fastapi.tiangolo.com/">FastAPI</a> is
+increasing. As opinionated about database as I am, I quite like the Django
+ORM: very simple to use, well integrated with the Python objects it produces,
+and it allows to write monsters of nested queries with great ease. Peeking at
+the logs of the SQL statements produced for you by the <tt class="docutils literal">django.db</tt> logger
+commands some admiration.</p>
 <p>What I really don't like is when tools get in the way of someone's work.
 Sometimes the tools are complex because the problem they try to solve is. But
 you are free to ask yourself the question: do I really have that problem? You
-might get to the conclusion that no, you don't, and you can make choices to
-simplify your life.</p>
-<p>In the case of Django, the right economy for me is to use the ORM for querying
-and manipulating data, but to avoid using the Models to produce schema, and to
-stay well clear of migrations.</p>
+might get to the conclusion that you might not, and you can make choices
+against conventions to simplify your life.</p>
+<p>In the case of Django, the right economy for me is to get to know inside out
+the ORM features and take full advantage of it to query and manipulate data,
+but to avoid using the Models to produce schema, using the native database
+language and tools instead, and to stay well clear of migrations.</p>
 </div>
 
 <script src="https://utteranc.es/client.js"
