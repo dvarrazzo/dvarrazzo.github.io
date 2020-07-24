@@ -626,7 +626,7 @@ following logger configuration to your <tt class="docutils literal">settings.py<
 log at each request. If you introduce by mistake a ripple load it will be
 very easy to spot: a fast train of short statement will blaze in the log
 console. Either it happens in Python code, or in a template, or as a result of
-an asynchronous ajax calls (so not included in request-oriented tools such as
+asynchronous ajax calls (so not included in request-oriented tools such as
 the Django Debug Toolbar) it will be unmissable; looking at these statements
 it will be easy to understand what model caused it and the right
 <a class="reference external" href="https://docs.djangoproject.com/en/3.0/ref/models/querysets/#select-related">select_related()</a> to add.</p>
