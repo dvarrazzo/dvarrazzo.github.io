@@ -2,13 +2,579 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">Blog</title>
   <id>urn:uuid:345e7579-5b16-39e4-9f1d-2a4bff93035d</id>
-  <updated>2020-05-19T00:00:00Z</updated>
+  <updated>2020-07-25T00:00:00Z</updated>
   <link href="https://www.varrazzo.com/blog/" />
   <link href="https://www.varrazzo.com/blog.xml" rel="self" />
   <author>
     <name></name>
   </author>
   <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/07/25/surviving-django/">
+    <title type="text">Surviving Django (if you care about databases)</title>
+    <id>urn:uuid:070a000d-40f1-3e95-8b80-bf979d9c29e3</id>
+    <updated>2020-07-25T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/07/25/surviving-django/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;p&gt;Django is currently the most commonly used full-stack web framework for Python. It has
+been around for a good 15 years, emerging as a winner from a period in which
+Python was already mature, but its web development tools were comparatively
+much more immature and fragmented.&lt;/p&gt;
+&lt;p&gt;Django allows the definition of objects in your program as &amp;quot;models&amp;quot; using the
+&lt;tt class=&quot;docutils literal&quot;&gt;Model&lt;/tt&gt; base class. They behave largely like normal Python classes, with
+added support to save into, and retrieve from, the relational database backing
+your application. If you don't need such database support, you didn't
+need a full-stack web framework in first place.&lt;/p&gt;
+&lt;p&gt;Django tries to be independent from the database you choose. It sounds like
+a good idea, but only on paper. After working several years
+with Django systems, both written from scratch or inherited and maintained, I
+feel the &amp;quot;blessed&amp;quot; way of working with databases and
+Django leads you to using your database in a sub-optimal way, and unnecessarily complicates
+the development and maintenance cycle of your project.&lt;/p&gt;
+&lt;p&gt;I think the divergence between wishful thinking and reality starts from a
+fundamental misunderstanding between you and Django, which is not written in
+the contract you haven't signed with them anyway:&lt;/p&gt;
+&lt;blockquote class=&quot;pull-quote&quot;&gt;
+&amp;quot;independence from the relational database&amp;quot; is a feature needed by Django
+as a framework, &lt;em&gt;not by the program you are writing&lt;/em&gt;.&lt;/blockquote&gt;
+&lt;p&gt;Django needs it because a web framework not tied to a single database vendor
+is more valuable than one tied to a specific one - and that's fair enough. &lt;em&gt;But you
+don't:&lt;/em&gt; your web program, most likely than not, will not have to switch from
+one database to another. So, &lt;a class=&quot;reference external&quot; href=&quot;https://www.martinfowler.com/bliki/Yagni.html&quot;&gt;You Ain't Gonna Need It™&lt;/a&gt;. Portability at all costs
+leads to at least two problems:&lt;/p&gt;
+&lt;p&gt;1) You will not able to use all the features offered by your relational
+database.&lt;/p&gt;
+&lt;p&gt;2) Every change to your models, or to your database schema, will be more
+complicated than it should be.&lt;/p&gt;
+&lt;div class=&quot;section&quot; id=&quot;you-ain-t-gonna-need-it&quot;&gt;
+&lt;h3&gt;You Ain't Gonna Need It&lt;/h3&gt;
+&lt;p&gt;How many times have you worked on a project and, after 1-2 years of
+development, you have changed to a different database?&lt;/p&gt;
+&lt;p&gt;I can tell you how many times it happened to me, I counted them: exactly
+never.&lt;/p&gt;
+&lt;p&gt;Replacing your database vendor is a major, traumatic occurrence, almost as
+much as rewriting your program in a different language. If you replace your
+database, more likely than not, it is because you are interested in the
+features of the new databas. You need to use them so using the common
+functionalities between the old and the new one will not solve any of your
+problems.&lt;/p&gt;
+&lt;p&gt;Did you maybe start your project with SQLite and now your project grew enough
+to need a bigger database? If so then you are still at the phase in
+which your project is a toy: you haven't done anything yet that requires
+thinking in terms of concurrency. Even if you have to rewrite a few things,
+it's not going to be a lot.&lt;/p&gt;
+&lt;p&gt;Do you have a large MySQL project and now you have to migrate to PostgreSQL?
+That's not gonna happen: you have probably tweaked MySQL, have expertise in
+MySQL. Maybe PostgreSQL might be a better database in some aspects, but not so much
+that you want to migrate all your data and start from scratch without
+&lt;a class=&quot;reference external&quot; href=&quot;http://www.catb.org/jargon/html/F/frobnicate.html&quot;&gt;frobbing, twiddling, tweaking&lt;/a&gt; the database configuration. Did you say
+you have High Availability and Disaster Recovery configured? That's to be
+converted too of course.&lt;/p&gt;
+&lt;p&gt;In the above paragraph, replace the database vendor with all the permutations
+of MySQL, PostgreSQL, MS SQL, Oracle. &lt;em&gt;That's not gonna happen&lt;/em&gt;. Except maybe
+if an Oracle salesman gets hold of someone in your project with a modicum of
+decision making and talks them into buying some sort of expensive license, but
+that's not a technical problem, it's a political one, and it's up to you to
+decide if you are comfortable with it.&lt;/p&gt;
+&lt;p&gt;Have you got PostgreSQL in production, but you want to test with SQLite because
+it's easier to set up? If so, your tests are just a tick-box exercise: you
+are not testing anything remotely plausible and resembling your live system.&lt;/p&gt;
+&lt;p&gt;Choosing a database happens in the first days of your projects, it will not
+happen when the project is mature. You may as well use all the features
+available with your database, not only the ones common enough that Django
+created a Python wrapper for it.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;use-all-the-features&quot;&gt;
+&lt;h3&gt;Use all the features&lt;/h3&gt;
+&lt;p&gt;Scanning the schema of a Django program I've written and maintained for a few
+years I see:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;Schemas (as in the &amp;quot;directory of the tables&amp;quot;, not all the other meanings)&lt;/li&gt;
+&lt;li&gt;Custom domains&lt;/li&gt;
+&lt;li&gt;Collations&lt;/li&gt;
+&lt;li&gt;Triggers&lt;/li&gt;
+&lt;li&gt;Permissions&lt;/li&gt;
+&lt;li&gt;Partial indexes&lt;/li&gt;
+&lt;li&gt;Constraint exclusions&lt;/li&gt;
+&lt;li&gt;Views&lt;/li&gt;
+&lt;li&gt;Stored procedures&lt;/li&gt;
+&lt;li&gt;Partitioned tables&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;If these features were used, it's because they allowed to implement
+certain features needed for the program in a simpler way than what possible in
+the language (if even would have been possible there). Audit for
+instance: Django doesn't have an audit feature except for the changes made in
+the admin. Even if you added some form of manual auditing to each &lt;tt class=&quot;docutils literal&quot;&gt;save()&lt;/tt&gt;
+method, it will not capture changes made outside Django. It wouldn't be very
+secure either: Django uses a single user to access the database so if someone
+manages to hijack that user, they would be able to change the data in the database
+and alter the audit tables to hide their traces.&lt;/p&gt;
+&lt;p&gt;In PostgreSQL you can:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;Create an &amp;quot;audit&amp;quot; user: it will have different permissions than the user of
+the Django application.&lt;/li&gt;
+&lt;li&gt;Create an &amp;quot;audit&amp;quot; schema: revoking write permission to all the objects it
+will contain from the Django user.&lt;/li&gt;
+&lt;li&gt;Create a function to append a record to an audit table owned by the &amp;quot;audit&amp;quot;
+user, but callable by the Django user.&lt;/li&gt;
+&lt;li&gt;Add a trigger to the tables to audit.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This setup requires Postgres-specific knowledge, which is fair for a feature
+that has to watch over the database data whichever the origin of the change
+is. But being PostgreSQL extensible as it is, you can &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/pgaudit&quot;&gt;use an extension&lt;/a&gt; to automate the creation and
+maintenance of the audit triggers and functions.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;so-where-do-i-put-the-schema&quot;&gt;
+&lt;h3&gt;So where do I put the schema?&lt;/h3&gt;
+&lt;p&gt;Into an SQL file!&lt;/p&gt;
+&lt;p&gt;With its tiny &lt;tt class=&quot;docutils literal&quot;&gt;.sql&lt;/tt&gt; extension!&lt;/p&gt;
+&lt;p&gt;And with comments! Explaining why a certain index or constraint exist!&lt;/p&gt;
+&lt;p&gt;With constraints named meaningfully, available for manipulation, not
+&lt;tt class=&quot;docutils literal&quot;&gt;auth_group_permissions_group_id_b120cbf9_fk_auth_group_id&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;Sounds civilised to me.&lt;/p&gt;
+&lt;p&gt;The nice thing of doing this is that, if you do things carefully enough, Django
+will not notice anything at all.&lt;/p&gt;
+&lt;p&gt;Take the above audit examples: Django is not meant to interact with it:
+everything will just happen under its nose. You can use views instead of
+tables for read-only models, you can use domains instead of more basic data
+types for your fields: Django won't see your triggers triggering, your
+constraints constraining, your permissions permitting - except when things go
+wrong, which will result in an error 500 and a Python traceback. This is at least
+better than bad data in the database. Also it won't see your procedures
+proceeding, your domains dominating...you get the idea.&lt;/p&gt;
+&lt;p&gt;Using psql to import the schema into an empty database means you can modularise the
+code and use &lt;tt class=&quot;docutils literal&quot;&gt;\i&lt;/tt&gt; to import &amp;quot;submodules&amp;quot;. A typical pattern for me is to have
+a &lt;tt class=&quot;docutils literal&quot;&gt;database.sql&lt;/tt&gt; to create global objects (users, extensions, schemas),
+set the basic permissions and import the details into target schemas.&lt;/p&gt;
+&lt;pre class=&quot;code postgres literal-block&quot;&gt;
+&lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;users&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sql&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;revoke&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;schema&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;public&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;-- safety
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;--- create a schema for the django app tables
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;schema&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;grant&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;usage&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;schema&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;backup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;--- set the default permissions for all the object that will be created there
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;alter&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;privileges&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;schema&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;grant&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;insert&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;update&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;delete&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;tables&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;alter&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;privileges&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;schema&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;grant&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;select&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;tables&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;view&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;backup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;alter&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;privileges&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;schema&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;grant&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;all&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sequences&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;alter&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;privileges&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;schema&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;grant&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;select&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sequences&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;backup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;--- import the tables into the schema
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;search_path&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;public&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;django&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sql&lt;/span&gt;   &lt;span class=&quot;c1&quot;&gt;-- django objects - users, groups, permissions tables
+&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sql&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;-- your app models
+&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;reset&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;search_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;The &lt;tt class=&quot;docutils literal&quot;&gt;database.sql&lt;/tt&gt; doesn't create the database itself so you can create an
+empty one anywhere it's needed, then you can use &lt;tt class=&quot;docutils literal&quot;&gt;psql &lt;span class=&quot;pre&quot;&gt;-f&lt;/span&gt; database.sql
+&lt;span class=&quot;pre&quot;&gt;&amp;quot;postgres://connection/url&amp;quot;&lt;/span&gt;&lt;/tt&gt; to populate it. The &lt;tt class=&quot;docutils literal&quot;&gt;myapp.sql&lt;/tt&gt; file
+shouldn't contain any reference to the schema &lt;tt class=&quot;docutils literal&quot;&gt;myapp&lt;/tt&gt; where the objects are
+created so the schama can be easily changed. Postgres doesn't have a statement like
+&lt;tt class=&quot;docutils literal&quot;&gt;CREATE USER ... IF NOT EXIST&lt;/tt&gt;: in &lt;tt class=&quot;docutils literal&quot;&gt;users.sql&lt;/tt&gt; you can simulate it with:&lt;/p&gt;
+&lt;pre class=&quot;code postgres literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;begin&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;perform&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pg_user&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;where&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;usename&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'myapp'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;found&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;user&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;language&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;plpgsql&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;migrations&quot;&gt;
+&lt;h3&gt;Migrations&lt;/h3&gt;
+&lt;p&gt;Django has an amazingly complex system to &lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/topics/migrations/&quot;&gt;perform model migrations&lt;/a&gt;. It is
+complex amongst other reasons because:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;It actually migrates &lt;em&gt;Python models&lt;/em&gt; not &lt;em&gt;database schemas&lt;/em&gt;. Even if you change a field's help
+text, it generates a migration.&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Migration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;migrations&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Migration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;operations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;migrations&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AlterField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;model_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'foo'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'bar'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;field&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BooleanField&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;help_text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'I only changed this'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;That's not useful at all for the database, but Django will create it for you
+and if you remove it, it will add it back. Similarly, changing a &lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/ref/models/fields/#choices&quot;&gt;choices
+list&lt;/a&gt;, a display label, results in migrations with no database operation,
+only a Python operation, and practically no SQL purpose.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;It allows access to the state of the model at times intermediate between
+migrations, using &lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/ref/applications/#django.apps.AppConfig.get_models&quot;&gt;get_model&lt;/a&gt;&lt;tt class=&quot;docutils literal&quot;&gt;(appname, modelname)&lt;/tt&gt; and with some
+Python code in the returned model. But if that code also happens to use
+any code inside your application, importing models with a normal Python
+&lt;tt class=&quot;docutils literal&quot;&gt;import&lt;/tt&gt;, things will crash because of a mismatch between model
+definitions and schema in the database. But they won't crash immediately: only
+later when you will apply some unrelated migration. And not when that
+migration is needed: only after it has already been applied and it doesn't
+have anything more to do in its lifetime: it is implemented as a model that
+Django will keep on importing over and over. In a project I'm currently
+working on, I had to add this function into our codebase:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;can_run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;transaction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atomic&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;models&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;objects&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;except&lt;/span&gt; &lt;span class=&quot;ne&quot;&gt;Exception&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;False&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;True&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;And use it as a whack-a-mole to avoid already applied migrations from exploding,
+adding early bailouts like:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;data_migration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;apps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;schema_editor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;can_run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Model1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Model2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Model3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;# ...the stuff I meant to do&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Migration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;migrations&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Migration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;operations&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;migrations&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RunPython&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data_migration&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;It detects changes to your models and infers how to change the schema.
+This is pretty much impossible to do in an automated way, except in the
+simplest cases. So the feature is incomplete, and when it thinks it
+knows what it's doing, often it doesn't and it's hard to tell it to stop.&lt;/p&gt;
+&lt;p&gt;In a case I experienced, my model &lt;tt class=&quot;docutils literal&quot;&gt;Foo&lt;/tt&gt; needed some extra pepper to its attribute
+&lt;tt class=&quot;docutils literal&quot;&gt;bar&lt;/tt&gt;. So we thought to fetch the data from the database into a hidden
+&lt;tt class=&quot;docutils literal&quot;&gt;_bar&lt;/tt&gt; attribute and then have a Python property to expose it:&lt;/p&gt;
+&lt;pre class=&quot;code diff literal-block&quot;&gt;
+ class Foo(models.Model):
+
+&lt;span class=&quot;gd&quot;&gt;-    bar = models.CharField(
+&lt;/span&gt;&lt;span class=&quot;gi&quot;&gt;+    _bar = models.CharField(
+&lt;/span&gt;         max_length=255,
+&lt;span class=&quot;gi&quot;&gt;+        db_column='bar',
+&lt;/span&gt;     )
+&lt;span class=&quot;gi&quot;&gt;+
++    &amp;#64;property
++    def bar(self):
++        return something_more()&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;No change needed to the database, but Django insisted on creating migration
+consisting pretty much of:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;ALTER TABLE foo DROP COLUMN bar;
+ALTER TABLE foo ADD COLUMN bar;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So goodbye to your data! But who needs a &lt;tt class=&quot;docutils literal&quot;&gt;bar&lt;/tt&gt; anyway. Although I think I could've
+used a bar, and a few drinks, if that migration had hit production.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Much of the complexity of this system is designed to give you a specific
+feature: migrations abstracted from your database. In my opinion, if there is
+something less likely to happen than writing a complex app to run on
+interchangeable databases, it's the need to repeat the same history of
+migrations. The cost you pay for this YAGNI feature is a cumbersome and
+fragile system trying to have a life of its own whilst fighting yours. It is a
+direct application of &lt;a class=&quot;reference external&quot; href=&quot;https://twitter.com/jeremydmiller/status/568797862441586688&quot;&gt;Jeremy Miller's observation&lt;/a&gt; that &lt;em&gt;any extensibility
+point that’s never used isn’t just wasted effort, it’s likely to also get in
+your way as well&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;I may be a bit of a control freak, but I think that there is too much magic
+here and too few hooks to intervene to correct it, all playing too close with my
+data to feel comfortable. This comes with the advantage of being able to
+replay your migrations in the future on a different database vendor, but I
+struggle to find a valid use case for it not involving parallel universes and
+time machines.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;so-what-do-i-use-instead-of-migrations&quot;&gt;
+&lt;h3&gt;So what do I use instead of migrations?&lt;/h3&gt;
+&lt;p&gt;You can use SQL files! Yes, same extensions as before. It takes some
+discipline, but it rewards with great control of the behaviour of the database
+and the safety of the data. The work involved consists in:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;Knowing your database and its data definition and manipulation language: to
+know how to change the schema and the data associated.&lt;/li&gt;
+&lt;li&gt;If you have the database schema in source control, when you change the
+schema, you will usually want to associate a similar &amp;quot;schema patch&amp;quot;. An
+ex-colleague of mine wrote a script to &amp;quot;prime&amp;quot; a migration with the right name
+and a comment containing the diff of the schema, to give an idea of what to
+do.&lt;/li&gt;
+&lt;li&gt;You can have a database table recording the schema patches already applied
+to the database and a script to look for unapplied patches: run them,
+and record them into the table, to run on deployment.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I have a &lt;a class=&quot;reference external&quot; href=&quot;https://gist.github.com/dvarrazzo/86b06961fa3278293e193417adbf3daf&quot;&gt;patch_db.py&lt;/a&gt; script that I have used, with small variations, in
+several projects. It is meant to be executed as a database superuser so that
+the application user can be given only limited privileges: enough to read and
+change the data it needs. No need to be a superuser or to own the tables to be
+able to change their schema. A few features of this simple script include:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;If the database had never been patched, it creates a &lt;tt class=&quot;docutils literal&quot;&gt;schema_patch&lt;/tt&gt; table
+and registers the patches available, as already applied.&lt;/li&gt;
+&lt;li&gt;If the table exists, it compares the content of the patches directory with
+the table content and applies and registers the missing patches in
+alphabetical order. You can use the date as prefix to make sure they are
+applied in the correct order.&lt;/li&gt;
+&lt;li&gt;It keeps an advisory lock for the entire run to make sure that there will
+not be two patching processes running concurrently by mistake.&lt;/li&gt;
+&lt;li&gt;The patching process is identifiable in PostgreSQL via its appname so it
+can be monitored and dealt with, in case it behaves unexpectedly.&lt;/li&gt;
+&lt;li&gt;Patches can be applied one by one, with interactive user confirmation, or
+unattended for automatic deployment.&lt;/li&gt;
+&lt;li&gt;You can associate executable scripts to a patch, to run before or after it,
+to implement procedures difficult to implement in SQL: you can have
+&lt;tt class=&quot;docutils literal&quot;&gt;my_patch.pre.sh&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;my_patch.post.py&lt;/tt&gt; to run respectively before and
+after &lt;tt class=&quot;docutils literal&quot;&gt;my_patch.sql&lt;/tt&gt; is applied, receiving a &lt;tt class=&quot;docutils literal&quot;&gt;PATCH_DSN&lt;/tt&gt; environment
+variable to know where to connect to.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The script is independent from Django; if used in a Django project it might be
+reimplemented as a management command, but I have never felt compelled to do
+so.&lt;/p&gt;
+&lt;p&gt;Once this script is integrated with your deployment procedures, there are these
+few examples of patches that can be produced, scanning the patches directory
+of projects I have worked with:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;Add a field to a table, populate it with data obtained querying other
+database tables.&lt;/li&gt;
+&lt;li&gt;Move a field to another table, split a table into two joined tables, change a
+relation from one-to-many to many-to-many without losing the current
+relations.&lt;/li&gt;
+&lt;li&gt;Partition previously unpartitioned data by creating partitions, moving
+data into them, and emptying the base table.&lt;/li&gt;
+&lt;li&gt;Add a new currency to the currencies table, change the name of that Balkan
+nation to &amp;quot;Republic of North Macedonia&amp;quot;, remove that island from the
+list of European Union nations, or any other change to some &amp;quot;configuration
+table&amp;quot;.&lt;/li&gt;
+&lt;li&gt;Fix data after a bug producing wrong data was discovered.&lt;/li&gt;
+&lt;li&gt;Add a new Django group and set the group permissions or add new objects'
+permissions to existing groups.&lt;/li&gt;
+&lt;li&gt;Create a normal column for a piece of data that was previously stored in an
+unstructured way into a JSON field, remove the data from the JSON and move
+it to the new field.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In practice, Django migrations create automatically only the simplest of
+operations, like adding a new (empty) column or dropping a column. Renaming a
+column is already an operation fraught with perils, and manipulating data
+using Python models while the models themselves are being altered, is a task of
+Shrödingeranean complexity.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;is-it-difficult-to-write-patches&quot;&gt;
+&lt;h3&gt;Is it difficult to write patches?&lt;/h3&gt;
+&lt;p&gt;Most of the time writing an SQL patch is simpler than writing a
+patch in the Django migration system. The latter is something that, in order to achieve
+successfully, requires knowledge not so much of the database, but rather of the
+migration system itself.&lt;/p&gt;
+&lt;p&gt;Looking at a few examples, taken directly from Django's own &lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/howto/writing-migrations/&quot;&gt;writing
+migrations&lt;/a&gt; page:&lt;/p&gt;
+&lt;p&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#migrations-that-add-unique-fields&quot;&gt;Adding a non-nullable field&lt;/a&gt; in Django migrations involves creating the
+normal migration, i.e. the one creating a
+&lt;tt class=&quot;docutils literal&quot;&gt;field=models.UUIDField(default=uuid.uuid4, unique=True)&lt;/tt&gt;, creating
+two empty ones (it's suggested to use &lt;tt class=&quot;docutils literal&quot;&gt;makemigrations myapp &lt;span class=&quot;pre&quot;&gt;--empty&lt;/span&gt;&lt;/tt&gt;
+because there's a certain amount of boilerplate involved), and pretty much
+have a sequence of:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;Create a field with the default, but nullable&lt;/li&gt;
+&lt;li&gt;Fill it with values (using a &lt;tt class=&quot;docutils literal&quot;&gt;RunPython&lt;/tt&gt; step)&lt;/li&gt;
+&lt;li&gt;Make it non-nullable&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;There is also a bit of a race condition between object creation whilst the
+migration has been applied.&lt;/p&gt;
+&lt;p&gt;The same steps, in SQL, take much less boilerplate: in one patch you can:&lt;/p&gt;
+&lt;pre class=&quot;code postgres literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;BEGIN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ALTER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp_mymodel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ADD&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;uuid&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;uuid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;UPDATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp_mymodel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;uuid&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;uuid_generate_v4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ALTER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;myapp_mymodel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ALTER&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;uuid&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;SET&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NOT&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;COMMIT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Or variations of the above (if you want the default generated by the
+database, a non-locking operation on a large table, a unique constraint...)&lt;/p&gt;
+&lt;hr class=&quot;docutils&quot; /&gt;
+&lt;p&gt;Writing &lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#non-atomic-migrations&quot;&gt;non-atomic migrations&lt;/a&gt; can either all be dealt with in one SQL
+script using a PL/pgSQL &lt;tt class=&quot;docutils literal&quot;&gt;DO&lt;/tt&gt; statement or with an additional script to
+replace the second step in the previous example (untested):&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;c1&quot;&gt;# migration add_uuid_nullable.post.py&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&amp;quot;&amp;quot;
+        UPDATE myapp_mymodel SET uuid = uuid_generate_v4()
+        FROM (
+            SELECT id FROM myapp_mymodel WHERE uuid IS NULL
+            ORDER BY id LIMIT 1000
+        ) x USING (id)
+        RETURNING id
+        &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fetchall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
+&lt;/pre&gt;
+&lt;hr class=&quot;docutils&quot; /&gt;
+&lt;p&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#migrating-data-between-third-party-apps&quot;&gt;Migrating data between third-party apps&lt;/a&gt; gets in the way with the whole
+&lt;tt class=&quot;docutils literal&quot;&gt;get_model()&lt;/tt&gt; machinery and you have to fight its error.&lt;/p&gt;
+&lt;p&gt;It's much more simple if you just leave Python out:&lt;/p&gt;
+&lt;pre class=&quot;code postgres literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;ALTER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;oldapp_oldmodel&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;RENAME&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TO&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newapp_newmodel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;Or whatever &lt;tt class=&quot;docutils literal&quot;&gt;INSERT&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;UPDATE&lt;/tt&gt; it takes to get data into new tables.&lt;/p&gt;
+&lt;hr class=&quot;docutils&quot; /&gt;
+&lt;p&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#changing-a-manytomanyfield-to-use-a-through-model&quot;&gt;Changing a ManyToManyField to use a through model&lt;/a&gt; is another example where
+Django considers your data expendable and to jump through &lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/ref/migration-operations/#django.db.migrations.operations.SeparateDatabaseAndState&quot;&gt;sophisticated
+hoops&lt;/a&gt; if you romantically want to hold onto them.&lt;/p&gt;
+&lt;p&gt;The whole example is 64 lines of code that make sense only if you know the
+internal model of the schema changing machinery and how to separate schema
+changes and Django models state operations (which, in my opinion, had no reason to be
+merged together in first place and the second has no reason to exist).&lt;/p&gt;
+&lt;p&gt;Dropping the complications, everything you need is here:&lt;/p&gt;
+&lt;pre class=&quot;code postgres literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;ALTER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;core_book_authors&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;RENAME&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TO&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;core_authorbook&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ALTER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;core_authorbook&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ADD&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is_primary&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;The first statement, by the way, is verbatim in a &lt;tt class=&quot;docutils literal&quot;&gt;RunSQL&lt;/tt&gt; example.
+I think this example wouldn't necessarily have been portable so I
+really struggle to see the point of all this.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;commands-you-don-t-want-to-use&quot;&gt;
+&lt;h3&gt;Commands you don't want to use&lt;/h3&gt;
+&lt;p&gt;Once you have introduced your migration procedures, and motivated your team
+into using them, these are a few operations you can use to replace the
+official ways of involving Django migrations:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;manage.py migrate&lt;/tt&gt;: the first time (e.g. new dev setup, unit tests) you
+can run &lt;tt class=&quot;docutils literal&quot;&gt;psql &lt;span class=&quot;pre&quot;&gt;-f&lt;/span&gt; database.sql&lt;/tt&gt;. If you do it in a test suite run, you will
+have tested your schema too. If an initial schema is already in place
+(deployment in staging and production, distributing changes to other
+developers) you can run something similar to the proposed &lt;a class=&quot;reference external&quot; href=&quot;https://gist.github.com/dvarrazzo/86b06961fa3278293e193417adbf3daf&quot;&gt;patch_db.py&lt;/a&gt;
+and have tested the patches too.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;manage.py makemigrations&lt;/tt&gt;: run &lt;tt class=&quot;docutils literal&quot;&gt;git diff &lt;span class=&quot;pre&quot;&gt;schema/*.sql&lt;/span&gt;&lt;/tt&gt; and work out
+what you have to do, like all the other times you wanted to use the Django
+command that didn't do everything you needed.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;manage.py sqlmigrate&lt;/tt&gt;: replaced by &lt;tt class=&quot;docutils literal&quot;&gt;cat&lt;/tt&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;manage.py showmigrations&lt;/tt&gt;: you can use &lt;tt class=&quot;docutils literal&quot;&gt;patch_db.py &lt;span class=&quot;pre&quot;&gt;--dry-run&lt;/span&gt;&lt;/tt&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class=&quot;first&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;manage.py squashmigrations&lt;/tt&gt;: ...I am in awe of the complexity of
+&lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/topics/migrations/#migration-squashing&quot;&gt;squashmigraitons&lt;/a&gt;. It reduces your many migrations to an undetermined
+number of fewer migrations, conditioned by the time you have been creative
+and have used SQL or Python in them. You can mark operations as &amp;quot;elidable&amp;quot;,
+if you want to have them dropped, but be careful of
+&lt;tt class=&quot;docutils literal&quot;&gt;CircularDependencyError&lt;/tt&gt;, although you can use &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;--no-optimize&lt;/span&gt;&lt;/tt&gt;...&lt;/p&gt;
+&lt;p&gt;You can replace squashmigrations with &lt;tt class=&quot;docutils literal&quot;&gt;rm&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;Once the migrations have been applied to all your testing and production
+systems, and all your developers' databases, just remove them. Or leave them
+where they are: who cares. Even if they stay there, even thousands of them
+won't do any harm to your program's start-up time: they are not automatically
+imported modules. If you want to keep them and not drown in patches, you can
+divide them into month or year directories, and change one line of the
+&lt;tt class=&quot;docutils literal&quot;&gt;patch_db&lt;/tt&gt; script to find them.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;tips-to-write-a-migration&quot;&gt;
+&lt;h3&gt;Tips to write a migration&lt;/h3&gt;
+&lt;p&gt;Writing a complex migration consists of trying the operations to perform in a
+testing database, which is often an iterative procedure of trial and error,
+where mistakes are made, requiring to go back to the state before
+migrating, and don't forget to add that semicolon!&lt;/p&gt;
+&lt;p&gt;A way to write a migration patch of the type described here consists roughly
+of the below:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;Create a file in the &lt;tt class=&quot;docutils literal&quot;&gt;schema/patches/&lt;/tt&gt; directory called
+&lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;YYYY-MM-DD_some_meaninfgul_description.sql&lt;/span&gt;&lt;/tt&gt;. If you happen to write more
+than one patch in the same day, and their order matters, you can add a &lt;tt class=&quot;docutils literal&quot;&gt;~02&lt;/tt&gt;
+after the date to the name of the second patch and so on, as &lt;tt class=&quot;docutils literal&quot;&gt;~&lt;/tt&gt; sorts
+after &lt;tt class=&quot;docutils literal&quot;&gt;_&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;Add a &lt;tt class=&quot;docutils literal&quot;&gt;BEGIN;&lt;/tt&gt; statement to the top of the file, followed by the
+statements you want to test.&lt;/li&gt;
+&lt;li&gt;Connect to your test database with a psql shell and use &lt;tt class=&quot;docutils literal&quot;&gt;\i
+/path/to/your/patch.sql&lt;/tt&gt; to try and apply your patch.&lt;/li&gt;
+&lt;li&gt;If applying the patch fails, run a &lt;tt class=&quot;docutils literal&quot;&gt;ROLLBACK&lt;/tt&gt; in psql, fix the error and try
+&lt;tt class=&quot;docutils literal&quot;&gt;\i&lt;/tt&gt; again.&lt;/li&gt;
+&lt;li&gt;If applying succeeds, you can explore the database to verify that the changes
+applied have produced the right results. You may want to run a &lt;tt class=&quot;docutils literal&quot;&gt;SAVEPOINT
+x&lt;/tt&gt; command now. In case you mistype a command while verifying the results,
+you can run &lt;tt class=&quot;docutils literal&quot;&gt;ROLLBACK TO SAVEPOINT x&lt;/tt&gt; and revert the transaction to the
+state just after the patch was applied.&lt;/li&gt;
+&lt;li&gt;Your patch applied ok, but you don't like the result? &lt;tt class=&quot;docutils literal&quot;&gt;ROLLBACK&lt;/tt&gt;, fix the
+patch then try again.&lt;/li&gt;
+&lt;li&gt;If you are happy with what you see, you can &lt;tt class=&quot;docutils literal&quot;&gt;ROLLBACK&lt;/tt&gt; this psql transaction,
+add a &lt;tt class=&quot;docutils literal&quot;&gt;COMMIT;&lt;/tt&gt; to the end of the patch script and run &lt;tt class=&quot;docutils literal&quot;&gt;patch_db&lt;/tt&gt;
+to apply the patch just created for good. If, by mistake or intention, you
+committed the psql changes, you can run &lt;tt class=&quot;docutils literal&quot;&gt;patch_db&lt;/tt&gt; interactively and &amp;quot;skip
+forever&amp;quot; the patch when asked for confirmation.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;another-random-bit-of-advice&quot;&gt;
+&lt;h3&gt;Another random bit of advice&lt;/h3&gt;
+&lt;p&gt;The motivation for writing this article comes from knowledge sharing with the
+team I'm currently collaborating with, who are using Django the canonical way.
+I am convinced they can better use the tools they have. Let's see if they can
+be persuaded to drop Django migrations...&lt;/p&gt;
+&lt;p&gt;As I'm writing this entire brain dump, there's another trick that should be
+filed under &amp;quot;know what your tool is doing&amp;quot;. Sometimes Django pages become slow
+because, adding something apparently harmless, such as accessing a model
+attribute, results in unexpected queries running behind the scenes. If you do it in
+a loop, it results in a &amp;quot;ripple load&amp;quot;, meaning you'll run 50 queries, each one
+fetching one record, while you could have run a single query fetching 50
+records, or just adding an extra JOIN to another query.&lt;/p&gt;
+&lt;p&gt;How do you identify this problem? While you are developing using the development
+server, you can log all the operations performed to the database adding the
+following logger configuration to your &lt;tt class=&quot;docutils literal&quot;&gt;settings.py&lt;/tt&gt;:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;LOGGING&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# ...&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;'loggers'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;# ...&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;'django.db'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'handlers'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'console'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+            &lt;span class=&quot;s1&quot;&gt;'level'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'DEBUG'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;You will get used to the amount of SQL blobs popping up in the dev server
+log at each request. If you accidentally introduce a ripple load, it'll be
+very easy to spot: a fast train of short statements will blaze into the log
+console. Either it happens in Python code or in a template or as a result of
+asynchronous ajax calls (not included in request-oriented tools, such as
+the Django Debug Toolbar). It will be unmissable. Looking at these statements,
+it's easy to understand what model caused it and the right
+&lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/ref/models/querysets/#select-related&quot;&gt;select_related()&lt;/a&gt; to add.&lt;/p&gt;
+&lt;p&gt;You're welcome.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;section&quot; id=&quot;do-you-hate-django&quot;&gt;
+&lt;h3&gt;&amp;quot;Do you hate Django?&amp;quot;&lt;/h3&gt;
+&lt;p&gt;No, I don't. I still like it, although with Python moving towards asyncio and
+&lt;a class=&quot;reference external&quot; href=&quot;/blog/2020/03/31/first-experience-mypy/&quot;&gt;static typing&lt;/a&gt;, and with the established
+web architecture of JSON APIs consumed by JavaScript front-ends, the appeal
+for other frameworks such as &lt;a class=&quot;reference external&quot; href=&quot;https://fastapi.tiangolo.com/&quot;&gt;FastAPI&lt;/a&gt; is
+increasing. As opinionated about databases I am, I quite like the Django
+ORM: very simple to use, well integrated with the Python objects it produces
+and it allows you to write monsters of nested queries with great ease. Peeking at
+the logs of the SQL statements produced for you by the &lt;tt class=&quot;docutils literal&quot;&gt;django.db&lt;/tt&gt; logger
+fosters some admiration.&lt;/p&gt;
+&lt;p&gt;What I really don't like is when tools get in the way of someone's work.
+Sometimes the tools are complex because the problem they try to solve is complex also. But
+you are free to ask yourself this question: do I really have that problem? You
+might get to the conclusion that you might not and you can make choices
+against conventions to simplify your life.&lt;/p&gt;
+&lt;p&gt;In the case of Django, the right economy for me is:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;Get to know the ORM features inside out and take full advantage of it to
+query and manipulate data.&lt;/li&gt;
+&lt;li&gt;Avoiding using the Models to produce the database schema, use the native
+database language and tools instead.&lt;/li&gt;
+&lt;li&gt;Stay well clear of migrations.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+</content>
+  </entry>
   <entry xml:base="https://www.varrazzo.com/blog/2020/05/19/a-trip-into-optimisation/">
     <title type="text">A trip into optimisation</title>
     <id>urn:uuid:848be87a-855e-3b2b-aecf-2911693199f2</id>
