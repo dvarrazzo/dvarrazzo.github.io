@@ -267,10 +267,10 @@ knows what it's doing, often it doesn't and it's hard to tell it to stop.&lt;/p&
 &lt;/pre&gt;
 &lt;p&gt;No change needed to the database, but Django insisted on creating migration
 consisting pretty much of:&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;ALTER TABLE foo DROP COLUMN bar;
-ALTER TABLE foo ADD COLUMN bar;&lt;/p&gt;
-&lt;/blockquote&gt;
+&lt;pre class=&quot;code postgres literal-block&quot;&gt;
+&lt;span class=&quot;k&quot;&gt;ALTER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;DROP&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;COLUMN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ALTER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;ADD&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;COLUMN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/pre&gt;
 &lt;p&gt;So goodbye to your data! But who needs a &lt;tt class=&quot;docutils literal&quot;&gt;bar&lt;/tt&gt; anyway. Although I think I could've
 used a bar, and a few drinks, if that migration had hit production.&lt;/p&gt;
 &lt;/li&gt;
