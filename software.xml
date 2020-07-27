@@ -568,7 +568,7 @@ against conventions to simplify your life.&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
 &lt;li&gt;Get to know the ORM features inside out and take full advantage of it to
 query and manipulate data.&lt;/li&gt;
-&lt;li&gt;Avoiding using the Models to produce the database schema, use the native
+&lt;li&gt;Avoid using the Models to produce the database schema, use the native
 database language and tools instead.&lt;/li&gt;
 &lt;li&gt;Stay well clear of migrations.&lt;/li&gt;
 &lt;/ul&gt;
