@@ -410,8 +410,8 @@ replace the second step in the previous example (untested):&lt;/p&gt;
         ) x USING (id)
         RETURNING id
         &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fetchall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-            &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fetchall&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
 &lt;/pre&gt;
 &lt;hr class=&quot;docutils&quot; /&gt;
 &lt;p&gt;&lt;a class=&quot;reference external&quot; href=&quot;https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#migrating-data-between-third-party-apps&quot;&gt;Migrating data between third-party apps&lt;/a&gt; gets in the way with the whole

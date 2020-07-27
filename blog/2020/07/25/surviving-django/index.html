@@ -495,8 +495,8 @@ replace the second step in the previous example (untested):</p>
         ) x USING (id)
         RETURNING id
         &quot;&quot;&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">():</span>
-            <span class="k">break</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">():</span>
+        <span class="k">break</span>
 </pre>
 <hr class="docutils" />
 <p><a class="reference external" href="https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#migrating-data-between-third-party-apps">Migrating data between third-party apps</a> gets in the way with the whole
