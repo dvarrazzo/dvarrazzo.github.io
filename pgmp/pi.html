@@ -74,7 +74,7 @@ provided in this nice <a class="reference external" href="https://web.archive.or
 <span class="p">)</span>
 <span class="k">SELECT</span> <span class="n">sum</span><span class="p">(</span><span class="n">xp</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nv">$2</span> <span class="o">/</span> <span class="nv">$1</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">t</span><span class="p">;</span>
 <span class="s">$$</span>
-<span class="k">LANGUAGE</span> <span class="n">sql</span> <span class="k">IMMUTABLE</span> <span class="k">STRICT</span><span class="p">;</span>
+<span class="k">LANGUAGE</span> <span class="k">sql</span> <span class="k">IMMUTABLE</span> <span class="k">STRICT</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>However using this method all the temporary terms in the calculation are kept

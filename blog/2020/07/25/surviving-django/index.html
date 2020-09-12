@@ -233,7 +233,7 @@ code and use <tt class="docutils literal">\i</tt> to import &quot;submodules&quo
 a <tt class="docutils literal">database.sql</tt> to create global objects (users, extensions, schemas),
 set the basic permissions and import the details into target schemas.</p>
 <pre class="code postgres literal-block">
-<span class="err">\</span><span class="n">i</span> <span class="n">users</span><span class="mf">.</span><span class="n">sql</span>
+<span class="err">\</span><span class="n">i</span> <span class="n">users</span><span class="mf">.</span><span class="k">sql</span>
 <span class="k">revoke</span> <span class="k">create</span> <span class="k">on</span> <span class="k">schema</span> <span class="n">public</span> <span class="k">from</span> <span class="n">public</span><span class="p">;</span>     <span class="c1">-- safety
 </span>
 <span class="c1">--- create a schema for the django app tables
@@ -250,8 +250,8 @@ set the basic permissions and import the details into target schemas.</p>
 
 <span class="c1">--- import the tables into the schema
 </span><span class="k">set</span> <span class="n">search_path</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">,</span> <span class="n">public</span><span class="p">;</span>
-<span class="err">\</span><span class="n">i</span> <span class="n">django</span><span class="mf">.</span><span class="n">sql</span>   <span class="c1">-- django objects - users, groups, permissions tables
-</span><span class="err">\</span><span class="n">i</span> <span class="n">myapp</span><span class="mf">.</span><span class="n">sql</span>    <span class="c1">-- your app models
+<span class="err">\</span><span class="n">i</span> <span class="n">django</span><span class="mf">.</span><span class="k">sql</span>   <span class="c1">-- django objects - users, groups, permissions tables
+</span><span class="err">\</span><span class="n">i</span> <span class="n">myapp</span><span class="mf">.</span><span class="k">sql</span>    <span class="c1">-- your app models
 </span><span class="k">reset</span> <span class="n">search_path</span><span class="p">;</span>
 </pre>
 <p>The <tt class="docutils literal">database.sql</tt> doesn't create the database itself so you can create an
