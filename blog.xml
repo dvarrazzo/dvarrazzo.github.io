@@ -2,13 +2,138 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">Blog</title>
   <id>urn:uuid:345e7579-5b16-39e4-9f1d-2a4bff93035d</id>
-  <updated>2020-07-25T00:00:00Z</updated>
+  <updated>2020-11-07T00:00:00Z</updated>
   <link href="https://www.varrazzo.com/blog/" />
   <link href="https://www.varrazzo.com/blog.xml" rel="self" />
   <author>
     <name></name>
   </author>
   <generator uri="https://github.com/t73fde/lektor-feed" version="20191006.1">Lektor Feed Plugin</generator>
+  <entry xml:base="https://www.varrazzo.com/blog/2020/11/07/psycopg3-adaptation/">
+    <title type="text">psycopg3 and adaptation choices</title>
+    <id>urn:uuid:51a91c28-dea6-34b0-a597-51a8a362c3cd</id>
+    <updated>2020-11-07T00:00:00Z</updated>
+    <link href="https://www.varrazzo.com/blog/2020/11/07/psycopg3-adaptation/" />
+    <author>
+      <name>Daniele Varrazzo</name>
+    </author>
+    <content type="html">&lt;p&gt;One of the main behavioural differences between psycopg2 and 3, and a big
+enought cause of incompatibility to require a &amp;quot;3&amp;quot;, is the use of server-side
+binding vs. client-side (psycopg2 predates the FE-BE protocol supporting it).
+Passing Python objects to the server as separate arguments leads sometimes to
+a behaviour of the server different to what people is used to using psql and
+psycopg2. An example: what do you think&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;should fetch? I assume it would be desirable to have a record &lt;tt class=&quot;docutils literal&quot;&gt;(&amp;quot;hello&amp;quot;,
+10)&lt;/tt&gt; back - consistently to what you would return if you merged argument
+client-side and queried for &lt;tt class=&quot;docutils literal&quot;&gt;select 'hello', 10&lt;/tt&gt;. However keeping this
+bahaviour predictable proved already tricky. When passing arguments to merge
+server-side, the client must pass their string (or binary) representation and,
+optionally, the oid of their types. The most intuitive thing to do would be to
+associate the text type oid (25) to Python strings. This works well for
+queries like the above one, but it proves too strict a type definition in
+context where a cast from text is not allowed. For instance this will fail:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;create table testjson(data jsonb)&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;insert into testjson (data) values (&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;)&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;The latter will raise the same exception you would get in psql if you execute
+&lt;tt class=&quot;docutils literal&quot;&gt;insert into testjson (data) values &lt;span class=&quot;pre&quot;&gt;('{}'::text)&lt;/span&gt;&lt;/tt&gt;. The reason why a &lt;tt class=&quot;docutils literal&quot;&gt;values
+&lt;span class=&quot;pre&quot;&gt;('{}')&lt;/span&gt;&lt;/tt&gt; works as expected in psql is that the untyped literal is interpreted
+as unknown, and the server can always cast from unknown to any other type. If
+we wanted to insert the data above the query should be rewritten as:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;insert into testjson (data) values (&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;::jsonb)&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;About a week ago I started the task to write &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/django/commits/psycopg3&quot;&gt;a Django backend for
+psycopg3&lt;/a&gt;: running its test suite is proving a great way to observe the
+behaviour of server-side binding in a plethora of different environment. The
+problem of the non-implicit cast from text to jsonb made porting the backend
+from psycopg2 to 3 &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/django/commit/1ca8b71ba9bc6acfe239dd42f751037644e59e13&quot;&gt;quite a tricky matter&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In order to provide an experience more similar to the use of psql and of
+psycopg2, one possibility is to not pass an oid type for the strings, leaving
+it unknown. When I tried with that approach, passing strings to jsonb fields
+(which is not necessarily what you would do, but it's what Django does it,
+probably to uniform JSON dumping across different adapter) became immediately
+much simpler. So it seems a good choice, but not an overall win: our &amp;quot;hello
+world&amp;quot; query:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;fails with PostgreSQL 9.6 and older versions, returning an error such as
+&lt;em&gt;could not determine data type of parameter $1&lt;/em&gt;. PostgreSQL 10 and following
+are more permissive and convert unknown to text on output.&lt;/p&gt;
+&lt;p&gt;It seems like there is a choice to make here: mine at the moment is to keep
+the latter behaviour, both because that's what allows to write the simpler
+code with the majority of the supported PostgreSQL versions. People using 9.6
+and previous version would need to adjust to:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;::text, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;but the use case of inserting data into tables seems a more important use case
+than parroting back a string after a database roundtrip.&lt;/p&gt;
+&lt;p&gt;What about the numbers? That's a problem thorny in a different way. Python
+integers are of arbitrary size, so they map better to a subset of the
+&lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; type than to &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt; or &lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt;. However there is a similar
+problem, where seemingly familiar expression don't behave as expected. If this
+works in psql:&lt;/p&gt;
+&lt;pre class=&quot;literal-block&quot;&gt;
+select data -&amp;gt; 'a' -&amp;gt; 2 from testjson;
+&lt;/pre&gt;
+&lt;p&gt;a similar statement with 2 as a parameter will fail with an error like
+&lt;em&gt;operator does not exist: jsonb -&amp;gt; numeric&lt;/em&gt;. Passing unknown as oid would
+work, but now our greeting would return instead &lt;tt class=&quot;docutils literal&quot;&gt;('hello', '10')&lt;/tt&gt;, with the
+number converted to string. This is probably too much of a departure from the
+expected behaviour; at least, unlike the test-to-json case, there is an
+automatic cast from &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; to integer, so an &lt;tt class=&quot;docutils literal&quot;&gt;insert into
+integer_field&lt;/tt&gt; works as expected. Only operators and functions whose
+arguments are declared &lt;tt class=&quot;docutils literal&quot;&gt;integer&lt;/tt&gt; and there is no &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; version trip
+into an error: JSON's &lt;tt class=&quot;docutils literal&quot;&gt;&lt;span class=&quot;pre&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;/tt&gt;, binary operators such as &lt;tt class=&quot;docutils literal&quot;&gt;&amp;gt;&amp;gt;&lt;/tt&gt; and &lt;tt class=&quot;docutils literal&quot;&gt;&amp;amp;&lt;/tt&gt;, and
+few others:&lt;/p&gt;
+&lt;pre class=&quot;literal-block&quot;&gt;
+piro=# select current_date, current_date + 1;
+ current_date |  ?column?
+---------------+------------
+ 2020-11-07   | 2020-11-08
+(1 row)
+
+piro=# select current_date + 1::numeric;
+ERROR:  operator does not exist: date + numeric
+LINE 1: select current_date + 1::numeric;
+                            ^
+HINT:  No operator matches the given name and argument types. You might
+need to add explicit type casts.
+&lt;/pre&gt;
+&lt;p&gt;Note that when Postgres says &lt;tt class=&quot;docutils literal&quot;&gt;integer&lt;/tt&gt; it means 4 bytes signed: defaulting
+the Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; to the &lt;tt class=&quot;docutils literal&quot;&gt;bigint&lt;/tt&gt; oid solves no problem - the same
+functions would fail the same way, and defaulting it to &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt; I feel it
+would overflow too easily in a 64 bits world.&lt;/p&gt;
+&lt;p&gt;How to fix that? as the hint suggests, the user would have to either add a
+cast to the query, which would look like:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select current_date + &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;::int&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;or to specify an object that would get converted in Postgres to the oid of
+&lt;tt class=&quot;docutils literal&quot;&gt;integer&lt;/tt&gt;: in psycopg3 I'm testing with adding subclasses of &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; called
+&lt;tt class=&quot;docutils literal&quot;&gt;Int4&lt;/tt&gt;, &lt;tt class=&quot;docutils literal&quot;&gt;Int8&lt;/tt&gt; etc. to map more closely on the Postgres types:&lt;/p&gt;
+&lt;pre class=&quot;code python literal-block&quot;&gt;
+&lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select current_date + &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Int4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)])&lt;/span&gt;
+&lt;/pre&gt;
+&lt;p&gt;My choices so far are then:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;cast Python &lt;tt class=&quot;docutils literal&quot;&gt;str&lt;/tt&gt; to unknown by default (only alternative: &lt;tt class=&quot;docutils literal&quot;&gt;text&lt;/tt&gt;)&lt;/li&gt;
+&lt;li&gt;cast Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; to &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; by default (alternatives: &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt;,
+&lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt;, &lt;tt class=&quot;docutils literal&quot;&gt;unknown&lt;/tt&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Being the adaptation system flexible, people are able to override these
+choices, but I don't expect many to do, and doing it process-wise would be an
+interoperation problem across libraries. The behaviour out-of-the-box is
+obviously important and I would like to get the tradeoffs right.&lt;/p&gt;
+&lt;p&gt;What do you think?&lt;/p&gt;
+</content>
+  </entry>
   <entry xml:base="https://www.varrazzo.com/blog/2020/07/25/surviving-django/">
     <title type="text">Surviving Django (if you care about databases)</title>
     <id>urn:uuid:070a000d-40f1-3e95-8b80-bf979d9c29e3</id>

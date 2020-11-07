@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <title>psycopg3 and adaptation choices &mdash; Daniele Varrazzo</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-158968242-1');
+    </script>
+    <link rel="shortcut icon" href="img/favicon.png">
+    <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/main.css?h=af85dcae">
+    <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
+    <link rel="stylesheet" href="/css/custom.css?h=7c0a27a5">
+    <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
+  </head>
+
+  <body>
+    <div class="main-wrapper">
+<header id="header" class="">
+  <a href="/about/" class="logo">
+    <img src="/img/logo.png?h=0ad960b2" class="logo-dark" alt="">
+    <img src="/img/logo-light.png?h=cb66caa4" class="logo-light" alt="">
+  </a>
+  <a href="#" class="mob-menu"><i class="fa fa-bars"></i></a>
+  <nav>
+    <ul class="main-menu">
+<li>
+  <a href="/about/">About</a>
+</li>
+<li>
+  <a href="/software/">Software</a>
+  <ul>
+<li>
+  <a href="https://www.psycopg.org/" target="_blank">psycopg <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://www.varrazzo.com/pgmp/" target="_blank">pgmp <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://pgxn.github.io/pgxnclient/" target="_blank">PGXN Client <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://reorg.github.io/pg_repack/" target="_blank">pg_repack <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/photo/">Photography</a>
+  <ul>
+<li>
+  <a href="/photo/longexp/">Long exposures</a>
+</li>
+<li>
+  <a href="/photo/ireland/">Ireland, 2019</a>
+</li>
+<li>
+  <a href="/photo/japan/">Japan, 2019</a>
+</li>
+<li>
+  <a href="/photo/whangarei/">Isolation diaries</a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/blog/">Blog</a>
+</li>
+<li>
+  <a href="/contact/">Contact</a>
+</li>
+    </ul>
+  </nav>
+</header>
+<div class="container fullwidth pt140 pb140" data-background="/img/blog/adapters.jpg?h=86b37815">
+  <div class="pt140 pb140">
+    <div class="entrance">
+      <h2 class="title">psycopg3 and adaptation choices</h2>
+      <p class="separator"></p>
+      <p class="small capitalize serif">2020-11-07</p>
+      
+        <div class="bumper">
+          <p class="small">
+          
+            <a href="/blog/tag/software/">#software</a>
+          
+            <a href="/blog/tag/psycopg/">#psycopg</a>
+          
+            <a href="/blog/tag/development/">#development</a>
+          
+          </p>
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="container mt70 mb70">
+  <div class="row">
+    <div id="content" class="col-md-9"><p>One of the main behavioural differences between psycopg2 and 3, and a big
+enought cause of incompatibility to require a &quot;3&quot;, is the use of server-side
+binding vs. client-side (psycopg2 predates the FE-BE protocol supporting it).
+Passing Python objects to the server as separate arguments leads sometimes to
+a behaviour of the server different to what people is used to using psql and
+psycopg2. An example: what do you think</p>
+<pre class="code python literal-block">
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+</pre>
+<p>should fetch? I assume it would be desirable to have a record <tt class="docutils literal">(&quot;hello&quot;,
+10)</tt> back - consistently to what you would return if you merged argument
+client-side and queried for <tt class="docutils literal">select 'hello', 10</tt>. However keeping this
+bahaviour predictable proved already tricky. When passing arguments to merge
+server-side, the client must pass their string (or binary) representation and,
+optionally, the oid of their types. The most intuitive thing to do would be to
+associate the text type oid (25) to Python strings. This works well for
+queries like the above one, but it proves too strict a type definition in
+context where a cast from text is not allowed. For instance this will fail:</p>
+<pre class="code python literal-block">
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;create table testjson(data jsonb)&quot;</span><span class="p">)</span>
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;insert into testjson (data) values (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">])</span>
+</pre>
+<p>The latter will raise the same exception you would get in psql if you execute
+<tt class="docutils literal">insert into testjson (data) values <span class="pre">('{}'::text)</span></tt>. The reason why a <tt class="docutils literal">values
+<span class="pre">('{}')</span></tt> works as expected in psql is that the untyped literal is interpreted
+as unknown, and the server can always cast from unknown to any other type. If
+we wanted to insert the data above the query should be rewritten as:</p>
+<pre class="code python literal-block">
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;insert into testjson (data) values (</span><span class="si">%s</span><span class="s2">::jsonb)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">])</span>
+</pre>
+<p>About a week ago I started the task to write <a class="reference external" href="https://github.com/dvarrazzo/django/commits/psycopg3">a Django backend for
+psycopg3</a>: running its test suite is proving a great way to observe the
+behaviour of server-side binding in a plethora of different environment. The
+problem of the non-implicit cast from text to jsonb made porting the backend
+from psycopg2 to 3 <a class="reference external" href="https://github.com/dvarrazzo/django/commit/1ca8b71ba9bc6acfe239dd42f751037644e59e13">quite a tricky matter</a>.</p>
+<p>In order to provide an experience more similar to the use of psql and of
+psycopg2, one possibility is to not pass an oid type for the strings, leaving
+it unknown. When I tried with that approach, passing strings to jsonb fields
+(which is not necessarily what you would do, but it's what Django does it,
+probably to uniform JSON dumping across different adapter) became immediately
+much simpler. So it seems a good choice, but not an overall win: our &quot;hello
+world&quot; query:</p>
+<pre class="code python literal-block">
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+</pre>
+<p>fails with PostgreSQL 9.6 and older versions, returning an error such as
+<em>could not determine data type of parameter $1</em>. PostgreSQL 10 and following
+are more permissive and convert unknown to text on output.</p>
+<p>It seems like there is a choice to make here: mine at the moment is to keep
+the latter behaviour, both because that's what allows to write the simpler
+code with the majority of the supported PostgreSQL versions. People using 9.6
+and previous version would need to adjust to:</p>
+<pre class="code python literal-block">
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select </span><span class="si">%s</span><span class="s2">::text, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+</pre>
+<p>but the use case of inserting data into tables seems a more important use case
+than parroting back a string after a database roundtrip.</p>
+<p>What about the numbers? That's a problem thorny in a different way. Python
+integers are of arbitrary size, so they map better to a subset of the
+<tt class="docutils literal">numeric</tt> type than to <tt class="docutils literal">int4</tt> or <tt class="docutils literal">int8</tt>. However there is a similar
+problem, where seemingly familiar expression don't behave as expected. If this
+works in psql:</p>
+<pre class="literal-block">
+select data -&gt; 'a' -&gt; 2 from testjson;
+</pre>
+<p>a similar statement with 2 as a parameter will fail with an error like
+<em>operator does not exist: jsonb -&gt; numeric</em>. Passing unknown as oid would
+work, but now our greeting would return instead <tt class="docutils literal">('hello', '10')</tt>, with the
+number converted to string. This is probably too much of a departure from the
+expected behaviour; at least, unlike the test-to-json case, there is an
+automatic cast from <tt class="docutils literal">numeric</tt> to integer, so an <tt class="docutils literal">insert into
+integer_field</tt> works as expected. Only operators and functions whose
+arguments are declared <tt class="docutils literal">integer</tt> and there is no <tt class="docutils literal">numeric</tt> version trip
+into an error: JSON's <tt class="docutils literal"><span class="pre">-&gt;</span></tt>, binary operators such as <tt class="docutils literal">&gt;&gt;</tt> and <tt class="docutils literal">&amp;</tt>, and
+few others:</p>
+<pre class="literal-block">
+piro=# select current_date, current_date + 1;
+ current_date |  ?column?
+---------------+------------
+ 2020-11-07   | 2020-11-08
+(1 row)
+
+piro=# select current_date + 1::numeric;
+ERROR:  operator does not exist: date + numeric
+LINE 1: select current_date + 1::numeric;
+                            ^
+HINT:  No operator matches the given name and argument types. You might
+need to add explicit type casts.
+</pre>
+<p>Note that when Postgres says <tt class="docutils literal">integer</tt> it means 4 bytes signed: defaulting
+the Python <tt class="docutils literal">int</tt> to the <tt class="docutils literal">bigint</tt> oid solves no problem - the same
+functions would fail the same way, and defaulting it to <tt class="docutils literal">int4</tt> I feel it
+would overflow too easily in a 64 bits world.</p>
+<p>How to fix that? as the hint suggests, the user would have to either add a
+cast to the query, which would look like:</p>
+<pre class="code python literal-block">
+<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select current_date + </span><span class="si">%s</span><span class="s2">::int&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">offset</span><span class="p">])</span>
+</pre>
+<p>or to specify an object that would get converted in Postgres to the oid of
+<tt class="docutils literal">integer</tt>: in psycopg3 I'm testing with adding subclasses of <tt class="docutils literal">int</tt> called
+<tt class="docutils literal">Int4</tt>, <tt class="docutils literal">Int8</tt> etc. to map more closely on the Postgres types:</p>
+<pre class="code python literal-block">
+<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select current_date + </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">Int4</span><span class="p">(</span><span class="n">offset</span><span class="p">)])</span>
+</pre>
+<p>My choices so far are then:</p>
+<ul class="simple">
+<li>cast Python <tt class="docutils literal">str</tt> to unknown by default (only alternative: <tt class="docutils literal">text</tt>)</li>
+<li>cast Python <tt class="docutils literal">int</tt> to <tt class="docutils literal">numeric</tt> by default (alternatives: <tt class="docutils literal">int4</tt>,
+<tt class="docutils literal">int8</tt>, <tt class="docutils literal">unknown</tt>).</li>
+</ul>
+<p>Being the adaptation system flexible, people are able to override these
+choices, but I don't expect many to do, and doing it process-wise would be an
+interoperation problem across libraries. The behaviour out-of-the-box is
+obviously important and I would like to get the tradeoffs right.</p>
+<p>What do you think?</p>
+
+<script src="https://utteranc.es/client.js"
+  repo="dvarrazzo/www.varrazzo.com"
+  issue-term="pathname"
+  label="comments"
+  theme="github-light"
+  crossorigin="anonymous"
+  async>
+</script>
+    </div>
+    <div id="sidebar" class="col-md-3">
+<div class="sidebar-inner">
+  <div class="widget-area">
+<aside class="widget">
+  <h3 class=widget-title>Recent posts</h3>
+  <ul>
+    <li><a href="/blog/2020/11/07/psycopg3-adaptation/">psycopg3 and adaptation choices</a></li>
+    <li><a href="/blog/2020/07/25/surviving-django/">Surviving Django (if you care about databases)</a></li>
+    <li><a href="/blog/2020/05/19/a-trip-into-optimisation/">A trip into optimisation</a></li>
+    <li><a href="/blog/2020/04/26/pinhole-day/">Pinhole Day</a></li>
+    <li><a href="/blog/2020/04/15/isolation-diaries/">Isolation Diaries</a></li>
+  </ul>
+</aside>
+<aside class="widget">
+  <h3 class=widget-title>Tags</h3>
+  <ul>
+<li><a href="/blog/tag/database/">#database</a></li>
+<li><a href="/blog/tag/design/">#design</a></li>
+<li><a href="/blog/tag/development/">#development</a></li>
+<li><a href="/blog/tag/life/">#life</a></li>
+<li><a href="/blog/tag/news/">#news</a></li>
+<li><a href="/blog/tag/photo/">#photo</a></li>
+<li><a href="/blog/tag/pinhole/">#pinhole</a></li>
+<li><a href="/blog/tag/psycopg/">#psycopg</a></li>
+<li><a href="/blog/tag/software/">#software</a></li>
+<li><a href="/blog/tag/travel/">#travel</a></li>
+<li><a href="/blog/tag/website/">#website</a></li>
+  </ul>
+</aside>
+  </div>
+</div>
+    </div>
+</div>
+
+<footer id="footer" class="">
+  <div class="footer-links">
+    &copy; 2020. By Daniele Varrazzo. |
+    <a target="_blank" href="https://github.com/dvarrazzo/">GitHub</a> |
+    <a target="_blank" href="https://www.linkedin.com/in/danielevarrazzo/">LinkedIn</a> |
+    <a target="_blank" href="https://www.instagram.com/dvarrazzo/">Instagram</a> |
+    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/">Flickr</a>
+  </div>
+
+</footer>
+    </div>
+    <script src="/js/lib/jquery.min.js?h=d6c1f419"></script>
+    <script src="/js/lib/scripts.js?h=e59b43e0"></script>
+    <script src="/js/main.js?h=4b3e78de"></script>
+  </body>
+</html>
