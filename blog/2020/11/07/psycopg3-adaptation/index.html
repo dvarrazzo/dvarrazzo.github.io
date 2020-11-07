@@ -106,7 +106,7 @@
 enought cause of incompatibility to require a &quot;3&quot;, is the use of server-side
 binding vs. client-side (psycopg2 predates the FE-BE protocol supporting it).
 Passing Python objects to the server as separate arguments leads sometimes to
-a behaviour of the server different to what people is used to using psql and
+a behaviour of the server different to what people are used to using psql and
 psycopg2. An example: what do you think</p>
 <pre class="code python literal-block">
 <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
@@ -114,7 +114,7 @@ psycopg2. An example: what do you think</p>
 <p>should fetch? I assume it would be desirable to have a record <tt class="docutils literal">(&quot;hello&quot;,
 10)</tt> back - consistently to what you would return if you merged argument
 client-side and queried for <tt class="docutils literal">select 'hello', 10</tt>. However keeping this
-bahaviour predictable proved already tricky. When passing arguments to merge
+behaviour predictable proved already tricky. When passing arguments to merge
 server-side, the client must pass their string (or binary) representation and,
 optionally, the oid of their types. The most intuitive thing to do would be to
 associate the text type oid (25) to Python strings. This works well for
@@ -126,15 +126,16 @@ context where a cast from text is not allowed. For instance this will fail:</p>
 </pre>
 <p>The latter will raise the same exception you would get in psql if you execute
 <tt class="docutils literal">insert into testjson (data) values <span class="pre">('{}'::text)</span></tt>. The reason why a <tt class="docutils literal">values
-<span class="pre">('{}')</span></tt> works as expected in psql is that the untyped literal is interpreted
-as unknown, and the server can always cast from unknown to any other type. If
-we wanted to insert the data above the query should be rewritten as:</p>
+<span class="pre">('{}')</span></tt> works as expected in psql is because the untyped literal is
+interpreted as unknown, and the server can always cast from unknown to any
+other type. If we wanted to insert the data above the query should be
+rewritten as:</p>
 <pre class="code python literal-block">
 <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;insert into testjson (data) values (</span><span class="si">%s</span><span class="s2">::jsonb)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">])</span>
 </pre>
 <p>About a week ago I started the task to write <a class="reference external" href="https://github.com/dvarrazzo/django/commits/psycopg3">a Django backend for
 psycopg3</a>: running its test suite is proving a great way to observe the
-behaviour of server-side binding in a plethora of different environment. The
+behaviour of server-side binding in a plethora of different environments. The
 problem of the non-implicit cast from text to jsonb made porting the backend
 from psycopg2 to 3 <a class="reference external" href="https://github.com/dvarrazzo/django/commit/1ca8b71ba9bc6acfe239dd42f751037644e59e13">quite a tricky matter</a>.</p>
 <p>In order to provide an experience more similar to the use of psql and of
@@ -213,9 +214,10 @@ cast to the query, which would look like:</p>
 <tt class="docutils literal">int8</tt>, <tt class="docutils literal">unknown</tt>).</li>
 </ul>
 <p>Being the adaptation system flexible, people are able to override these
-choices, but I don't expect many to do, and doing it process-wise would be an
-interoperation problem across libraries. The behaviour out-of-the-box is
-obviously important and I would like to get the tradeoffs right.</p>
+choices, but I don't expect many people to do it, and doing it process-wise
+might cause interoperation problems across libraries. The behaviour
+out-of-the-box is obviously important and I would like to get the tradeoffs
+right.</p>
 <p>What do you think?</p>
 
 <script src="https://utteranc.es/client.js"

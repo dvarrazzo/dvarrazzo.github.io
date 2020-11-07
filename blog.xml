@@ -21,7 +21,7 @@
 enought cause of incompatibility to require a &amp;quot;3&amp;quot;, is the use of server-side
 binding vs. client-side (psycopg2 predates the FE-BE protocol supporting it).
 Passing Python objects to the server as separate arguments leads sometimes to
-a behaviour of the server different to what people is used to using psql and
+a behaviour of the server different to what people are used to using psql and
 psycopg2. An example: what do you think&lt;/p&gt;
 &lt;pre class=&quot;code python literal-block&quot;&gt;
 &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
@@ -29,7 +29,7 @@ psycopg2. An example: what do you think&lt;/p&gt;
 &lt;p&gt;should fetch? I assume it would be desirable to have a record &lt;tt class=&quot;docutils literal&quot;&gt;(&amp;quot;hello&amp;quot;,
 10)&lt;/tt&gt; back - consistently to what you would return if you merged argument
 client-side and queried for &lt;tt class=&quot;docutils literal&quot;&gt;select 'hello', 10&lt;/tt&gt;. However keeping this
-bahaviour predictable proved already tricky. When passing arguments to merge
+behaviour predictable proved already tricky. When passing arguments to merge
 server-side, the client must pass their string (or binary) representation and,
 optionally, the oid of their types. The most intuitive thing to do would be to
 associate the text type oid (25) to Python strings. This works well for
@@ -41,15 +41,16 @@ context where a cast from text is not allowed. For instance this will fail:&lt;/
 &lt;/pre&gt;
 &lt;p&gt;The latter will raise the same exception you would get in psql if you execute
 &lt;tt class=&quot;docutils literal&quot;&gt;insert into testjson (data) values &lt;span class=&quot;pre&quot;&gt;('{}'::text)&lt;/span&gt;&lt;/tt&gt;. The reason why a &lt;tt class=&quot;docutils literal&quot;&gt;values
-&lt;span class=&quot;pre&quot;&gt;('{}')&lt;/span&gt;&lt;/tt&gt; works as expected in psql is that the untyped literal is interpreted
-as unknown, and the server can always cast from unknown to any other type. If
-we wanted to insert the data above the query should be rewritten as:&lt;/p&gt;
+&lt;span class=&quot;pre&quot;&gt;('{}')&lt;/span&gt;&lt;/tt&gt; works as expected in psql is because the untyped literal is
+interpreted as unknown, and the server can always cast from unknown to any
+other type. If we wanted to insert the data above the query should be
+rewritten as:&lt;/p&gt;
 &lt;pre class=&quot;code python literal-block&quot;&gt;
 &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;insert into testjson (data) values (&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;::jsonb)&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
 &lt;/pre&gt;
 &lt;p&gt;About a week ago I started the task to write &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/django/commits/psycopg3&quot;&gt;a Django backend for
 psycopg3&lt;/a&gt;: running its test suite is proving a great way to observe the
-behaviour of server-side binding in a plethora of different environment. The
+behaviour of server-side binding in a plethora of different environments. The
 problem of the non-implicit cast from text to jsonb made porting the backend
 from psycopg2 to 3 &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/dvarrazzo/django/commit/1ca8b71ba9bc6acfe239dd42f751037644e59e13&quot;&gt;quite a tricky matter&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;In order to provide an experience more similar to the use of psql and of
@@ -128,9 +129,10 @@ cast to the query, which would look like:&lt;/p&gt;
 &lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt;, &lt;tt class=&quot;docutils literal&quot;&gt;unknown&lt;/tt&gt;).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Being the adaptation system flexible, people are able to override these
-choices, but I don't expect many to do, and doing it process-wise would be an
-interoperation problem across libraries. The behaviour out-of-the-box is
-obviously important and I would like to get the tradeoffs right.&lt;/p&gt;
+choices, but I don't expect many people to do it, and doing it process-wise
+might cause interoperation problems across libraries. The behaviour
+out-of-the-box is obviously important and I would like to get the tradeoffs
+right.&lt;/p&gt;
 &lt;p&gt;What do you think?&lt;/p&gt;
 </content>
   </entry>
