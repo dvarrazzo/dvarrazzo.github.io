@@ -74,7 +74,22 @@ and previous version would need to adjust to:&lt;/p&gt;
 &lt;span class=&quot;n&quot;&gt;cursor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;::text, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
 &lt;/pre&gt;
 &lt;p&gt;but the use case of inserting data into tables seems a more important use case
-than parroting back a string after a database roundtrip.&lt;/p&gt;
+than parroting back a string after a database round-trip.&lt;/p&gt;
+&lt;div class=&quot;admonition admonition-choices-to-cast-python-str-type&quot;&gt;
+&lt;p class=&quot;first admonition-title&quot;&gt;Choices to cast Python &lt;tt class=&quot;docutils literal&quot;&gt;str&lt;/tt&gt; type:&lt;/p&gt;
+&lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;unknown&lt;/tt&gt;:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;pro: passed without casting to most data types and functions&lt;/li&gt;
+&lt;li&gt;con: requires a cast to roundtrip back with PostgreSQL 9.6 and previous&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;text&lt;/tt&gt;:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;pro: roundtrips with PostgreSQL 9.6 and previous&lt;/li&gt;
+&lt;li&gt;con: may require several casts for most of data type, both in insert and
+functions&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p class=&quot;last&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;unknown&lt;/tt&gt; seems the winner.&lt;/p&gt;
+&lt;/div&gt;
 &lt;p&gt;What about the numbers? That's a problem thorny in a different way. Python
 integers are of arbitrary size, so they map better to a subset of the
 &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; type than to &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt; or &lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt;. However there is a similar
@@ -111,7 +126,7 @@ need to add explicit type casts.
 the Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; to the &lt;tt class=&quot;docutils literal&quot;&gt;bigint&lt;/tt&gt; oid solves no problem - the same
 functions would fail the same way, and defaulting it to &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt; I feel it
 would overflow too easily in a 64 bits world.&lt;/p&gt;
-&lt;p&gt;How to fix that? as the hint suggests, the user would have to either add a
+&lt;p&gt;How to fix that? As the hint suggests, the user would have to either add a
 cast to the query, which would look like:&lt;/p&gt;
 &lt;pre class=&quot;code python literal-block&quot;&gt;
 &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select current_date + &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;::int&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
@@ -122,17 +137,48 @@ cast to the query, which would look like:&lt;/p&gt;
 &lt;pre class=&quot;code python literal-block&quot;&gt;
 &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select current_date + &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Int4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)])&lt;/span&gt;
 &lt;/pre&gt;
-&lt;p&gt;My choices so far are then:&lt;/p&gt;
+&lt;div class=&quot;admonition admonition-choices-to-cast-python-int-type&quot;&gt;
+&lt;p class=&quot;first admonition-title&quot;&gt;Choices to cast Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; type:&lt;/p&gt;
+&lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;unknown&lt;/tt&gt;:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
-&lt;li&gt;cast Python &lt;tt class=&quot;docutils literal&quot;&gt;str&lt;/tt&gt; to unknown by default (only alternative: &lt;tt class=&quot;docutils literal&quot;&gt;text&lt;/tt&gt;)&lt;/li&gt;
-&lt;li&gt;cast Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; to &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; by default (alternatives: &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt;,
-&lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt;, &lt;tt class=&quot;docutils literal&quot;&gt;unknown&lt;/tt&gt;).&lt;/li&gt;
+&lt;li&gt;+1: can express the full range of the unbounded Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
+&lt;li&gt;+2: can be passed without cast to most data types and functions&lt;/li&gt;
+&lt;li&gt;-1: roundtrips back to string, error on PostgreSQL &amp;lt; 10&lt;/li&gt;
 &lt;/ul&gt;
+&lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;decimal&lt;/tt&gt;:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;+1: can express the full range of the unbounded Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
+&lt;li&gt;+1: can be passed without cast to most data types&lt;/li&gt;
+&lt;li&gt;+1: requires a cast for some functions&lt;/li&gt;
+&lt;li&gt;-0.5: roundtrips back to &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt; (but maybe we could cast to int if
+scale = 0?)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt;:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;+1: can be passed without cast to most data types&lt;/li&gt;
+&lt;li&gt;+1: roundtrips back to &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
+&lt;li&gt;-1: requires a cast for some functions&lt;/li&gt;
+&lt;li&gt;-0.5: can't express values not fitting in 64 bits (relatively limited
+use case: if the target column is &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; then it would be wise for
+the user to pass a &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt;:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;+2: can be passed without cast to most data types and functions&lt;/li&gt;
+&lt;li&gt;+1: roundtrips back to &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
+&lt;li&gt;-1: limited range: couldn't be used to pass a value not fitting into 32
+bytes from Python to a &lt;tt class=&quot;docutils literal&quot;&gt;bigint&lt;/tt&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p class=&quot;last&quot;&gt;Winner: unclear. The only I feel to exclude is &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt;, which
+unfortunately is the only types which makes most functions work. Maybe
+&lt;tt class=&quot;docutils literal&quot;&gt;decimal&lt;/tt&gt;, but only if it turns out easy to cast back values with scale
+= 0 to integer.&lt;/p&gt;
+&lt;/div&gt;
 &lt;p&gt;Being the adaptation system flexible, people are able to override these
-choices, but I don't expect many people to do it, and doing it process-wise
-might cause interoperation problems across libraries. The behaviour
-out-of-the-box is obviously important and I would like to get the tradeoffs
-right.&lt;/p&gt;
+choices, but I don't expect many people wanting to do it, and doing it
+process-wise might cause interoperation problems across libraries. The
+behaviour out-of-the-box is obviously important and I would like to get the
+trade-offs right.&lt;/p&gt;
 &lt;p&gt;What do you think?&lt;/p&gt;
 </content>
   </entry>

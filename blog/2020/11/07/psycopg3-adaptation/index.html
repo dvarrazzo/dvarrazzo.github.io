@@ -189,7 +189,22 @@ and previous version would need to adjust to:</p>
 <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select </span><span class="si">%s</span><span class="s2">::text, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
 </pre>
 <p>but the use case of inserting data into tables seems a more important use case
-than parroting back a string after a database roundtrip.</p>
+than parroting back a string after a database round-trip.</p>
+<div class="admonition admonition-choices-to-cast-python-str-type">
+<p class="first admonition-title">Choices to cast Python <tt class="docutils literal">str</tt> type:</p>
+<p>To <tt class="docutils literal">unknown</tt>:</p>
+<ul class="simple">
+<li>pro: passed without casting to most data types and functions</li>
+<li>con: requires a cast to roundtrip back with PostgreSQL 9.6 and previous</li>
+</ul>
+<p>To <tt class="docutils literal">text</tt>:</p>
+<ul class="simple">
+<li>pro: roundtrips with PostgreSQL 9.6 and previous</li>
+<li>con: may require several casts for most of data type, both in insert and
+functions</li>
+</ul>
+<p class="last"><tt class="docutils literal">unknown</tt> seems the winner.</p>
+</div>
 <p>What about the numbers? That's a problem thorny in a different way. Python
 integers are of arbitrary size, so they map better to a subset of the
 <tt class="docutils literal">numeric</tt> type than to <tt class="docutils literal">int4</tt> or <tt class="docutils literal">int8</tt>. However there is a similar
@@ -226,7 +241,7 @@ need to add explicit type casts.
 the Python <tt class="docutils literal">int</tt> to the <tt class="docutils literal">bigint</tt> oid solves no problem - the same
 functions would fail the same way, and defaulting it to <tt class="docutils literal">int4</tt> I feel it
 would overflow too easily in a 64 bits world.</p>
-<p>How to fix that? as the hint suggests, the user would have to either add a
+<p>How to fix that? As the hint suggests, the user would have to either add a
 cast to the query, which would look like:</p>
 <pre class="code python literal-block">
 <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select current_date + </span><span class="si">%s</span><span class="s2">::int&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">offset</span><span class="p">])</span>
@@ -237,17 +252,48 @@ cast to the query, which would look like:</p>
 <pre class="code python literal-block">
 <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select current_date + </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">Int4</span><span class="p">(</span><span class="n">offset</span><span class="p">)])</span>
 </pre>
-<p>My choices so far are then:</p>
+<div class="admonition admonition-choices-to-cast-python-int-type">
+<p class="first admonition-title">Choices to cast Python <tt class="docutils literal">int</tt> type:</p>
+<p>To <tt class="docutils literal">unknown</tt>:</p>
 <ul class="simple">
-<li>cast Python <tt class="docutils literal">str</tt> to unknown by default (only alternative: <tt class="docutils literal">text</tt>)</li>
-<li>cast Python <tt class="docutils literal">int</tt> to <tt class="docutils literal">numeric</tt> by default (alternatives: <tt class="docutils literal">int4</tt>,
-<tt class="docutils literal">int8</tt>, <tt class="docutils literal">unknown</tt>).</li>
+<li>+1: can express the full range of the unbounded Python <tt class="docutils literal">int</tt></li>
+<li>+2: can be passed without cast to most data types and functions</li>
+<li>-1: roundtrips back to string, error on PostgreSQL &lt; 10</li>
 </ul>
+<p>To <tt class="docutils literal">decimal</tt>:</p>
+<ul class="simple">
+<li>+1: can express the full range of the unbounded Python <tt class="docutils literal">int</tt></li>
+<li>+1: can be passed without cast to most data types</li>
+<li>+1: requires a cast for some functions</li>
+<li>-0.5: roundtrips back to <tt class="docutils literal">Decimal</tt> (but maybe we could cast to int if
+scale = 0?)</li>
+</ul>
+<p>To <tt class="docutils literal">int8</tt>:</p>
+<ul class="simple">
+<li>+1: can be passed without cast to most data types</li>
+<li>+1: roundtrips back to <tt class="docutils literal">int</tt></li>
+<li>-1: requires a cast for some functions</li>
+<li>-0.5: can't express values not fitting in 64 bits (relatively limited
+use case: if the target column is <tt class="docutils literal">numeric</tt> then it would be wise for
+the user to pass a <tt class="docutils literal">Decimal</tt>)</li>
+</ul>
+<p>To <tt class="docutils literal">int4</tt>:</p>
+<ul class="simple">
+<li>+2: can be passed without cast to most data types and functions</li>
+<li>+1: roundtrips back to <tt class="docutils literal">int</tt></li>
+<li>-1: limited range: couldn't be used to pass a value not fitting into 32
+bytes from Python to a <tt class="docutils literal">bigint</tt>.</li>
+</ul>
+<p class="last">Winner: unclear. The only I feel to exclude is <tt class="docutils literal">int4</tt>, which
+unfortunately is the only types which makes most functions work. Maybe
+<tt class="docutils literal">decimal</tt>, but only if it turns out easy to cast back values with scale
+= 0 to integer.</p>
+</div>
 <p>Being the adaptation system flexible, people are able to override these
-choices, but I don't expect many people to do it, and doing it process-wise
-might cause interoperation problems across libraries. The behaviour
-out-of-the-box is obviously important and I would like to get the tradeoffs
-right.</p>
+choices, but I don't expect many people wanting to do it, and doing it
+process-wise might cause interoperation problems across libraries. The
+behaviour out-of-the-box is obviously important and I would like to get the
+trade-offs right.</p>
 <p>What do you think?</p>
 
 <script src="https://utteranc.es/client.js"
