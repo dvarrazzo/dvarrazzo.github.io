@@ -90,6 +90,7 @@ functions&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p class=&quot;last&quot;&gt;&lt;tt class=&quot;docutils literal&quot;&gt;unknown&lt;/tt&gt; seems the winner.&lt;/p&gt;
 &lt;/div&gt;
+&lt;hr class=&quot;docutils&quot; /&gt;
 &lt;p&gt;What about the numbers? That's a problem thorny in a different way. Python
 integers are of arbitrary size, so they map better to a subset of the
 &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; type than to &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt; or &lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt;. However there is a similar
@@ -126,8 +127,8 @@ need to add explicit type casts.
 the Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; to the &lt;tt class=&quot;docutils literal&quot;&gt;bigint&lt;/tt&gt; oid solves no problem - the same
 functions would fail the same way, and defaulting it to &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt; I feel it
 would overflow too easily in a 64 bits world.&lt;/p&gt;
-&lt;p&gt;How to fix that? As the hint suggests, the user would have to either add a
-cast to the query, which would look like:&lt;/p&gt;
+&lt;p&gt;How to fix that, if you are an end user? As the hint suggests, the user would
+have to either add a cast to the query, which would look like:&lt;/p&gt;
 &lt;pre class=&quot;code python literal-block&quot;&gt;
 &lt;span class=&quot;n&quot;&gt;cur&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;select current_date + &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%s&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;::int&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
 &lt;/pre&gt;
@@ -143,43 +144,75 @@ cast to the query, which would look like:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
 &lt;li&gt;+1: can express the full range of the unbounded Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
 &lt;li&gt;+2: can be passed without cast to most data types and functions&lt;/li&gt;
-&lt;li&gt;-1: roundtrips back to string, error on PostgreSQL &amp;lt; 10&lt;/li&gt;
+&lt;li&gt;-2: it round-trips back to string, error on PostgreSQL &amp;lt; 10&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;decimal&lt;/tt&gt;:&lt;/p&gt;
+&lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt;:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
 &lt;li&gt;+1: can express the full range of the unbounded Python &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
 &lt;li&gt;+1: can be passed without cast to most data types&lt;/li&gt;
-&lt;li&gt;+1: requires a cast for some functions&lt;/li&gt;
-&lt;li&gt;-0.5: roundtrips back to &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt; (but maybe we could cast to int if
-scale = 0?)&lt;/li&gt;
+&lt;li&gt;-1: requires a cast for some functions&lt;/li&gt;
+&lt;li&gt;&lt;span class=&quot;strike&quot;&gt;-1: it round-trips to 'Decimal'&lt;/span&gt;&lt;/li&gt;
+&lt;li&gt;+0.5: &lt;strong&gt;it can round-trip back to int&lt;/strong&gt;, with additional care - more to
+follow&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt;:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
-&lt;li&gt;+1: can be passed without cast to most data types&lt;/li&gt;
-&lt;li&gt;+1: roundtrips back to &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
-&lt;li&gt;-1: requires a cast for some functions&lt;/li&gt;
 &lt;li&gt;-0.5: can't express values not fitting in 64 bits (relatively limited
 use case: if the target column is &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; then it would be wise for
 the user to pass a &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;)&lt;/li&gt;
+&lt;li&gt;+1: can be passed without cast to most data types&lt;/li&gt;
+&lt;li&gt;-1: requires a cast for some functions&lt;/li&gt;
+&lt;li&gt;+1: it round-trips back to &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;To &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt;:&lt;/p&gt;
 &lt;ul class=&quot;simple&quot;&gt;
-&lt;li&gt;+2: can be passed without cast to most data types and functions&lt;/li&gt;
-&lt;li&gt;+1: roundtrips back to &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
 &lt;li&gt;-1: limited range: couldn't be used to pass a value not fitting into 32
 bytes from Python to a &lt;tt class=&quot;docutils literal&quot;&gt;bigint&lt;/tt&gt;.&lt;/li&gt;
+&lt;li&gt;+2: can be passed without cast to most data types and functions&lt;/li&gt;
+&lt;li&gt;+1: it round-trips back to &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p class=&quot;last&quot;&gt;Winner: unclear. The only I feel to exclude is &lt;tt class=&quot;docutils literal&quot;&gt;int4&lt;/tt&gt;, which
-unfortunately is the only types which makes most functions work. Maybe
-&lt;tt class=&quot;docutils literal&quot;&gt;decimal&lt;/tt&gt;, but only if it turns out easy to cast back values with scale
-= 0 to integer.&lt;/p&gt;
+&lt;p class=&quot;last&quot;&gt;Winner: probably &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt;, with &lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt; runner-up?&lt;/p&gt;
 &lt;/div&gt;
-&lt;p&gt;Being the adaptation system flexible, people are able to override these
+&lt;p&gt;What about the observation on &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt;? If we dump &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; -&amp;gt; &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt;
+to the db, and load back &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; -&amp;gt; &lt;tt class=&quot;docutils literal&quot;&gt;decimal&lt;/tt&gt; from it, we end up with
+integers round-tripping to &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;, which could easily create errors in
+Python contexts which are not ready to deal with fixed-point arithmetic.
+However, upon receiving a &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; from the database, we can check what
+number it is: if it has no decimal digit it may be returned to Python as
+&lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;, if it has any decimal digit it can returned as &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;.&lt;/p&gt;
+&lt;p&gt;This mechanism can be as trivial as &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/commit/5ced659f4838cf72c1981518ae2804942ebbd07b&quot;&gt;looking if there is a '.'&lt;/a&gt; in the data
+returned by the database; however in many cases the is job made simpler (or at
+least more efficient) by the presence of the &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; modifiers:
+&lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; comes in three flavours:&lt;/p&gt;
+&lt;ul class=&quot;simple&quot;&gt;
+&lt;li&gt;&lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt;: arbitrary precision (number of digits) and scale (number of
+digits after the decimal point),&lt;/li&gt;
+&lt;li&gt;&lt;tt class=&quot;docutils literal&quot;&gt;numeric(&lt;/tt&gt;&lt;em&gt;n&lt;/em&gt;&lt;tt class=&quot;docutils literal&quot;&gt;)&lt;/tt&gt;: limited precision, no digit after the decimal
+point (equivalent to &lt;tt class=&quot;docutils literal&quot;&gt;numeric(&lt;/tt&gt;&lt;em&gt;n&lt;/em&gt;&lt;tt class=&quot;docutils literal&quot;&gt;, 0)&lt;/tt&gt;),&lt;/li&gt;
+&lt;li&gt;&lt;tt class=&quot;docutils literal&quot;&gt;numeric(&lt;/tt&gt;&lt;em&gt;n&lt;/em&gt;&lt;tt class=&quot;docutils literal&quot;&gt;,&lt;/tt&gt; &lt;em&gt;m&lt;/em&gt;&lt;tt class=&quot;docutils literal&quot;&gt;)&lt;/tt&gt;: limited precision, fixed number of
+digits after the decimal point.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The modifier information is returned in many contexts (among which the most
+important: selecting data from tables): if we know the scale &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/commit/a9444144f7d0581284ccab198ad0355436e6822a&quot;&gt;we can decide
+upfront&lt;/a&gt; to load the entire column as &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; if the scale is 0, &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;
+otherwise. If the modifier is unknown we can look at the presence of the dot.&lt;/p&gt;
+&lt;p&gt;Returning an &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; in a context where &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt; are expected doesn't seem
+a big problem: throwing an integer to a fixed-point calculation doesn't wreak
+havoc has it does throwing a &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt; in a context of &lt;tt class=&quot;docutils literal&quot;&gt;flaot&lt;/tt&gt;
+calculations. Running the entire Django test suite after this change caused no
+test to fail, which gives me some comfort.&lt;/p&gt;
+&lt;hr class=&quot;docutils&quot; /&gt;
+&lt;p&gt;Being the adaptation system flexible, users are able to override these
 choices, but I don't expect many people wanting to do it, and doing it
 process-wise might cause interoperation problems across libraries. The
 behaviour out-of-the-box is obviously important and I would like to get the
 trade-offs right.&lt;/p&gt;
 &lt;p&gt;What do you think?&lt;/p&gt;
+&lt;div class=&quot;admonition admonition-note&quot;&gt;
+&lt;p class=&quot;first admonition-title&quot;&gt;Note&lt;/p&gt;
+&lt;p class=&quot;last&quot;&gt;This article was modified after experimenting with the &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; to
+&lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; strategy. Thank you for rubber-ducking. 🦆&lt;/p&gt;
+&lt;/div&gt;
 </content>
   </entry>
   <entry xml:base="https://www.varrazzo.com/blog/2020/07/25/surviving-django/">

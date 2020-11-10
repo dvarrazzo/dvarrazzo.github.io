@@ -17,7 +17,7 @@
     <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="/css/main.css?h=af85dcae">
     <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
-    <link rel="stylesheet" href="/css/custom.css?h=687d5741">
+    <link rel="stylesheet" href="/css/custom.css?h=02992245">
     <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
   </head>
 
@@ -205,6 +205,7 @@ functions</li>
 </ul>
 <p class="last"><tt class="docutils literal">unknown</tt> seems the winner.</p>
 </div>
+<hr class="docutils" />
 <p>What about the numbers? That's a problem thorny in a different way. Python
 integers are of arbitrary size, so they map better to a subset of the
 <tt class="docutils literal">numeric</tt> type than to <tt class="docutils literal">int4</tt> or <tt class="docutils literal">int8</tt>. However there is a similar
@@ -241,8 +242,8 @@ need to add explicit type casts.
 the Python <tt class="docutils literal">int</tt> to the <tt class="docutils literal">bigint</tt> oid solves no problem - the same
 functions would fail the same way, and defaulting it to <tt class="docutils literal">int4</tt> I feel it
 would overflow too easily in a 64 bits world.</p>
-<p>How to fix that? As the hint suggests, the user would have to either add a
-cast to the query, which would look like:</p>
+<p>How to fix that, if you are an end user? As the hint suggests, the user would
+have to either add a cast to the query, which would look like:</p>
 <pre class="code python literal-block">
 <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select current_date + </span><span class="si">%s</span><span class="s2">::int&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">offset</span><span class="p">])</span>
 </pre>
@@ -258,43 +259,75 @@ cast to the query, which would look like:</p>
 <ul class="simple">
 <li>+1: can express the full range of the unbounded Python <tt class="docutils literal">int</tt></li>
 <li>+2: can be passed without cast to most data types and functions</li>
-<li>-1: roundtrips back to string, error on PostgreSQL &lt; 10</li>
+<li>-2: it round-trips back to string, error on PostgreSQL &lt; 10</li>
 </ul>
-<p>To <tt class="docutils literal">decimal</tt>:</p>
+<p>To <tt class="docutils literal">numeric</tt>:</p>
 <ul class="simple">
 <li>+1: can express the full range of the unbounded Python <tt class="docutils literal">int</tt></li>
 <li>+1: can be passed without cast to most data types</li>
-<li>+1: requires a cast for some functions</li>
-<li>-0.5: roundtrips back to <tt class="docutils literal">Decimal</tt> (but maybe we could cast to int if
-scale = 0?)</li>
+<li>-1: requires a cast for some functions</li>
+<li><span class="strike">-1: it round-trips to 'Decimal'</span></li>
+<li>+0.5: <strong>it can round-trip back to int</strong>, with additional care - more to
+follow</li>
 </ul>
 <p>To <tt class="docutils literal">int8</tt>:</p>
 <ul class="simple">
-<li>+1: can be passed without cast to most data types</li>
-<li>+1: roundtrips back to <tt class="docutils literal">int</tt></li>
-<li>-1: requires a cast for some functions</li>
 <li>-0.5: can't express values not fitting in 64 bits (relatively limited
 use case: if the target column is <tt class="docutils literal">numeric</tt> then it would be wise for
 the user to pass a <tt class="docutils literal">Decimal</tt>)</li>
+<li>+1: can be passed without cast to most data types</li>
+<li>-1: requires a cast for some functions</li>
+<li>+1: it round-trips back to <tt class="docutils literal">int</tt></li>
 </ul>
 <p>To <tt class="docutils literal">int4</tt>:</p>
 <ul class="simple">
-<li>+2: can be passed without cast to most data types and functions</li>
-<li>+1: roundtrips back to <tt class="docutils literal">int</tt></li>
 <li>-1: limited range: couldn't be used to pass a value not fitting into 32
 bytes from Python to a <tt class="docutils literal">bigint</tt>.</li>
+<li>+2: can be passed without cast to most data types and functions</li>
+<li>+1: it round-trips back to <tt class="docutils literal">int</tt></li>
 </ul>
-<p class="last">Winner: unclear. The only I feel to exclude is <tt class="docutils literal">int4</tt>, which
-unfortunately is the only types which makes most functions work. Maybe
-<tt class="docutils literal">decimal</tt>, but only if it turns out easy to cast back values with scale
-= 0 to integer.</p>
+<p class="last">Winner: probably <tt class="docutils literal">numeric</tt>, with <tt class="docutils literal">int8</tt> runner-up?</p>
 </div>
-<p>Being the adaptation system flexible, people are able to override these
+<p>What about the observation on <tt class="docutils literal">numeric</tt>? If we dump <tt class="docutils literal">int</tt> -&gt; <tt class="docutils literal">numeric</tt>
+to the db, and load back <tt class="docutils literal">numeric</tt> -&gt; <tt class="docutils literal">decimal</tt> from it, we end up with
+integers round-tripping to <tt class="docutils literal">Decimal</tt>, which could easily create errors in
+Python contexts which are not ready to deal with fixed-point arithmetic.
+However, upon receiving a <tt class="docutils literal">numeric</tt> from the database, we can check what
+number it is: if it has no decimal digit it may be returned to Python as
+<tt class="docutils literal">int</tt>, if it has any decimal digit it can returned as <tt class="docutils literal">Decimal</tt>.</p>
+<p>This mechanism can be as trivial as <a class="reference external" href="https://github.com/psycopg/psycopg3/commit/5ced659f4838cf72c1981518ae2804942ebbd07b">looking if there is a '.'</a> in the data
+returned by the database; however in many cases the is job made simpler (or at
+least more efficient) by the presence of the <tt class="docutils literal">numeric</tt> modifiers:
+<tt class="docutils literal">numeric</tt> comes in three flavours:</p>
+<ul class="simple">
+<li><tt class="docutils literal">numeric</tt>: arbitrary precision (number of digits) and scale (number of
+digits after the decimal point),</li>
+<li><tt class="docutils literal">numeric(</tt><em>n</em><tt class="docutils literal">)</tt>: limited precision, no digit after the decimal
+point (equivalent to <tt class="docutils literal">numeric(</tt><em>n</em><tt class="docutils literal">, 0)</tt>),</li>
+<li><tt class="docutils literal">numeric(</tt><em>n</em><tt class="docutils literal">,</tt> <em>m</em><tt class="docutils literal">)</tt>: limited precision, fixed number of
+digits after the decimal point.</li>
+</ul>
+<p>The modifier information is returned in many contexts (among which the most
+important: selecting data from tables): if we know the scale <a class="reference external" href="https://github.com/psycopg/psycopg3/commit/a9444144f7d0581284ccab198ad0355436e6822a">we can decide
+upfront</a> to load the entire column as <tt class="docutils literal">int</tt> if the scale is 0, <tt class="docutils literal">Decimal</tt>
+otherwise. If the modifier is unknown we can look at the presence of the dot.</p>
+<p>Returning an <tt class="docutils literal">int</tt> in a context where <tt class="docutils literal">Decimal</tt> are expected doesn't seem
+a big problem: throwing an integer to a fixed-point calculation doesn't wreak
+havoc has it does throwing a <tt class="docutils literal">Decimal</tt> in a context of <tt class="docutils literal">flaot</tt>
+calculations. Running the entire Django test suite after this change caused no
+test to fail, which gives me some comfort.</p>
+<hr class="docutils" />
+<p>Being the adaptation system flexible, users are able to override these
 choices, but I don't expect many people wanting to do it, and doing it
 process-wise might cause interoperation problems across libraries. The
 behaviour out-of-the-box is obviously important and I would like to get the
 trade-offs right.</p>
 <p>What do you think?</p>
+<div class="admonition admonition-note">
+<p class="first admonition-title">Note</p>
+<p class="last">This article was modified after experimenting with the <tt class="docutils literal">numeric</tt> to
+<tt class="docutils literal">int</tt> strategy. Thank you for rubber-ducking. 🦆</p>
+</div>
 
 <script src="https://utteranc.es/client.js"
   repo="dvarrazzo/www.varrazzo.com"
