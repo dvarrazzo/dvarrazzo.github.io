@@ -174,12 +174,12 @@ bytes from Python to a &lt;tt class=&quot;docutils literal&quot;&gt;bigint&lt;/t
 &lt;p class=&quot;last&quot;&gt;Winner: probably &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt;, with &lt;tt class=&quot;docutils literal&quot;&gt;int8&lt;/tt&gt; runner-up?&lt;/p&gt;
 &lt;/div&gt;
 &lt;p&gt;What about the observation on &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt;? If we dump &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; -&amp;gt; &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt;
-to the db, and load back &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; -&amp;gt; &lt;tt class=&quot;docutils literal&quot;&gt;decimal&lt;/tt&gt; from it, we end up with
+to the db, and load back &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; -&amp;gt; &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt; from it, we end up with
 integers round-tripping to &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;, which could easily create errors in
 Python contexts which are not ready to deal with fixed-point arithmetic.
 However, upon receiving a &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; from the database, we can check what
-number it is: if it has no decimal digit it may be returned to Python as
-&lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;, if it has any decimal digit it can returned as &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;.&lt;/p&gt;
+number it is: if it has no decimal digit it can be returned to Python as
+&lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt;, if it has any decimal digit it must be returned as &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;.&lt;/p&gt;
 &lt;p&gt;This mechanism can be as trivial as &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/commit/5ced659f4838cf72c1981518ae2804942ebbd07b&quot;&gt;looking if there is a '.'&lt;/a&gt; in the data
 returned by the database; however in many cases the is job made simpler (or at
 least more efficient) by the presence of the &lt;tt class=&quot;docutils literal&quot;&gt;numeric&lt;/tt&gt; modifiers:
@@ -193,7 +193,7 @@ point (equivalent to &lt;tt class=&quot;docutils literal&quot;&gt;numeric(&lt;/t
 digits after the decimal point.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;The modifier information is returned in many contexts (among which the most
-important: selecting data from tables): if we know the scale &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/commit/a9444144f7d0581284ccab198ad0355436e6822a&quot;&gt;we can decide
+important: selecting data from tables): if we know the scale &lt;a class=&quot;reference external&quot; href=&quot;https://github.com/psycopg/psycopg3/commit/2553e83c5899855fa178860aa3b6b3dab0d4d6b4&quot;&gt;we can decide
 upfront&lt;/a&gt; to load the entire column as &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; if the scale is 0, &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt;
 otherwise. If the modifier is unknown we can look at the presence of the dot.&lt;/p&gt;
 &lt;p&gt;Returning an &lt;tt class=&quot;docutils literal&quot;&gt;int&lt;/tt&gt; in a context where &lt;tt class=&quot;docutils literal&quot;&gt;Decimal&lt;/tt&gt; are expected doesn't seem

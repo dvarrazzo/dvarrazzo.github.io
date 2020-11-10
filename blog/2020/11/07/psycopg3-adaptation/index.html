@@ -289,12 +289,12 @@ bytes from Python to a <tt class="docutils literal">bigint</tt>.</li>
 <p class="last">Winner: probably <tt class="docutils literal">numeric</tt>, with <tt class="docutils literal">int8</tt> runner-up?</p>
 </div>
 <p>What about the observation on <tt class="docutils literal">numeric</tt>? If we dump <tt class="docutils literal">int</tt> -&gt; <tt class="docutils literal">numeric</tt>
-to the db, and load back <tt class="docutils literal">numeric</tt> -&gt; <tt class="docutils literal">decimal</tt> from it, we end up with
+to the db, and load back <tt class="docutils literal">numeric</tt> -&gt; <tt class="docutils literal">Decimal</tt> from it, we end up with
 integers round-tripping to <tt class="docutils literal">Decimal</tt>, which could easily create errors in
 Python contexts which are not ready to deal with fixed-point arithmetic.
 However, upon receiving a <tt class="docutils literal">numeric</tt> from the database, we can check what
-number it is: if it has no decimal digit it may be returned to Python as
-<tt class="docutils literal">int</tt>, if it has any decimal digit it can returned as <tt class="docutils literal">Decimal</tt>.</p>
+number it is: if it has no decimal digit it can be returned to Python as
+<tt class="docutils literal">int</tt>, if it has any decimal digit it must be returned as <tt class="docutils literal">Decimal</tt>.</p>
 <p>This mechanism can be as trivial as <a class="reference external" href="https://github.com/psycopg/psycopg3/commit/5ced659f4838cf72c1981518ae2804942ebbd07b">looking if there is a '.'</a> in the data
 returned by the database; however in many cases the is job made simpler (or at
 least more efficient) by the presence of the <tt class="docutils literal">numeric</tt> modifiers:
@@ -308,7 +308,7 @@ point (equivalent to <tt class="docutils literal">numeric(</tt><em>n</em><tt cla
 digits after the decimal point.</li>
 </ul>
 <p>The modifier information is returned in many contexts (among which the most
-important: selecting data from tables): if we know the scale <a class="reference external" href="https://github.com/psycopg/psycopg3/commit/a9444144f7d0581284ccab198ad0355436e6822a">we can decide
+important: selecting data from tables): if we know the scale <a class="reference external" href="https://github.com/psycopg/psycopg3/commit/2553e83c5899855fa178860aa3b6b3dab0d4d6b4">we can decide
 upfront</a> to load the entire column as <tt class="docutils literal">int</tt> if the scale is 0, <tt class="docutils literal">Decimal</tt>
 otherwise. If the modifier is unknown we can look at the presence of the dot.</p>
 <p>Returning an <tt class="docutils literal">int</tt> in a context where <tt class="docutils literal">Decimal</tt> are expected doesn't seem
