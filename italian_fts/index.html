@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <title>Italian full-text search for PostgreSQL &mdash; Daniele Varrazzo</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-158968242-1');
+    </script>
+    <link rel="shortcut icon" href="img/favicon.png">
+    <link rel="stylesheet" href="/css/plugins.css?h=ee14355f">
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300%7cPoppins:400,300,500,700,600' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/main.css?h=af85dcae">
+    <link rel="stylesheet" href="/css/syntax.css?h=8242465b">
+    <link rel="stylesheet" href="/css/custom.css?h=02992245">
+    <script src="/js/lib/modernizr-2.6.2.min.js?h=d0696412"></script>
+  </head>
+
+  <body>
+    <div class="main-wrapper">
+<header id="header" class="">
+  <a href="/about/" class="logo">
+    <img src="/img/logo.png?h=0ad960b2" class="logo-dark" alt="">
+    <img src="/img/logo-light.png?h=cb66caa4" class="logo-light" alt="">
+  </a>
+  <a href="#" class="mob-menu"><i class="fa fa-bars"></i></a>
+  <nav>
+    <ul class="main-menu">
+<li>
+  <a href="/about/">About</a>
+</li>
+<li>
+  <a href="/software/">Software</a>
+  <ul>
+<li>
+  <a href="https://www.psycopg.org/" target="_blank">psycopg <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://www.varrazzo.com/pgmp/" target="_blank">pgmp <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://pgxn.github.io/pgxnclient/" target="_blank">PGXN Client <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+<li>
+  <a href="https://reorg.github.io/pg_repack/" target="_blank">pg_repack <i class="fa fa-external-link" aria-hidden="true"></i></a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/photo/">Photography</a>
+  <ul>
+<li>
+  <a href="/photo/longexp/">Long exposures</a>
+</li>
+<li>
+  <a href="/photo/ireland/">Ireland, 2019</a>
+</li>
+<li>
+  <a href="/photo/japan/">Japan, 2019</a>
+</li>
+<li>
+  <a href="/photo/whangarei/">Isolation diaries</a>
+</li>
+  </ul>
+</li>
+<li>
+  <a href="/blog/">Blog</a>
+</li>
+<li>
+  <a href="/contact/">Contact</a>
+</li>
+    </ul>
+  </nav>
+</header>
+<div class="container fullwidth pt140 pb140" data-background="/italian_fts/cortona.jpg">
+  <div class="pt140 pb140">
+    <div class="entrance">
+      <h2 class="title">Italian full-text search for PostgreSQL</h2>
+    </div>
+  </div>
+</div>
+
+<div class="container mt70 mb70">
+  <div class="row">
+    <div id="content" class="col-md-8 col-md-offset-2"><div class="admonition admonition-note">
+<p class="first admonition-title">Note:</p>
+<p class="last">Unsurprisingly, you can read this <a class="reference external" href="/fts_italiano/">in Italian</a> too!</p>
+</div>
+<p>This package provides a dictionary and the other files required to
+perform <em>full text search</em> in Italian documents using the <a class="reference external" href="http://www.postgresql.org">PostgreSQL</a>
+database.</p>
+<p>Using the provided dictionary, search operations in Italian documents can
+keep into account morphological variations of Italian words, such as verb
+conjugations.</p>
+<div class="section" id="spelling-dictionary-informations">
+<h3>Spelling Dictionary Informations</h3>
+<p>This vocabulary has been generated from the MySpell OpenOffice.org vocabulary,
+provided by the <a class="reference external" href="http://linguistico.sourceforge.net/">progetto linguistico</a>.</p>
+<p>The dictionary had to undergo an huge amount of transformations, and is now
+quite unrecognizable from the original. Above all, all the verbal forms,
+including irregular verbs, are now reduced to the infinite form. Furthermore,
+for each verb, the construction with pronominal and reflexive particles are
+recognized on gerund, present and past participle, imperative and infinite.</p>
+<p>Great care has also been taken in reducing the different forms of adjectives
+(male and female, singular and plural, superlatives) to a single normal form,
+and to unify different forms of male and female (es. <em>ricercatore</em> and
+<em>ricercatrice</em>: male and female form of &quot;researcher&quot;).</p>
+<p>Furthermore, in the original dictionary, many unrelated male and female nouns
+were joined together as they were an adjective (es. <em>caso/casi</em> + <em>casa/case</em>,
+with the unrelated meanings of &quot;case(s)&quot; and &quot;house(s)&quot;). Such false friends
+have been mostly split apart to avoid false positives in search results, but
+some of them may still lie around in the dictionary (this is a kind of error
+that no Python script can help fixing...).</p>
+<p>Some statistics about the current dictionary edition:</p>
+<ul class="simple">
+<li><strong>66,929</strong> distinct roots,</li>
+<li><strong>7,300</strong> completely conjugated verbs</li>
+<li><strong>1,943,826</strong> distinct recognized terms</li>
+<li><strong>62</strong> flags in the affix file</li>
+<li><strong>10,365</strong> production rules in the affix file.</li>
+</ul>
+<div class="section" id="presentation-at-pgday">
+<h4>Presentation at PGDay</h4>
+<p>The dictionary was presented at <a class="reference external" href="http://www.pgday.it">PGDay</a> 2007, the first Italian PostgreSQL
+conference. The <a class="reference external" href="../fts_italiano/fts-pgday.odp">slideshow</a> is available for download.</p>
+</div>
+</div>
+<div class="section" id="download-installation-usage">
+<h3>Download, installation, usage</h3>
+<p>You can find all the info on the <a class="reference external" href="https://github.com/dvarrazzo/italian_fts/blob/master/README.rst">GitHub project</a>.</p>
+</div>
+<div class="section" id="license">
+<h3>License</h3>
+<p>The Italian Dictionary for Full-Text Search is distributed under GPL license.</p>
+</div>
+<div class="section" id="acknowledgments">
+<h3>Acknowledgments</h3>
+<p>I wish to thank <strong>Davide Prina</strong> and <strong>Gianluca Turconi</strong>, because without
+their <a class="reference external" href="http://linguistico.sourceforge.net/">progetto linguistico</a> i wouldn't have had anything to work upon.</p>
+<p>I also hearty thank <strong>Oleg Bartunov</strong> and <strong>Teodor Sigaev</strong>, the <a class="reference external" href="http://www.sai.msu.su/~megera/postgres/gist/tsearch/V2/">Tsearch2</a>
+authors.</p>
+<p>And many thanks to <a class="reference external" href="http://www.develer.com">Develer</a>, one of the finest hackers assembly in Italy!</p>
+</div>
+
+<script src="https://utteranc.es/client.js"
+  repo="dvarrazzo/www.varrazzo.com"
+  issue-term="pathname"
+  label="comments"
+  theme="github-light"
+  crossorigin="anonymous"
+  async>
+</script>
+    </div>
+</div>
+
+<footer id="footer" class="">
+  <div class="footer-links">
+    &copy; 2020. By Daniele Varrazzo. |
+    <a target="_blank" href="https://github.com/dvarrazzo/">GitHub</a> |
+    <a target="_blank" href="https://www.linkedin.com/in/danielevarrazzo/">LinkedIn</a> |
+    <a target="_blank" href="https://www.instagram.com/dvarrazzo/">Instagram</a> |
+    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/">Flickr</a>
+  </div>
+
+</footer>
+    </div>
+    <script src="/js/lib/jquery.min.js?h=d6c1f419"></script>
+    <script src="/js/lib/scripts.js?h=e59b43e0"></script>
+    <script src="/js/main.js?h=4b3e78de"></script>
+  </body>
+</html>
