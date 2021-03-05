@@ -200,13 +200,13 @@ configuration file containing 4 errors:</p>
 </pre>
 <p>It's easy to use the validator to find all the errors at once:</p>
 <pre class="code pycon literal-block">
-<span class="kn"></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jsonschema</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jsonschema</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">yaml</span>
 <span class="go">
-</span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;seldump/schema/config.yaml&quot;</span><span class="p">))</span>
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;seldump/schema/config.yaml&quot;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">validator</span> <span class="o">=</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">Draft7Validator</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
 <span class="go">
-</span><span class="n"></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;badconfig.yaml&quot;</span><span class="p">))</span>
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;badconfig.yaml&quot;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">iter_errors</span><span class="p">(</span><span class="n">config</span><span class="p">)))</span>
 <span class="go">
 Additional properties are not allowed ('kid' was unexpected)
@@ -310,11 +310,11 @@ tables...</p>
 
 <footer id="footer" class="">
   <div class="footer-links">
-    &copy; 2020. By Daniele Varrazzo. |
+    &copy; 2020-2021. By Daniele Varrazzo. |
     <a target="_blank" href="https://github.com/dvarrazzo/">GitHub</a> |
     <a target="_blank" href="https://www.linkedin.com/in/danielevarrazzo/">LinkedIn</a> |
     <a target="_blank" href="https://www.instagram.com/dvarrazzo/">Instagram</a> |
-    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/">Flickr</a>
+    <a target="_blank" href="https://www.flickr.com/photos/dvarrazzo/albums/72157627599162127">Flickr</a>
   </div>
 
 </footer>
