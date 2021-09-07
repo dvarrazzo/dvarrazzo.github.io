@@ -331,6 +331,18 @@ trade-offs right.</p>
 <p class="last">This article was modified after experimenting with the <tt class="docutils literal">numeric</tt> to
 <tt class="docutils literal">int</tt> strategy. Thank you for rubber-ducking. 🦆</p>
 </div>
+<div class="admonition admonition-note">
+<p class="first admonition-title">Note</p>
+<p>This article was written with the Psycopg 2 model in mind, where there is
+a direct mapping from the parameter type to the adaptation function.</p>
+<p>After further expermentation with Psycopg 3, this model proved
+inadequately rigid. Psycopg 3 has improved since: at the time of the <a class="reference external" href="https://www.psycopg.org/articles/2021/08/30/psycopg-30-beta1-released/">beta
+1 release</a>,
+it implements an adaptation algorithm which can use the parameter value to
+select the right PostgreSQL type.</p>
+<p class="last">You can find the current state of the affairs in the <a class="reference external" href="https://www.psycopg.org/psycopg3/docs/advanced/adapt.html">Psycopg 3
+documentation</a></p>
+</div>
 
 <script src="https://utteranc.es/client.js"
   repo="dvarrazzo/www.varrazzo.com"
