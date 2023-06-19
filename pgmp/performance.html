@@ -1,27 +1,23 @@
+<!DOCTYPE html>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>Performance &#8212; PostgreSQL Multiple Precision Arithmetic 1.1.0dev0 documentation</title>
-    <link rel="stylesheet" href="_static/pgmp.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pgmp.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YCKCK1NGRM"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'UA-158968242-1');
+      gtag('config', 'G-YCKCK1NGRM');
     </script>
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=Accessible"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -44,25 +40,26 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="performance">
-<span id="id1"></span><h1>Performance<a class="headerlink" href="#performance" title="Permalink to this headline">¶</a></h1>
+  <section id="performance">
+<span id="id1"></span><h1>Performance<a class="headerlink" href="#performance" title="Permalink to this heading">¶</a></h1>
 <p>Here are a few comparisons between the data types provided by pgmp and the
 builtin PostgreSQL data types.  A few observations:</p>
 <ul class="simple">
-<li>Of course <a class="reference internal" href="mpz.html#mpz" title="mpz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code></a> is not a substitute for <code class="xref py py-obj docutils literal notranslate"><span class="pre">decimal</span></code> as it doesn’t store
+<li><p>Of course <a class="reference internal" href="mpz.html#mpz" title="mpz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code></a> is not a substitute for <code class="xref py py-obj docutils literal notranslate"><span class="pre">decimal</span></code> as it doesn’t store
 the non-integer part. So yes, we are comparing apples with pineapples, but
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">decimal</span></code> is the only currently available way to have arbitrary size
-numbers in PostgreSQL.</li>
-<li>We don’t claim the extra speed summing numbers with 1000 digits is something
+numbers in PostgreSQL.</p></li>
+<li><p>We don’t claim the extra speed summing numbers with 1000 digits is something
 everybody needs, nor that applications doing a mix of math and other
-operations or under an I/O load will benefit of the same speedup.</li>
-<li>Those are “laptop comparisons”, not obtained with a tuned PostgreSQL
+operations or under an I/O load will benefit of the same speedup.</p></li>
+<li><p>Those are “laptop comparisons”, not obtained with a tuned PostgreSQL
 installation nor on production-grade hardware. However they are probably
 fine enough to compare the difference in behaviour between the data types,
 and I expect the same performance ratio on different hardware with the same
-platform.</li>
-<li>All the results are obtained using the scripts available in the
-<a class="reference external" href="https://github.com/dvarrazzo/pgmp/tree/master/bench">bench</a> directory of the pmpz source code.</li>
+platform.</p></li>
+<li><p>All the results are obtained using the scripts available in the
+<a class="reference external" href="https://github.com/dvarrazzo/pgmp/tree/master/bench">bench</a> directory of the pmpz source code.</p>
+</li>
 </ul>
 <p id="performance-sum">Just taking the sum of a table with 1M records, <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> is about 25% faster than
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">numeric</span></code> for small numbers; the difference increases with the size of the
@@ -101,14 +98,16 @@ different data types. The numbers are integers, so there is about a constant
 offset between <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpq</span></code>. The platform is 32 bit.</p>
 <img alt="img/TableSize-1e6-small.png" src="img/TableSize-1e6-small.png" />
 <img alt="img/TableSize-1e6.png" src="img/TableSize-1e6.png" />
-</div>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
         </div>
         <div class="sidebar">
+          
           <h3>Table of Contents</h3>
           <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pgmp</span></code> extension installation</a></li>
@@ -123,10 +122,9 @@ offset between <code class="xref py py-obj docutils literal notranslate"><span c
             <form class="search" action="search.html" method="get">
                 <input type="text" name="q" />
                 <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
             </form>
           </div>
+
         </div>
         <div class="clearer"></div>
       </div>
@@ -150,7 +148,7 @@ offset between <code class="xref py py-obj docutils literal notranslate"><span c
           
     <div class="footer" role="contentinfo">
         &#169; Copyright 2011-2020, Daniele Varrazzo.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
     </div>
         </div>
         <div class="clearer"></div>

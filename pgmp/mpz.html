@@ -1,27 +1,24 @@
+<!DOCTYPE html>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>mpz data type &#8212; PostgreSQL Multiple Precision Arithmetic 1.1.0dev0 documentation</title>
-    <link rel="stylesheet" href="_static/pgmp.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pgmp.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YCKCK1NGRM"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'UA-158968242-1');
+      gtag('config', 'G-YCKCK1NGRM');
     </script>
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=Accessible"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=Accessible"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="mpq data type" href="mpq.html" />
@@ -50,16 +47,16 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="mpz-data-type">
-<h1><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> data type<a class="headerlink" href="#mpz-data-type" title="Permalink to this headline">¶</a></h1>
+  <section id="mpz-data-type">
+<h1><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> data type<a class="headerlink" href="#mpz-data-type" title="Permalink to this heading">¶</a></h1>
 <p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> data type can store integer numbers of arbitrary size, up to the
 maximum memory allowed by PostgreSQL data types (about 1GB).</p>
 <p>Every PostgreSQL integer type (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int16</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">int32</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">int64</span></code>) can be converted
 to <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code>. Not integer types (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float4</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">float8</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">numeric</span></code>) are truncated.
 Cast from integer types are automatic, whereas non integer require explicit
 cast (but are implicitly converted in assignment).</p>
-<div class="highlight-postgres notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span> <span class="n">mpz</span><span class="p">(</span><span class="mf">10000</span><span class="p">);</span>      <span class="c1">-- Cast using mpz as a function</span>
-<span class="k">SELECT</span> <span class="mf">10000</span><span class="o">::</span><span class="n">mpz</span><span class="p">;</span>      <span class="c1">-- PostgreSQL-style cast</span>
+<div class="highlight-postgres notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">mpz</span><span class="p">(</span><span class="mf">10000</span><span class="p">);</span><span class="w">      </span><span class="c1">-- Cast using mpz as a function</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="mf">10000</span><span class="o">::</span><span class="n">mpz</span><span class="p">;</span><span class="w">      </span><span class="c1">-- PostgreSQL-style cast</span>
 </pre></div>
 </div>
 <p>Casting <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> to PostgreSQL integer types and <code class="xref py py-obj docutils literal notranslate"><span class="pre">numeric</span></code> works as expected
@@ -69,13 +66,13 @@ and will overflow if the value is too big for their range. Casting to
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> values can be compared using the regular PostgreSQL comparison
 operators. Indexes on <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> columns can be created using the <em>btree</em> or the
 <em>hash</em> method.</p>
-<div class="section" id="mpz-textual-input-output">
-<h2><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> textual input/output<a class="headerlink" href="#mpz-textual-input-output" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="mpz">
-<code class="descname">mpz</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="headerlink" href="#mpz" title="Permalink to this definition">¶</a></dt>
-<dt>
-<code class="descname">mpz</code><span class="sig-paren">(</span><em>text</em>, <em>base</em><span class="sig-paren">)</span></dt>
+<section id="mpz-textual-input-output">
+<h2><code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> textual input/output<a class="headerlink" href="#mpz-textual-input-output" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mpz">
+<span class="sig-name descname"><span class="pre">mpz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mpz" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">mpz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Convert a textual representation into an <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> number. The form
 <code class="samp docutils literal notranslate"><em><span class="pre">text</span></em><span class="pre">::mpz</span></code> is equivalent to <code class="samp docutils literal notranslate"><span class="pre">mpz(</span><em><span class="pre">text</span></em><span class="pre">)</span></code>.</p>
 <p>White space is allowed in the string, and is simply ignored.</p>
@@ -85,24 +82,24 @@ leading characters are used: <code class="docutils literal notranslate"><span cl
 <p>For bases up to 36, case is ignored; upper-case and lower-case letters
 have the same value.  For bases 37 to 62, upper-case letter represent the
 usual 10..35 while lower-case letter represent 36..61.</p>
-<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="gp">=#</span> <span class="k">SELECT</span> <span class="s1">&#39;0x10&#39;</span><span class="o">::</span><span class="n">mpz</span> <span class="k">AS</span> <span class="s s-Name">&quot;hex&quot;</span><span class="p">,</span> <span class="s1">&#39;10&#39;</span><span class="o">::</span><span class="n">mpz</span> <span class="k">AS</span> <span class="s s-Name">&quot;dec&quot;</span><span class="p">,</span>
-<span class="gp">-#</span>        <span class="s1">&#39;010&#39;</span><span class="o">::</span><span class="n">mpz</span> <span class="k">AS</span> <span class="s s-Name">&quot;oct&quot;</span><span class="p">,</span> <span class="s1">&#39;0b10&#39;</span><span class="o">::</span><span class="n">mpz</span> <span class="k">AS</span> <span class="s s-Name">&quot;bin&quot;</span><span class="p">;</span>
+<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="gp">=#</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="s1">&#39;0x10&#39;</span><span class="o">::</span><span class="n">mpz</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s s-Name">&quot;hex&quot;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;10&#39;</span><span class="o">::</span><span class="n">mpz</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s s-Name">&quot;dec&quot;</span><span class="p">,</span>
+<span class="gp">-#</span><span class="w">        </span><span class="s1">&#39;010&#39;</span><span class="o">::</span><span class="n">mpz</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s s-Name">&quot;oct&quot;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0b10&#39;</span><span class="o">::</span><span class="n">mpz</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s s-Name">&quot;bin&quot;</span><span class="p">;</span>
 <span class="go"> hex | dec | oct | bin</span>
 <span class="go">-----+-----+-----+-----</span>
 <span class="go"> 16  | 10  | 8   | 2</span>
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The maximum base accepted by GMP 4.1 is 36, not 62.</p>
+<p class="admonition-title">Note</p>
+<p>The maximum base accepted by GMP 4.1 is 36, not 62.</p>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="text">
-<code class="descname">text</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#text" title="Permalink to this definition">¶</a></dt>
-<dt>
-<code class="descname">text</code><span class="sig-paren">(</span><em>z</em>, <em>base</em><span class="sig-paren">)</span></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="text">
+<span class="sig-name descname"><span class="pre">text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#text" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Convert the <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> <em>z</em> into a string. The form <code class="samp docutils literal notranslate"><em><span class="pre">z</span></em><span class="pre">::text</span></code> is
 equivalent to <code class="samp docutils literal notranslate"><span class="pre">text(</span><em><span class="pre">z</span></em><span class="pre">)</span></code>.</p>
 <p><em>base</em> may vary from 2 to 62 or from -2 to -36.  For base in the range
@@ -111,336 +108,318 @@ upper-case letters are used; for 37..62, digits, upper-case letters, and
 lower-case letters (in that significance order) are used. If <em>base</em> is not
 specified, 10 is assumed.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The maximum base accepted by GMP 4.1 is 36, not 62.</p>
+<p class="admonition-title">Note</p>
+<p>The maximum base accepted by GMP 4.1 is 36, not 62.</p>
 </div>
 </dd></dl>
 
-</div>
-<div class="section" id="arithmetic-operators-and-functions">
-<h2>Arithmetic Operators and Functions<a class="headerlink" href="#arithmetic-operators-and-functions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="arithmetic-operators-and-functions">
+<h2>Arithmetic Operators and Functions<a class="headerlink" href="#arithmetic-operators-and-functions" title="Permalink to this heading">¶</a></h2>
 <p>These operators can either work on <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> arguments or take an integer
 argument that will be implicitly converted.  Operators taking a <span class="math notranslate nohighlight">\(2^n\)</span>
 argument always use an integer as right argument.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">GMP defines many structures in terms of <code class="xref py py-obj docutils literal notranslate"><span class="pre">long</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span></code>, whose
+<p class="admonition-title">Note</p>
+<p>GMP defines many structures in terms of <code class="xref py py-obj docutils literal notranslate"><span class="pre">long</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span></code>, whose
 definitions may vary across platforms. PostgreSQL instead offers data
 types with a defined number of bytes (e.g. <code class="xref py py-obj docutils literal notranslate"><span class="pre">int4</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">int8</span></code>). For this
 reason, functions taking an integer as argument are defined as <code class="xref py py-obj docutils literal notranslate"><span class="pre">int8</span></code>,
 but they may actually fail if the server is 32 bit and the argument
 doesn’t fit into an <code class="xref py py-obj docutils literal notranslate"><span class="pre">int4</span></code>.</p>
 </div>
-<table border="1" class="docutils" id="id12">
+<table class="docutils align-default" id="id12">
 <caption><span class="caption-text">Arithmetic operators</span><a class="headerlink" href="#id12" title="Permalink to this table">¶</a></caption>
-<colgroup>
-<col width="15%" />
-<col width="43%" />
-<col width="26%" />
-<col width="15%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Operator</th>
-<th class="head">Description</th>
-<th class="head">Example</th>
-<th class="head">Return</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Operator</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Example</p></th>
+<th class="head"><p>Return</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">-</span></code></td>
-<td>Unary minus</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">-</span> <span class="pre">5::mpz</span></code></td>
-<td>-5</td>
+<tbody>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-</span></code></p></td>
+<td><p>Unary minus</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-</span> <span class="pre">5::mpz</span></code></p></td>
+<td><p>-5</p></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">+</span></code></td>
-<td>Unary plus</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">+</span> <span class="pre">5::mpz</span></code></td>
-<td>5</td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">+</span></code></p></td>
+<td><p>Unary plus</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">+</span> <span class="pre">5::mpz</span></code></p></td>
+<td><p>5</p></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">+</span></code></td>
-<td>Addition</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">2::mpz</span> <span class="pre">+</span> <span class="pre">3::mpz</span></code></td>
-<td>5</td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">+</span></code></p></td>
+<td><p>Addition</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">2::mpz</span> <span class="pre">+</span> <span class="pre">3::mpz</span></code></p></td>
+<td><p>5</p></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">-</span></code></td>
-<td>Subtraction</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">2::mpz</span> <span class="pre">-</span> <span class="pre">3::mpz</span></code></td>
-<td>-1</td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-</span></code></p></td>
+<td><p>Subtraction</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">2::mpz</span> <span class="pre">-</span> <span class="pre">3::mpz</span></code></p></td>
+<td><p>-1</p></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">*</span></code></td>
-<td>Multiplication</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">7::mpz</span> <span class="pre">*</span> <span class="pre">3::mpz</span></code></td>
-<td>21</td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">*</span></code></p></td>
+<td><p>Multiplication</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">7::mpz</span> <span class="pre">*</span> <span class="pre">3::mpz</span></code></p></td>
+<td><p>21</p></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">&lt;&lt;</span></code></td>
-<td>Multiplication by <span class="math notranslate nohighlight">\(2^n\)</span></td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">3::mpz</span> <span class="pre">&lt;&lt;</span> <span class="pre">2</span></code></td>
-<td>12</td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">&lt;&lt;</span></code></p></td>
+<td><p>Multiplication by <span class="math notranslate nohighlight">\(2^n\)</span></p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">3::mpz</span> <span class="pre">&lt;&lt;</span> <span class="pre">2</span></code></p></td>
+<td><p>12</p></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">^</span></code></td>
-<td>Power (1)</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">3::mpz</span> <span class="pre">^</span> <span class="pre">2</span></code></td>
-<td>9</td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">^</span></code></p></td>
+<td><p>Power (1)</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">3::mpz</span> <span class="pre">^</span> <span class="pre">2</span></code></p></td>
+<td><p>9</p></td>
 </tr>
 </tbody>
 </table>
 <p>Notes:</p>
 <ol class="arabic simple">
-<li>See also the <a class="reference internal" href="#exponentiation-functions">exponentiation functions</a>.</li>
+<li><p>See also the <a class="reference internal" href="#exponentiation-functions">exponentiation functions</a>.</p></li>
 </ol>
-<dl class="function">
-<dt id="abs">
-<code class="descname">abs</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#abs" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="abs">
+<span class="sig-name descname"><span class="pre">abs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#abs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the absolute value of <em>z</em>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="sgn">
-<code class="descname">sgn</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#sgn" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="sgn">
+<span class="sig-name descname"><span class="pre">sgn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sgn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return +1 if <em>z</em> &gt; 0, 0 if <em>z</em> = 0, and -1 if <em>z</em> &lt; 0.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="odd">
-<code class="descname">odd</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#odd" title="Permalink to this definition">¶</a></dt>
-<dt id="even">
-<code class="descname">even</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#even" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="odd">
+<span class="sig-name descname"><span class="pre">odd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#odd" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="even">
+<span class="sig-name descname"><span class="pre">even</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#even" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code> if <em>z</em> is odd or even, respectively, else <code class="xref py py-obj docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="division-operators-and-functions">
-<h2>Division Operators and Functions<a class="headerlink" href="#division-operators-and-functions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="division-operators-and-functions">
+<h2>Division Operators and Functions<a class="headerlink" href="#division-operators-and-functions" title="Permalink to this heading">¶</a></h2>
 <p>For all the division-related operators <span class="math notranslate nohighlight">\(n \oslash d\)</span>, <span class="math notranslate nohighlight">\(q\)</span> and
 <span class="math notranslate nohighlight">\(r\)</span> will satisfy <span class="math notranslate nohighlight">\(n = q \cdot d + r\)</span>, and <span class="math notranslate nohighlight">\(r\)</span> will satisfy
 <span class="math notranslate nohighlight">\(0 \le |r| \lt |d|\)</span>.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Only the truncating division and reminder (<code class="xref py py-obj docutils literal notranslate"><span class="pre">/</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">%</span></code>) have the correct
+<p class="admonition-title">Note</p>
+<p>Only the truncating division and reminder (<code class="xref py py-obj docutils literal notranslate"><span class="pre">/</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">%</span></code>) have the correct
 precedence respect to addition, subtraction and multiplication.
 See <a class="reference external" href="https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-PRECEDENCE-TABLE">the PostgreSQL precedence table</a> for further details.</p>
 </div>
-<table border="1" class="docutils" id="id13">
+<table class="docutils align-default" id="id13">
 <caption><span class="caption-text">Division operators</span><a class="headerlink" href="#id13" title="Permalink to this table">¶</a></caption>
-<colgroup>
-<col width="16%" />
-<col width="45%" />
-<col width="29%" />
-<col width="10%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Operator</th>
-<th class="head">Description</th>
-<th class="head">Example</th>
-<th class="head">Return</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Operator</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Example</p></th>
+<th class="head"><p>Return</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">/</span></code></td>
-<td><p class="first">Division quotient</p>
-<p class="last">Rounding towards zero</p>
+<tbody>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">/</span></code></p></td>
+<td><p>Division quotient</p>
+<p>Rounding towards zero</p>
 </td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;7::mpz</span> <span class="pre">/</span> <span class="pre">3::mpz</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">/</span> <span class="pre">3::mpz</span></code></p>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 7::mpz</span> <span class="pre">/</span> <span class="pre">3::mpz</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">/</span> <span class="pre">3::mpz</span></code></p>
 </td>
-<td><p class="first">2</p>
-<p class="last">-2</p>
-</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">%</span></code></td>
-<td><p class="first">Division reminder</p>
-<p class="last">Rounding towards zero</p>
-</td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;7::mpz</span> <span class="pre">%</span> <span class="pre">3::mpz</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">%</span> <span class="pre">3::mpz</span></code></p>
-</td>
-<td><p class="first">1</p>
-<p class="last">-1</p>
+<td><p>2</p>
+<p>-2</p>
 </td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">+/</span></code></td>
-<td><p class="first">Division quotient</p>
-<p class="last">Rounding towards +infinity</p>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">%</span></code></p></td>
+<td><p>Division reminder</p>
+<p>Rounding towards zero</p>
 </td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;7::mpz</span> <span class="pre">+/</span> <span class="pre">3::mpz</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">+/</span> <span class="pre">3::mpz</span></code></p>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 7::mpz</span> <span class="pre">%</span> <span class="pre">3::mpz</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">%</span> <span class="pre">3::mpz</span></code></p>
 </td>
-<td><p class="first">3</p>
-<p class="last">-2</p>
-</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">+%</span></code></td>
-<td><p class="first">Division reminder</p>
-<p class="last">Rounding towards +infinity</p>
-</td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;7::mpz</span> <span class="pre">+%</span> <span class="pre">3::mpz</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">+%</span> <span class="pre">3::mpz</span></code></p>
-</td>
-<td><p class="first">-2</p>
-<p class="last">-1</p>
+<td><p>1</p>
+<p>-1</p>
 </td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">-/</span></code></td>
-<td><p class="first">Division quotient</p>
-<p class="last">Rounding towards -infinity</p>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">+/</span></code></p></td>
+<td><p>Division quotient</p>
+<p>Rounding towards +infinity</p>
 </td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;7::mpz</span> <span class="pre">-/</span> <span class="pre">3::mpz</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">-/</span> <span class="pre">3::mpz</span></code></p>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 7::mpz</span> <span class="pre">+/</span> <span class="pre">3::mpz</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">+/</span> <span class="pre">3::mpz</span></code></p>
 </td>
-<td><p class="first">2</p>
-<p class="last">-3</p>
-</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">-%</span></code></td>
-<td><p class="first">Division reminder</p>
-<p class="last">Rounding towards -infinity</p>
-</td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;7::mpz</span> <span class="pre">-%</span> <span class="pre">3::mpz</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">-%</span> <span class="pre">3::mpz</span></code></p>
-</td>
-<td><p class="first">1</p>
-<p class="last">2</p>
+<td><p>3</p>
+<p>-2</p>
 </td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">/?</span></code></td>
-<td>Divisible (1)</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">21::mpz</span> <span class="pre">/?</span> <span class="pre">7::mpz</span></code></td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">+%</span></code></p></td>
+<td><p>Division reminder</p>
+<p>Rounding towards +infinity</p>
+</td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 7::mpz</span> <span class="pre">+%</span> <span class="pre">3::mpz</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">+%</span> <span class="pre">3::mpz</span></code></p>
+</td>
+<td><p>-2</p>
+<p>-1</p>
+</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">/!</span></code></td>
-<td>Exact division (2)</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">21::mpz</span> <span class="pre">/!</span> <span class="pre">7::mpz</span></code></td>
-<td>3</td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-/</span></code></p></td>
+<td><p>Division quotient</p>
+<p>Rounding towards -infinity</p>
+</td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 7::mpz</span> <span class="pre">-/</span> <span class="pre">3::mpz</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">-/</span> <span class="pre">3::mpz</span></code></p>
+</td>
+<td><p>2</p>
+<p>-3</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-%</span></code></p></td>
+<td><p>Division reminder</p>
+<p>Rounding towards -infinity</p>
+</td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 7::mpz</span> <span class="pre">-%</span> <span class="pre">3::mpz</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-7::mpz</span> <span class="pre">-%</span> <span class="pre">3::mpz</span></code></p>
+</td>
+<td><p>1</p>
+<p>2</p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">/?</span></code></p></td>
+<td><p>Divisible (1)</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">21::mpz</span> <span class="pre">/?</span> <span class="pre">7::mpz</span></code></p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">/!</span></code></p></td>
+<td><p>Exact division (2)</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">21::mpz</span> <span class="pre">/!</span> <span class="pre">7::mpz</span></code></p></td>
+<td><p>3</p></td>
 </tr>
 </tbody>
 </table>
 <p>Notes:</p>
 <ol class="arabic simple">
-<li>See also the function <a class="reference internal" href="#divisible" title="divisible"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divisible()</span></code></a>.</li>
-<li>The exact division operator (<code class="xref py py-obj docutils literal notranslate"><span class="pre">/!</span></code>) produces correct results only when it
+<li><p>See also the function <a class="reference internal" href="#divisible" title="divisible"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divisible()</span></code></a>.</p></li>
+<li><p>The exact division operator (<code class="xref py py-obj docutils literal notranslate"><span class="pre">/!</span></code>) produces correct results only when it
 is known in advance that <span class="math notranslate nohighlight">\(d\)</span> divides <span class="math notranslate nohighlight">\(n\)</span>.  The operator is
 much faster than the other division operators, and is the best choice when
 exact division is known to occur, for example reducing a rational to
-lowest terms.</li>
+lowest terms.</p></li>
 </ol>
-<table border="1" class="docutils" id="id14">
+<table class="docutils align-default" id="id14">
 <caption><span class="caption-text">Division operators for powers of 2</span><a class="headerlink" href="#id14" title="Permalink to this table">¶</a></caption>
-<colgroup>
-<col width="11%" />
-<col width="51%" />
-<col width="27%" />
-<col width="10%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Operator</th>
-<th class="head">Description</th>
-<th class="head">Example</th>
-<th class="head">Return</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Operator</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Example</p></th>
+<th class="head"><p>Return</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></td>
-<td><p class="first">Quotient of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
-<p class="last">Rounding towards zero</p>
+<tbody>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></p></td>
+<td><p>Quotient of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
+<p>Rounding towards zero</p>
 </td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;1027::mpz</span> <span class="pre">&gt;&gt;</span> <span class="pre">3</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">&gt;&gt;</span> <span class="pre">3</span></code></p>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 1027::mpz</span> <span class="pre">&gt;&gt;</span> <span class="pre">3</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">&gt;&gt;</span> <span class="pre">3</span></code></p>
 </td>
-<td><p class="first">128</p>
-<p class="last">-128</p>
-</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">%&gt;</span></code></td>
-<td><p class="first">Remainder of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
-<p class="last">Rounding towards zero</p>
-</td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;1027::mpz</span> <span class="pre">%&gt;</span> <span class="pre">3</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">%&gt;</span> <span class="pre">3</span></code></p>
-</td>
-<td><p class="first">3</p>
-<p class="last">-3</p>
+<td><p>128</p>
+<p>-128</p>
 </td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">+&gt;&gt;</span></code></td>
-<td><p class="first">Quotient of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
-<p class="last">Rounding towards +infinity</p>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">%&gt;</span></code></p></td>
+<td><p>Remainder of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
+<p>Rounding towards zero</p>
 </td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;1027::mpz</span> <span class="pre">+&gt;&gt;</span> <span class="pre">3</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">+&gt;&gt;</span> <span class="pre">3</span></code></p>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 1027::mpz</span> <span class="pre">%&gt;</span> <span class="pre">3</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">%&gt;</span> <span class="pre">3</span></code></p>
 </td>
-<td><p class="first">129</p>
-<p class="last">-128</p>
-</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">+%&gt;</span></code></td>
-<td><p class="first">Remainder of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
-<p class="last">Rounding towards +infinity</p>
-</td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;1027::mpz</span> <span class="pre">+%&gt;</span> <span class="pre">3</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">+%&gt;</span> <span class="pre">3</span></code></p>
-</td>
-<td><p class="first">-5</p>
-<p class="last">-3</p>
+<td><p>3</p>
+<p>-3</p>
 </td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">-&gt;&gt;</span></code></td>
-<td><p class="first">Quotient of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
-<p class="last">Rounding towards -infinity</p>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">+&gt;&gt;</span></code></p></td>
+<td><p>Quotient of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
+<p>Rounding towards +infinity</p>
 </td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;1027::mpz</span> <span class="pre">-&gt;&gt;</span> <span class="pre">3</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">-&gt;&gt;</span> <span class="pre">3</span></code></p>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 1027::mpz</span> <span class="pre">+&gt;&gt;</span> <span class="pre">3</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">+&gt;&gt;</span> <span class="pre">3</span></code></p>
 </td>
-<td><p class="first">128</p>
-<p class="last">-129</p>
-</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">-%&gt;</span></code></td>
-<td><p class="first">Remainder of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
-<p class="last">Rounding towards -infinity</p>
-</td>
-<td><p class="first"><code class="xref py py-obj docutils literal notranslate"><span class="pre">&nbsp;1027::mpz</span> <span class="pre">-%&gt;</span> <span class="pre">3</span></code></p>
-<p class="last"><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">-%&gt;</span> <span class="pre">3</span></code></p>
-</td>
-<td><p class="first">3</p>
-<p class="last">5</p>
+<td><p>129</p>
+<p>-128</p>
 </td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">&gt;&gt;?</span></code></td>
-<td>Divisible by <span class="math notranslate nohighlight">\(2^n\)</span> (1)</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">64::mpz</span> <span class="pre">&gt;&gt;?</span> <span class="pre">3</span></code></td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">+%&gt;</span></code></p></td>
+<td><p>Remainder of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
+<p>Rounding towards +infinity</p>
+</td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 1027::mpz</span> <span class="pre">+%&gt;</span> <span class="pre">3</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">+%&gt;</span> <span class="pre">3</span></code></p>
+</td>
+<td><p>-5</p>
+<p>-3</p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-&gt;&gt;</span></code></p></td>
+<td><p>Quotient of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
+<p>Rounding towards -infinity</p>
+</td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 1027::mpz</span> <span class="pre">-&gt;&gt;</span> <span class="pre">3</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">-&gt;&gt;</span> <span class="pre">3</span></code></p>
+</td>
+<td><p>128</p>
+<p>-129</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-%&gt;</span></code></p></td>
+<td><p>Remainder of division by <span class="math notranslate nohighlight">\(2^n\)</span></p>
+<p>Rounding towards -infinity</p>
+</td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre"> 1027::mpz</span> <span class="pre">-%&gt;</span> <span class="pre">3</span></code></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">-1027::mpz</span> <span class="pre">-%&gt;</span> <span class="pre">3</span></code></p>
+</td>
+<td><p>3</p>
+<p>5</p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">&gt;&gt;?</span></code></p></td>
+<td><p>Divisible by <span class="math notranslate nohighlight">\(2^n\)</span> (1)</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">64::mpz</span> <span class="pre">&gt;&gt;?</span> <span class="pre">3</span></code></p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code></p></td>
 </tr>
 </tbody>
 </table>
 <ol class="arabic simple">
-<li>See also the function <a class="reference internal" href="#divisible_2exp" title="divisible_2exp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divisible_2exp()</span></code></a>.</li>
+<li><p>See also the function <a class="reference internal" href="#divisible_2exp" title="divisible_2exp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divisible_2exp()</span></code></a>.</p></li>
 </ol>
-<dl class="function">
-<dt id="tdiv_qr">
-<code class="descname">tdiv_qr</code><span class="sig-paren">(</span><em>n</em>, <em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#tdiv_qr" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="tdiv_qr">
+<span class="sig-name descname"><span class="pre">tdiv_qr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tdiv_qr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a tuple containing quotient <em>q</em> and remainder <em>r</em> of the division,
 rounding towards 0.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="cdiv_qr">
-<code class="descname">cdiv_qr</code><span class="sig-paren">(</span><em>n</em>, <em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#cdiv_qr" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="cdiv_qr">
+<span class="sig-name descname"><span class="pre">cdiv_qr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cdiv_qr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a tuple containing quotient <em>q</em> and remainder <em>r</em> of the division,
 rounding towards +infinity (ceil).</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="fdiv_qr">
-<code class="descname">fdiv_qr</code><span class="sig-paren">(</span><em>n</em>, <em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#fdiv_qr" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="fdiv_qr">
+<span class="sig-name descname"><span class="pre">fdiv_qr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fdiv_qr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a tuple containing quotient <em>q</em> and remainder <em>r</em> of the division,
 rounding towards -infinity (floor).</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="divisible">
-<code class="descname">divisible</code><span class="sig-paren">(</span><em>n</em>, <em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#divisible" title="Permalink to this definition">¶</a></dt>
-<dt id="divisible_2exp">
-<code class="descname">divisible_2exp</code><span class="sig-paren">(</span><em>n</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#divisible_2exp" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="divisible">
+<span class="sig-name descname"><span class="pre">divisible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisible" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="divisible_2exp">
+<span class="sig-name descname"><span class="pre">divisible_2exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#divisible_2exp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code> if <em>n</em> is exactly divisible by <em>d</em>, or in the case of
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">divisible_2exp()</span></code> by <span class="math notranslate nohighlight">\(2^b\)</span>.</p>
 <p><span class="math notranslate nohighlight">\(n\)</span> is divisible by <span class="math notranslate nohighlight">\(d\)</span> if there exists an integer <span class="math notranslate nohighlight">\(q\)</span>
@@ -451,11 +430,11 @@ is considered divisible by 0.</p>
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">divisible_2exp()</span></code>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="congruent">
-<code class="descname">congruent</code><span class="sig-paren">(</span><em>n</em>, <em>c</em>, <em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#congruent" title="Permalink to this definition">¶</a></dt>
-<dt id="congruent_2exp">
-<code class="descname">congruent_2exp</code><span class="sig-paren">(</span><em>n</em>, <em>c</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#congruent_2exp" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="congruent">
+<span class="sig-name descname"><span class="pre">congruent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#congruent" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="congruent_2exp">
+<span class="sig-name descname"><span class="pre">congruent_2exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#congruent_2exp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code> if <em>n</em> is congruent to <em>c</em> modulo <em>d</em>, or in the case of
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">congruent_2exp()</span></code> modulo <span class="math notranslate nohighlight">\(2^b\)</span>.</p>
 <p><span class="math notranslate nohighlight">\(n\)</span> is congruent to <span class="math notranslate nohighlight">\(c \mod d\)</span> if there exists an integer
@@ -464,67 +443,67 @@ operators, <em>d</em>=0 is accepted and following the rule it can be seen that n
 and c are considered congruent mod 0 only when exactly equal.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="exponentiation-functions">
-<h2>Exponentiation Functions<a class="headerlink" href="#exponentiation-functions" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="pow">
-<code class="descname">pow</code><span class="sig-paren">(</span><em>base</em>, <em>exp</em><span class="sig-paren">)</span><a class="headerlink" href="#pow" title="Permalink to this definition">¶</a></dt>
+</section>
+<section id="exponentiation-functions">
+<h2>Exponentiation Functions<a class="headerlink" href="#exponentiation-functions" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="pow">
+<span class="sig-name descname"><span class="pre">pow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <em>base</em> raised to <em>exp</em>.</p>
 <p><em>exp</em> is defined as <code class="xref py py-obj docutils literal notranslate"><span class="pre">int8</span></code> but must fit into a <code class="xref py py-obj docutils literal notranslate"><span class="pre">long</span></code> as defined on the
 server.</p>
 <p>The function is an alias for the <code class="xref py py-obj docutils literal notranslate"><span class="pre">^</span></code> operator.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="powm">
-<code class="descname">powm</code><span class="sig-paren">(</span><em>base</em>, <em>exp</em>, <em>mod</em><span class="sig-paren">)</span><a class="headerlink" href="#powm" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="powm">
+<span class="sig-name descname"><span class="pre">powm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#powm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return (<em>base</em> raised to <em>exp</em>) modulo <em>mod</em>.</p>
 <p>Negative <em>exp</em> is supported if an inverse <em>base^-1</em> mod <em>mod</em> exists (see
 <a class="reference internal" href="#invert" title="invert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">invert()</span></code></a> function). If an inverse doesn’t exist then a divide by zero is
 raised.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="root-extraction-functions">
-<h2>Root Extraction Functions<a class="headerlink" href="#root-extraction-functions" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="root">
-<code class="descname">root</code><span class="sig-paren">(</span><em>op</em>, <em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#root" title="Permalink to this definition">¶</a></dt>
+</section>
+<section id="root-extraction-functions">
+<h2>Root Extraction Functions<a class="headerlink" href="#root-extraction-functions" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="root">
+<span class="sig-name descname"><span class="pre">root</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#root" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the truncated integer part of the <em>n</em>th root of <em>op</em>.</p>
 <p><em>n</em> is defined as <code class="xref py py-obj docutils literal notranslate"><span class="pre">int8</span></code> but must fit into a <code class="xref py py-obj docutils literal notranslate"><span class="pre">long</span></code> as defined on the
 server.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="rootrem">
-<code class="descname">rootrem</code><span class="sig-paren">(</span><em>op</em>, <em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#rootrem" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rootrem">
+<span class="sig-name descname"><span class="pre">rootrem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rootrem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a tuple of 2 elements with the truncated integer part of the <em>n</em>th
 root of <em>op</em> and the remainder (<em>i.e.</em> <em>op</em> - <em>root</em> ^ <em>n</em>).</p>
-<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="gp">=#</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">rootrem</span><span class="p">(</span><span class="mf">28</span><span class="p">,</span> <span class="mf">3</span><span class="p">);</span>
+<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="gp">=#</span><span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">rootrem</span><span class="p">(</span><span class="mf">28</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">);</span>
 <span class="go"> root | rem</span>
 <span class="go">------+-----</span>
 <span class="go"> 3    | 1</span>
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The function is not available on GMP version &lt; 4.2.</p>
+<p class="admonition-title">Note</p>
+<p>The function is not available on GMP version &lt; 4.2.</p>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="sqrt">
-<code class="descname">sqrt</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#sqrt" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="sqrt">
+<span class="sig-name descname"><span class="pre">sqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sqrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the truncated integer part of the square root of <em>op</em>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="sqrtrem">
-<code class="descname">sqrtrem</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#sqrtrem" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="sqrtrem">
+<span class="sig-name descname"><span class="pre">sqrtrem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sqrtrem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a tuple of 2 elements with the truncated integer part of the square
 root of <em>op</em> and the remainder (<em>i.e.</em> <em>op</em> - <em>root</em> * <em>root</em>).</p>
-<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="gp">=#</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">sqrtrem</span><span class="p">(</span><span class="mf">83</span><span class="p">);</span>
+<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="gp">=#</span><span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">sqrtrem</span><span class="p">(</span><span class="mf">83</span><span class="p">);</span>
 <span class="go"> root | rem</span>
 <span class="go">------+-----</span>
 <span class="go"> 9    | 2</span>
@@ -532,9 +511,9 @@ root of <em>op</em> and the remainder (<em>i.e.</em> <em>op</em> - <em>root</em>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="perfect_power">
-<code class="descname">perfect_power</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#perfect_power" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="perfect_power">
+<span class="sig-name descname"><span class="pre">perfect_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#perfect_power" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code> if <em>op</em> is a perfect power, <em>i.e.</em>, if there exist
 integers <span class="math notranslate nohighlight">\(a\)</span> and <span class="math notranslate nohighlight">\(b\)</span>, with <span class="math notranslate nohighlight">\(b&gt;1\)</span>, such that <em>op</em> equals
 <span class="math notranslate nohighlight">\(a^b\)</span>.</p>
@@ -543,20 +522,20 @@ Negative values of op are accepted, but of course can only be odd perfect
 powers.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="perfect_square">
-<code class="descname">perfect_square</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#perfect_square" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="perfect_square">
+<span class="sig-name descname"><span class="pre">perfect_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#perfect_square" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref py py-obj docutils literal notranslate"><span class="pre">true</span></code> if <em>op</em> is a perfect square, <em>i.e.</em>, if the square root of
 <em>op</em> is an integer. Under this definition both 0 and 1 are considered to
 be perfect squares.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="number-theoretic-functions">
-<h2>Number Theoretic Functions<a class="headerlink" href="#number-theoretic-functions" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="probab_prime">
-<code class="descname">probab_prime</code><span class="sig-paren">(</span><em>n</em>, <em>reps</em><span class="sig-paren">)</span><a class="headerlink" href="#probab_prime" title="Permalink to this definition">¶</a></dt>
+</section>
+<section id="number-theoretic-functions">
+<h2>Number Theoretic Functions<a class="headerlink" href="#number-theoretic-functions" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="probab_prime">
+<span class="sig-name descname"><span class="pre">probab_prime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#probab_prime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine whether <em>n</em> is prime. Return 2 if <em>n</em> is definitely prime,
 return 1 if <em>n</em> is probably prime (without being certain), or return 0 if
 <em>n</em> is definitely composite.</p>
@@ -569,36 +548,36 @@ tests. Numbers which fail are known to be composite but those which pass
 might be prime or might be composite. Only a few composites pass, hence
 those which pass are considered probably prime.</p>
 <div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference external" href="https://en.wikipedia.org/wiki/Primality_test">Primality test</a></p>
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Primality_test">Primality test</a></p>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="nextprime">
-<code class="descname">nextprime</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#nextprime" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="nextprime">
+<span class="sig-name descname"><span class="pre">nextprime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#nextprime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the next prime greater than <em>op</em>.</p>
 <p>This function uses a probabilistic algorithm to identify primes. For
 practical purposes it’s adequate, the chance of a composite passing will
 be extremely small.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="gcd">
-<code class="descname">gcd</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#gcd" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="gcd">
+<span class="sig-name descname"><span class="pre">gcd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the greatest common divisor of <em>a</em> and <em>b</em>. The result is
 always positive even if one or both input operands are negative.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="gcdext">
-<code class="descname">gcdext</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#gcdext" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="gcdext">
+<span class="sig-name descname"><span class="pre">gcdext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcdext" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the greatest common divisor <em>g</em> of <em>a</em> and <em>b</em>, and in addition
 coefficients <em>s</em> and <em>t</em> satisfying <span class="math notranslate nohighlight">\(a \cdot s + b \cdot t = g\)</span>. The
 value <em>g</em> is always positive, even if one or both of <em>a</em> and <em>b</em> are
 negative. The values <em>s</em> and <em>t</em> are chosen such that <span class="math notranslate nohighlight">\(|s| \le |b|
 \hspace{0em}\)</span> and <span class="math notranslate nohighlight">\(|t| \le |a| \hspace{0em}\)</span>.</p>
-<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="gp">=#</span> <span class="k">select</span> <span class="o">*</span> <span class="k">from</span>  <span class="n">gcdext</span><span class="p">(</span><span class="mf">6</span><span class="p">,</span> <span class="mf">15</span><span class="p">);</span>
+<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="gp">=#</span><span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">from</span><span class="w">  </span><span class="n">gcdext</span><span class="p">(</span><span class="mf">6</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">);</span>
 <span class="go"> g | s  | t</span>
 <span class="go">---+----+---</span>
 <span class="go"> 3 | -2 | 1</span>
@@ -606,33 +585,33 @@ negative. The values <em>s</em> and <em>t</em> are chosen such that <span class=
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="lcm">
-<code class="descname">lcm</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#lcm" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="lcm">
+<span class="sig-name descname"><span class="pre">lcm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lcm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the least common multiple of <em>a</em> and <em>b</em>. The value returned is
 always positive, irrespective of the signs of <em>a</em> and <em>b</em>. The return
 will be zero if either <em>a</em> or <em>b</em> is zero.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="fac">
-<code class="descname">fac</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#fac" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="fac">
+<span class="sig-name descname"><span class="pre">fac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fac" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <em>op</em>!, the factorial of <em>op</em>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="bin">
-<code class="descname">bin</code><span class="sig-paren">(</span><em>n</em>, <em>k</em><span class="sig-paren">)</span><a class="headerlink" href="#bin" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="bin">
+<span class="sig-name descname"><span class="pre">bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the <a class="reference external" href="https://en.wikipedia.org/wiki/Binomial_coefficient">binomial coefficient</a> <span class="math notranslate nohighlight">\({n \choose k}\)</span>.
 Negative values of <em>n</em> are supported, using the identity
 <span class="math notranslate nohighlight">\({-n \choose k} = (-1)^k {n+k-1 \choose k}\)</span>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="fib">
-<code class="descname">fib</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#fib" title="Permalink to this definition">¶</a></dt>
-<dt id="fib2">
-<code class="descname">fib2</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#fib2" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="fib">
+<span class="sig-name descname"><span class="pre">fib</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fib" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="fib2">
+<span class="sig-name descname"><span class="pre">fib2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fib2" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fib()</span></code> returns <span class="math notranslate nohighlight">\(F_n\)</span>, the <em>n</em>th <a class="reference external" href="https://en.wikipedia.org/wiki/Fibonacci_number">Fibonacci number</a>.
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">fib2()</span></code> returns <span class="math notranslate nohighlight">\(F_n\)</span> and <span class="math notranslate nohighlight">\(F_{n-1}\)</span>.</p>
 <p>These functions are designed for calculating isolated Fibonacci numbers.
@@ -640,11 +619,11 @@ When a sequence of values is wanted it’s best to start with <code class="xref 
 and iterate the defining <span class="math notranslate nohighlight">\(F_{n+1}=F_n+F_{n-1}\)</span> or similar.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="lucnum">
-<code class="descname">lucnum</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#lucnum" title="Permalink to this definition">¶</a></dt>
-<dt id="lucnum2">
-<code class="descname">lucnum2</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#lucnum2" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="lucnum">
+<span class="sig-name descname"><span class="pre">lucnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lucnum" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="lucnum2">
+<span class="sig-name descname"><span class="pre">lucnum2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lucnum2" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lucnum()</span></code> returns <span class="math notranslate nohighlight">\(L_n\)</span>, the <em>n</em>th <a class="reference external" href="https://en.wikipedia.org/wiki/Lucas_number">Lucas number</a>.
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">lucnum2()</span></code> returns <span class="math notranslate nohighlight">\(L_n\)</span> and <span class="math notranslate nohighlight">\(L_{n-1}\)</span>.</p>
 <p>These functions are designed for calculating isolated Lucas numbers.
@@ -656,100 +635,94 @@ going from Fibonacci to Lucas can be found in <a class="reference external" href
 the reverse is straightforward too.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="invert">
-<code class="descname">invert</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#invert" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="invert">
+<span class="sig-name descname"><span class="pre">invert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#invert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the inverse of <em>a</em> modulo <em>b</em> if exists. The return value <em>r</em>
 will satisfy <span class="math notranslate nohighlight">\(0 \le r \lt b\)</span>. If an inverse doesn’t exist return
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="jacobi">
-<code class="descname">jacobi</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#jacobi" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="jacobi">
+<span class="sig-name descname"><span class="pre">jacobi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#jacobi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the <a class="reference external" href="https://en.wikipedia.org/wiki/Jacobi_symbol">Jacobi symbol</a> <span class="math notranslate nohighlight">\((\frac{a}{b})\)</span>. This is defined
 only for <em>b</em> odd.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="legendre">
-<code class="descname">legendre</code><span class="sig-paren">(</span><em>a</em>, <em>p</em><span class="sig-paren">)</span><a class="headerlink" href="#legendre" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="legendre">
+<span class="sig-name descname"><span class="pre">legendre</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#legendre" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the <a class="reference external" href="https://en.wikipedia.org/wiki/Legendre_symbol">Legendre symbol</a> <span class="math notranslate nohighlight">\((\frac{a}{p})\)</span>.  This is defined
 only for <em>p</em> an odd positive prime, and for such <em>p</em> it’s identical to the
 Jacobi symbol.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="kronecker">
-<code class="descname">kronecker</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#kronecker" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="kronecker">
+<span class="sig-name descname"><span class="pre">kronecker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kronecker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the Jacobi symbol <span class="math notranslate nohighlight">\((\frac{a}{b})\)</span> with the Kronecker
 extension <span class="math notranslate nohighlight">\((\frac{a}{2})=(\frac{2}{a})\)</span> when <em>a</em> odd, or
 <span class="math notranslate nohighlight">\((\frac{a}{2})=0\)</span> when <em>a</em> even.</p>
 <div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">Section 1.4.2, Henri Cohen, “A Course in Computational Algebraic
+<p class="admonition-title">See also</p>
+<p>Section 1.4.2, Henri Cohen, “A Course in Computational Algebraic
 Number Theory”, Graduate Texts in Mathematics number 138,
 Springer-Verlag, 1993. <a class="reference external" href="https://www.math.u-bordeaux.fr/~cohen/">https://www.math.u-bordeaux.fr/~cohen/</a></p>
 </div>
 </dd></dl>
 
-</div>
-<div class="section" id="logical-and-bit-manipulation-functions">
-<h2>Logical and Bit Manipulation Functions<a class="headerlink" href="#logical-and-bit-manipulation-functions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="logical-and-bit-manipulation-functions">
+<h2>Logical and Bit Manipulation Functions<a class="headerlink" href="#logical-and-bit-manipulation-functions" title="Permalink to this heading">¶</a></h2>
 <p>These functions behave as if twos complement arithmetic were used (although
 sign-magnitude is the actual implementation). The least significant bit is
 number 0.</p>
-<table border="1" class="docutils" id="id15">
+<table class="docutils align-default" id="id15">
 <caption><span class="caption-text">Logical Operators</span><a class="headerlink" href="#id15" title="Permalink to this table">¶</a></caption>
-<colgroup>
-<col width="9%" />
-<col width="28%" />
-<col width="41%" />
-<col width="22%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Operator</th>
-<th class="head">Description</th>
-<th class="head">Example</th>
-<th class="head">Return</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Operator</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Example</p></th>
+<th class="head"><p>Return</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">&amp;</span></code></td>
-<td>Bitwise and</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b10001'::mpz</span> <span class="pre">&amp;</span> <span class="pre">'0b01001'::mpz</span></code></td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b1'::mpz</span></code></td>
+<tbody>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">&amp;</span></code></p></td>
+<td><p>Bitwise and</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b10001'::mpz</span> <span class="pre">&amp;</span> <span class="pre">'0b01001'::mpz</span></code></p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b1'::mpz</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">|</span></code></td>
-<td>Bitwise inclusive-or</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b10001'::mpz</span> <span class="pre">|</span> <span class="pre">'0b01001'::mpz</span></code></td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b11001'::mpz</span></code></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">|</span></code></p></td>
+<td><p>Bitwise inclusive-or</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b10001'::mpz</span> <span class="pre">|</span> <span class="pre">'0b01001'::mpz</span></code></p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b11001'::mpz</span></code></p></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">#</span></code></td>
-<td>Bitwise exclusive-or</td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b10001'::mpz</span> <span class="pre">#</span> <span class="pre">'0b01001'::mpz</span></code></td>
-<td><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b11000'::mpz</span></code></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">#</span></code></p></td>
+<td><p>Bitwise exclusive-or</p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b10001'::mpz</span> <span class="pre">#</span> <span class="pre">'0b01001'::mpz</span></code></p></td>
+<td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">'0b11000'::mpz</span></code></p></td>
 </tr>
 </tbody>
 </table>
-<dl class="function">
-<dt id="com">
-<code class="descname">com</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#com" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="com">
+<span class="sig-name descname"><span class="pre">com</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#com" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the ones’ complement of <em>op</em>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="popcount">
-<code class="descname">popcount</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#popcount" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="popcount">
+<span class="sig-name descname"><span class="pre">popcount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#popcount" title="Permalink to this definition">¶</a></dt>
 <dd><p>If op&gt;=0, return the population count of <em>op</em>, which is the number of 1
 bits in the binary representation. If op&lt;0, the number of 1s is infinite,
 and the return value is the largest possible, represented by
 <a class="reference internal" href="misc.html#gmp_max_bitcnt" title="gmp_max_bitcnt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gmp_max_bitcnt()</span></code></a>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="hamdist">
-<code class="descname">hamdist</code><span class="sig-paren">(</span><em>op1</em>, <em>op2</em><span class="sig-paren">)</span><a class="headerlink" href="#hamdist" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="hamdist">
+<span class="sig-name descname"><span class="pre">hamdist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hamdist" title="Permalink to this definition">¶</a></dt>
 <dd><p>If <em>op1</em> and <em>op2</em> are both &gt;=0 or both &lt;0, return the <a class="reference external" href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming
 distance</a>
 between the two operands, which is the number of bit positions where <em>op1</em>
@@ -758,11 +731,11 @@ then the number of bits different is infinite, and the return value is the
 largest possible, represented by <a class="reference internal" href="misc.html#gmp_max_bitcnt" title="gmp_max_bitcnt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gmp_max_bitcnt()</span></code></a>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="scan0">
-<code class="descname">scan0</code><span class="sig-paren">(</span><em>op</em>, <em>starting_bit</em><span class="sig-paren">)</span><a class="headerlink" href="#scan0" title="Permalink to this definition">¶</a></dt>
-<dt id="scan1">
-<code class="descname">scan1</code><span class="sig-paren">(</span><em>op</em>, <em>starting_bit</em><span class="sig-paren">)</span><a class="headerlink" href="#scan1" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="scan0">
+<span class="sig-name descname"><span class="pre">scan0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_bit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scan0" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="scan1">
+<span class="sig-name descname"><span class="pre">scan1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_bit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scan1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scan <em>op</em>, starting from bit <em>starting_bit</em>, towards more significant
 bits, until the first 0 or 1 bit (respectively) is found. Return the index
 of the found bit.</p>
@@ -774,64 +747,64 @@ the end of a negative number, or <code class="xref py py-obj docutils literal no
 number.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="setbit">
-<code class="descname">setbit</code><span class="sig-paren">(</span><em>op</em>, <em>bit_index</em><span class="sig-paren">)</span><a class="headerlink" href="#setbit" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="setbit">
+<span class="sig-name descname"><span class="pre">setbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#setbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <em>op</em> with bit <em>bit_index</em> set.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="clrbit">
-<code class="descname">clrbit</code><span class="sig-paren">(</span><em>op</em>, <em>bit_index</em><span class="sig-paren">)</span><a class="headerlink" href="#clrbit" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="clrbit">
+<span class="sig-name descname"><span class="pre">clrbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#clrbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <em>op</em> with bit <em>bit_index</em> cleared.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="combit">
-<code class="descname">combit</code><span class="sig-paren">(</span><em>op</em>, <em>bit_index</em><span class="sig-paren">)</span><a class="headerlink" href="#combit" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="combit">
+<span class="sig-name descname"><span class="pre">combit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#combit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <em>op</em> with bit <em>bit_index</em> complemented.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The function is not available on GMP version &lt; 4.2.</p>
+<p class="admonition-title">Note</p>
+<p>The function is not available on GMP version &lt; 4.2.</p>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="tstbit">
-<code class="descname">tstbit</code><span class="sig-paren">(</span><em>op</em>, <em>bit_index</em><span class="sig-paren">)</span><a class="headerlink" href="#tstbit" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="tstbit">
+<span class="sig-name descname"><span class="pre">tstbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bit_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tstbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test bit <em>bit_index</em> in <em>op</em> and return 0 or 1 accordingly.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="random-number-functions">
-<h2>Random number functions<a class="headerlink" href="#random-number-functions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="random-number-functions">
+<h2>Random number functions<a class="headerlink" href="#random-number-functions" title="Permalink to this heading">¶</a></h2>
 <p>Sequences of pseudo-random numbers are generated using an internal per-session
 variable, which holds an algorithm selection and a current state. Such a
 variable must be initialized by a call to one of the <code class="xref py py-obj docutils literal notranslate"><span class="pre">randinit*()</span></code> functions,
 and can be seeded with the <a class="reference internal" href="#randseed" title="randseed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">randseed()</span></code></a> function.</p>
-<dl class="function">
-<dt id="randinit">
-<code class="descname">randinit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randinit" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="randinit">
+<span class="sig-name descname"><span class="pre">randinit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randinit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the session random state with a default algorithm. This will be
 a compromise between speed and randomness, and is recommended for
 applications with no special requirements. Currently this is
 <a class="reference internal" href="#randinit_mt" title="randinit_mt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">randinit_mt()</span></code></a>.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="randinit_mt">
-<code class="descname">randinit_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randinit_mt" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="randinit_mt">
+<span class="sig-name descname"><span class="pre">randinit_mt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#randinit_mt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the session random state for a <a class="reference external" href="https://en.wikipedia.org/wiki/Mersenne_twister">Mersenne Twister</a> algorithm.
 This algorithm is fast and has good randomness properties.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The function is not available on GMP version &lt; 4.2.</p>
+<p class="admonition-title">Note</p>
+<p>The function is not available on GMP version &lt; 4.2.</p>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="randinit_lc_2exp">
-<code class="descname">randinit_lc_2exp</code><span class="sig-paren">(</span><em>a</em>, <em>c</em>, <em>e</em><span class="sig-paren">)</span><a class="headerlink" href="#randinit_lc_2exp" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="randinit_lc_2exp">
+<span class="sig-name descname"><span class="pre">randinit_lc_2exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randinit_lc_2exp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the session random state with a <a class="reference external" href="https://en.wikipedia.org/wiki/Linear_congruential_generator">linear congruential</a>
 algorithm <span class="math notranslate nohighlight">\(X = (a \cdot X + c) \mod 2^e\)</span>.</p>
 <p>The low bits of <em>X</em> in this algorithm are not very random. The least
@@ -843,9 +816,9 @@ multiple iterations of the recurrence are used and the results
 concatenated.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="randinit_lc_2exp_size">
-<code class="descname">randinit_lc_2exp_size</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#randinit_lc_2exp_size" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="randinit_lc_2exp_size">
+<span class="sig-name descname"><span class="pre">randinit_lc_2exp_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randinit_lc_2exp_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the session random state for a linear congruential algorithm as
 per <a class="reference internal" href="#randinit_lc_2exp" title="randinit_lc_2exp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">randinit_lc_2exp()</span></code></a>. <em>a</em>, <em>c</em> and <em>e</em> are selected from a table,
 chosen so that size bits (or more) of each <em>X</em> will be used, ie.
@@ -854,9 +827,9 @@ chosen so that size bits (or more) of each <em>X</em> will be used, ie.
 maximum size currently supported is 128.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="randseed">
-<code class="descname">randseed</code><span class="sig-paren">(</span><em>seed</em><span class="sig-paren">)</span><a class="headerlink" href="#randseed" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="randseed">
+<span class="sig-name descname"><span class="pre">randseed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#randseed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set an initial seed value into session random state.</p>
 <p>The size of a seed determines how many different sequences of random
 numbers is possible to generate. The “quality” of the seed is the
@@ -873,27 +846,27 @@ value. On some systems there’s a special device <code class="docutils literal 
 provides random data better suited for use as a seed.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="urandomb">
-<code class="descname">urandomb</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#urandomb" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="urandomb">
+<span class="sig-name descname"><span class="pre">urandomb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#urandomb" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a uniformly distributed random integer in the range <span class="math notranslate nohighlight">\(0\)</span> to
 <span class="math notranslate nohighlight">\(2^n-1\)</span>, inclusive.</p>
 <p>The session state must be initialized by calling one of the <code class="xref py py-obj docutils literal notranslate"><span class="pre">randinit()</span></code>
 functions before invoking this function.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="urandomm">
-<code class="descname">urandomm</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#urandomm" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="urandomm">
+<span class="sig-name descname"><span class="pre">urandomm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#urandomm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a uniformly distributed random integer in the range 0 to
 <em>n</em>-1, inclusive.</p>
 <p>The session state must be initialized by calling one of the <code class="xref py py-obj docutils literal notranslate"><span class="pre">randinit()</span></code>
 functions before invoking this function.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="rrandomb">
-<code class="descname">rrandomb</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#rrandomb" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="rrandomb">
+<span class="sig-name descname"><span class="pre">rrandomb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rrandomb" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a random integer with long strings of zeros and ones in the
 binary representation. Useful for testing functions and algorithms, since
 this kind of random numbers have proven to be more likely to trigger
@@ -903,60 +876,62 @@ corner-case bugs. The random number will be in the range <span class="math notra
 functions before invoking this function.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="aggregation-functions">
-<h2>Aggregation functions<a class="headerlink" href="#aggregation-functions" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="sum">
-<code class="descname">sum</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#sum" title="Permalink to this definition">¶</a></dt>
+</section>
+<section id="aggregation-functions">
+<h2>Aggregation functions<a class="headerlink" href="#aggregation-functions" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="sum">
+<span class="sig-name descname"><span class="pre">sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the sum of <em>z</em> across all input values.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="prod">
-<code class="descname">prod</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#prod" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="prod">
+<span class="sig-name descname"><span class="pre">prod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the product of <em>z</em> across all input values.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="max">
-<code class="descname">max</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#max" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="max">
+<span class="sig-name descname"><span class="pre">max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#max" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the maximum value of <em>z</em> across all input values.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="min">
-<code class="descname">min</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#min" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="min">
+<span class="sig-name descname"><span class="pre">min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#min" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the minimum value of <em>z</em> across all input values.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="bit_and">
-<code class="descname">bit_and</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#bit_and" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="bit_and">
+<span class="sig-name descname"><span class="pre">bit_and</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bit_and" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the bitwise and of <em>z</em> across all input values.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="bit_or">
-<code class="descname">bit_or</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#bit_or" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="bit_or">
+<span class="sig-name descname"><span class="pre">bit_or</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bit_or" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the bitwise inclusive-or of <em>z</em> across all input values.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="bit_xor">
-<code class="descname">bit_xor</code><span class="sig-paren">(</span><em>z</em><span class="sig-paren">)</span><a class="headerlink" href="#bit_xor" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="bit_xor">
+<span class="sig-name descname"><span class="pre">bit_xor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bit_xor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the bitwise exclusive-or of <em>z</em> across all input values.</p>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
         </div>
         <div class="sidebar">
+          
           <h3>Table of Contents</h3>
           <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pgmp</span></code> extension installation</a></li>
@@ -982,10 +957,9 @@ functions before invoking this function.</p>
             <form class="search" action="search.html" method="get">
                 <input type="text" name="q" />
                 <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
             </form>
           </div>
+
         </div>
         <div class="clearer"></div>
       </div>
@@ -1013,7 +987,7 @@ functions before invoking this function.</p>
           
     <div class="footer" role="contentinfo">
         &#169; Copyright 2011-2020, Daniele Varrazzo.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
     </div>
         </div>
         <div class="clearer"></div>

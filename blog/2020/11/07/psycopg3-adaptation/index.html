@@ -154,8 +154,8 @@ associate the text type oid (25) to Python strings. This works well for
 queries like the above one, but it proves too strict a type definition in
 context where a cast from text is not allowed. For instance this will fail:</p>
 <pre class="code python literal-block">
-<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;create table testjson(data jsonb)&quot;</span><span class="p">)</span>
-<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;insert into testjson (data) values (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">])</span>
+<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;create table testjson(data jsonb)&quot;</span><span class="p">)</span><span class="w">
+</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;insert into testjson (data) values (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">])</span>
 </pre>
 <p>The latter will raise the same exception you would get in psql if you execute
 <tt class="docutils literal">insert into testjson (data) values <span class="pre">('{}'::text)</span></tt>. The reason why a <tt class="docutils literal">values

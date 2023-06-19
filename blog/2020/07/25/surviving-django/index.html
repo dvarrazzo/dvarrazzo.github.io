@@ -238,26 +238,26 @@ code and use <tt class="docutils literal">\i</tt> to import &quot;submodules&quo
 a <tt class="docutils literal">database.sql</tt> to create global objects (users, extensions, schemas),
 set the basic permissions and import the details into target schemas.</p>
 <pre class="code postgres literal-block">
-<span class="err">\</span><span class="n">i</span> <span class="n">users</span><span class="mf">.</span><span class="k">sql</span>
-<span class="k">revoke</span> <span class="k">create</span> <span class="k">on</span> <span class="k">schema</span> <span class="n">public</span> <span class="k">from</span> <span class="n">public</span><span class="p">;</span>     <span class="c1">-- safety
-</span>
-<span class="c1">--- create a schema for the django app tables
-</span><span class="k">create</span> <span class="k">schema</span> <span class="n">myapp</span><span class="p">;</span>
-<span class="k">grant</span> <span class="n">usage</span> <span class="k">on</span> <span class="k">schema</span> <span class="n">myapp</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">,</span> <span class="n">backup</span><span class="p">;</span>
+<span class="err">\</span><span class="n">i</span><span class="w"> </span><span class="n">users</span><span class="mf">.</span><span class="k">sql</span><span class="w">
+</span><span class="k">revoke</span><span class="w"> </span><span class="k">create</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">schema</span><span class="w"> </span><span class="n">public</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">public</span><span class="p">;</span><span class="w">     </span><span class="c1">-- safety
+</span><span class="w">
+</span><span class="c1">--- create a schema for the django app tables
+</span><span class="k">create</span><span class="w"> </span><span class="k">schema</span><span class="w"> </span><span class="n">myapp</span><span class="p">;</span><span class="w">
+</span><span class="k">grant</span><span class="w"> </span><span class="n">usage</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">schema</span><span class="w"> </span><span class="n">myapp</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">myapp</span><span class="p">,</span><span class="w"> </span><span class="n">backup</span><span class="p">;</span><span class="w">
 
-<span class="c1">--- set the default permissions for all the object that will be created there
-</span><span class="k">alter</span> <span class="k">default</span> <span class="k">privileges</span> <span class="k">in</span> <span class="k">schema</span> <span class="n">myapp</span>
-    <span class="k">grant</span> <span class="k">select</span><span class="p">,</span> <span class="k">insert</span><span class="p">,</span> <span class="k">update</span><span class="p">,</span> <span class="k">delete</span> <span class="k">on</span> <span class="k">tables</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">;</span>
-<span class="k">alter</span> <span class="k">default</span> <span class="k">privileges</span> <span class="k">in</span> <span class="k">schema</span> <span class="n">myapp</span>
-    <span class="k">grant</span> <span class="k">select</span> <span class="k">on</span> <span class="k">tables</span> <span class="k">to</span> <span class="k">view</span><span class="p">,</span> <span class="n">backup</span><span class="p">;</span>
-<span class="k">alter</span> <span class="k">default</span> <span class="k">privileges</span> <span class="k">in</span> <span class="k">schema</span> <span class="n">myapp</span> <span class="k">grant</span> <span class="k">all</span> <span class="k">on</span> <span class="k">sequences</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">;</span>
-<span class="k">alter</span> <span class="k">default</span> <span class="k">privileges</span> <span class="k">in</span> <span class="k">schema</span> <span class="n">myapp</span> <span class="k">grant</span> <span class="k">select</span> <span class="k">on</span> <span class="k">sequences</span> <span class="k">to</span> <span class="n">backup</span><span class="p">;</span>
+</span><span class="c1">--- set the default permissions for all the object that will be created there
+</span><span class="k">alter</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="k">privileges</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">schema</span><span class="w"> </span><span class="n">myapp</span><span class="w">
+    </span><span class="k">grant</span><span class="w"> </span><span class="k">select</span><span class="p">,</span><span class="w"> </span><span class="k">insert</span><span class="p">,</span><span class="w"> </span><span class="k">update</span><span class="p">,</span><span class="w"> </span><span class="k">delete</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">tables</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">myapp</span><span class="p">;</span><span class="w">
+</span><span class="k">alter</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="k">privileges</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">schema</span><span class="w"> </span><span class="n">myapp</span><span class="w">
+    </span><span class="k">grant</span><span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">tables</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="k">view</span><span class="p">,</span><span class="w"> </span><span class="n">backup</span><span class="p">;</span><span class="w">
+</span><span class="k">alter</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="k">privileges</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">schema</span><span class="w"> </span><span class="n">myapp</span><span class="w"> </span><span class="k">grant</span><span class="w"> </span><span class="k">all</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">sequences</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">myapp</span><span class="p">;</span><span class="w">
+</span><span class="k">alter</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="k">privileges</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">schema</span><span class="w"> </span><span class="n">myapp</span><span class="w"> </span><span class="k">grant</span><span class="w"> </span><span class="k">select</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="k">sequences</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">backup</span><span class="p">;</span><span class="w">
 
-<span class="c1">--- import the tables into the schema
-</span><span class="k">set</span> <span class="n">search_path</span> <span class="k">to</span> <span class="n">myapp</span><span class="p">,</span> <span class="n">public</span><span class="p">;</span>
-<span class="err">\</span><span class="n">i</span> <span class="n">django</span><span class="mf">.</span><span class="k">sql</span>   <span class="c1">-- django objects - users, groups, permissions tables
-</span><span class="err">\</span><span class="n">i</span> <span class="n">myapp</span><span class="mf">.</span><span class="k">sql</span>    <span class="c1">-- your app models
-</span><span class="k">reset</span> <span class="n">search_path</span><span class="p">;</span>
+</span><span class="c1">--- import the tables into the schema
+</span><span class="k">set</span><span class="w"> </span><span class="n">search_path</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">myapp</span><span class="p">,</span><span class="w"> </span><span class="n">public</span><span class="p">;</span><span class="w">
+</span><span class="err">\</span><span class="n">i</span><span class="w"> </span><span class="n">django</span><span class="mf">.</span><span class="k">sql</span><span class="w">   </span><span class="c1">-- django objects - users, groups, permissions tables
+</span><span class="err">\</span><span class="n">i</span><span class="w"> </span><span class="n">myapp</span><span class="mf">.</span><span class="k">sql</span><span class="w">    </span><span class="c1">-- your app models
+</span><span class="k">reset</span><span class="w"> </span><span class="n">search_path</span><span class="p">;</span>
 </pre>
 <p>The <tt class="docutils literal">database.sql</tt> doesn't create the database itself so you can create an
 empty one anywhere it's needed, then you can use <tt class="docutils literal">psql <span class="pre">-f</span> database.sql
@@ -266,14 +266,14 @@ shouldn't contain any reference to the schema <tt class="docutils literal">myapp
 created so the schama can be easily changed. Postgres doesn't have a statement like
 <tt class="docutils literal">CREATE USER ... IF NOT EXIST</tt>: in <tt class="docutils literal">users.sql</tt> you can simulate it with:</p>
 <pre class="code postgres literal-block">
-<span class="k">do</span> <span class="s">$</span><span class="dl"></span><span class="s">$</span>
-<span class="k">begin</span>
-    <span class="k">perform</span> <span class="mf">1</span> <span class="k">from</span> <span class="n">pg_user</span> <span class="k">where</span> <span class="n">usename</span> <span class="o">=</span> <span class="s1">'myapp'</span><span class="p">;</span>
-    <span class="k">if</span> <span class="k">not</span> <span class="n">found</span> <span class="k">then</span>
-        <span class="k">create</span> <span class="k">user</span> <span class="n">myapp</span><span class="p">;</span>
-    <span class="k">end</span> <span class="k">if</span><span class="p">;</span>
-<span class="k">end</span>
-<span class="s">$</span><span class="dl"></span><span class="s">$</span> <span class="k">language</span> <span class="n">plpgsql</span><span class="p">;</span>
+<span class="k">do</span><span class="w"> </span><span class="s">$</span><span class="dl"></span><span class="s">$</span><span class="w">
+</span><span class="k">begin</span><span class="w">
+    </span><span class="k">perform</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">pg_user</span><span class="w"> </span><span class="k">where</span><span class="w"> </span><span class="n">usename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'myapp'</span><span class="p">;</span><span class="w">
+    </span><span class="k">if</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="k">then</span><span class="w">
+        </span><span class="k">create</span><span class="w"> </span><span class="k">user</span><span class="w"> </span><span class="n">myapp</span><span class="p">;</span><span class="w">
+    </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span><span class="w">
+</span><span class="k">end</span><span class="w">
+</span><span class="s">$</span><span class="dl"></span><span class="s">$</span><span class="w"> </span><span class="k">language</span><span class="w"> </span><span class="n">plpgsql</span><span class="p">;</span>
 </pre>
 </div>
 <div class="section" id="migrations">
@@ -284,14 +284,14 @@ complex amongst other reasons because:</p>
 <li><p class="first">It actually migrates <em>Python models</em> not <em>database schemas</em>. Even if you change a field's help
 text, it generates a migration.</p>
 <pre class="code python literal-block">
-<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span><span class="w">
 
-    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">migrations</span><span class="o">.</span><span class="n">AlterField</span><span class="p">(</span>
-            <span class="n">model_name</span><span class="o">=</span><span class="s1">'foo'</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s1">'bar'</span><span class="p">,</span>
-            <span class="n">field</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">help_text</span><span class="o">=</span><span class="s1">'I only changed this'</span><span class="p">),</span>
-        <span class="p">),</span>
+</span>    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span><span class="w">
+</span>        <span class="n">migrations</span><span class="o">.</span><span class="n">AlterField</span><span class="p">(</span><span class="w">
+</span>            <span class="n">model_name</span><span class="o">=</span><span class="s1">'foo'</span><span class="p">,</span><span class="w">
+</span>            <span class="n">name</span><span class="o">=</span><span class="s1">'bar'</span><span class="p">,</span><span class="w">
+</span>            <span class="n">field</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">help_text</span><span class="o">=</span><span class="s1">'I only changed this'</span><span class="p">),</span><span class="w">
+</span>        <span class="p">),</span>
 </pre>
 <p>That's not useful at all for the database, but Django will create it for you
 and if you remove it, it will add it back. Similarly, changing a <a class="reference external" href="https://docs.djangoproject.com/en/3.0/ref/models/fields/#choices">choices
@@ -310,29 +310,29 @@ have anything more to do in its lifetime: it is implemented as a model that
 Django will keep on importing over and over. In a project I'm currently
 working on, I had to add this function into our codebase:</p>
 <pre class="code python literal-block">
-<span class="k">def</span> <span class="nf">can_run</span><span class="p">(</span><span class="o">*</span><span class="n">models</span><span class="p">):</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
-                <span class="n">model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">True</span>
+<span class="k">def</span> <span class="nf">can_run</span><span class="p">(</span><span class="o">*</span><span class="n">models</span><span class="p">):</span><span class="w">
+</span>    <span class="k">try</span><span class="p">:</span><span class="w">
+</span>        <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span><span class="w">
+</span>            <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span><span class="w">
+</span>                <span class="n">model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">first</span><span class="p">()</span><span class="w">
+</span>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span><span class="w">
+</span>        <span class="k">return</span> <span class="kc">False</span><span class="w">
+</span>    <span class="k">else</span><span class="p">:</span><span class="w">
+</span>        <span class="k">return</span> <span class="kc">True</span>
 </pre>
 <p>And use it as a whack-a-mole to avoid already applied migrations from exploding,
 adding early bailouts like:</p>
 <pre class="code python literal-block">
-<span class="k">def</span> <span class="nf">data_migration</span><span class="p">(</span><span class="n">apps</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">):</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">can_run</span><span class="p">(</span><span class="n">Model1</span><span class="p">,</span> <span class="n">Model2</span><span class="p">,</span> <span class="n">Model3</span><span class="p">):</span>
-        <span class="k">return</span>
+<span class="k">def</span> <span class="nf">data_migration</span><span class="p">(</span><span class="n">apps</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">):</span><span class="w">
+</span>    <span class="k">if</span> <span class="ow">not</span> <span class="n">can_run</span><span class="p">(</span><span class="n">Model1</span><span class="p">,</span> <span class="n">Model2</span><span class="p">,</span> <span class="n">Model3</span><span class="p">):</span><span class="w">
+</span>        <span class="k">return</span><span class="w">
 
-    <span class="c1"># ...the stuff I meant to do</span>
+</span>    <span class="c1"># ...the stuff I meant to do</span><span class="w">
 
-<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
-    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">migrations</span><span class="o">.</span><span class="n">RunPython</span><span class="p">(</span><span class="n">data_migration</span><span class="p">),</span>
-    <span class="p">]</span>
+</span><span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span><span class="w">
+</span>    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span><span class="w">
+</span>        <span class="n">migrations</span><span class="o">.</span><span class="n">RunPython</span><span class="p">(</span><span class="n">data_migration</span><span class="p">),</span><span class="w">
+</span>    <span class="p">]</span>
 </pre>
 </li>
 <li><p class="first">It detects changes to your models and infers how to change the schema.
@@ -343,23 +343,23 @@ knows what it's doing, often it doesn't and it's hard to tell it to stop.</p>
 <tt class="docutils literal">bar</tt>. So we thought to fetch the data from the database into a hidden
 <tt class="docutils literal">_bar</tt> attribute and then have a Python property to expose it:</p>
 <pre class="code diff literal-block">
- class Foo(models.Model):
+<span class="w"> </span>class Foo(models.Model):<span class="w">
 
-<span class="gd">-    bar = models.CharField(
-</span><span class="gi">+    _bar = models.CharField(
-</span>         max_length=255,
-<span class="gi">+        db_column='bar',
-</span>     )
-<span class="gi">+
-+    &#64;property
-+    def bar(self):
-+        return something_more()</span>
+</span><span class="gd">-    bar = models.CharField(</span><span class="w">
+</span><span class="gi">+    _bar = models.CharField(</span><span class="w">
+ </span>        max_length=255,<span class="w">
+</span><span class="gi">+        db_column='bar',</span><span class="w">
+ </span>    )<span class="w">
+</span><span class="gi">+</span><span class="w">
+</span><span class="gi">+    &#64;property</span><span class="w">
+</span><span class="gi">+    def bar(self):</span><span class="w">
+</span><span class="gi">+        return something_more()</span>
 </pre>
 <p>No change needed to the database, but Django insisted on creating migration
 consisting pretty much of:</p>
 <pre class="code postgres literal-block">
-<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">foo</span> <span class="k">DROP</span> <span class="k">COLUMN</span> <span class="n">bar</span><span class="p">;</span>
-<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">foo</span> <span class="k">ADD</span> <span class="k">COLUMN</span> <span class="n">bar</span><span class="p">;</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="k">DROP</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span><span class="w">
+</span><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="k">ADD</span><span class="w"> </span><span class="k">COLUMN</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span>
 </pre>
 <p>So goodbye to your data! But who needs a <tt class="docutils literal">bar</tt> anyway. Although I think I could've
 used a bar, and a few drinks, if that migration had hit production.</p>
@@ -476,11 +476,11 @@ have a sequence of:</p>
 migration has been applied.</p>
 <p>The same steps, in SQL, take much less boilerplate: in one patch you can:</p>
 <pre class="code postgres literal-block">
-<span class="k">BEGIN</span><span class="p">;</span>
-<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">myapp_mymodel</span> <span class="k">ADD</span> <span class="nb">uuid</span> <span class="nb">uuid</span><span class="p">;</span>
-<span class="k">UPDATE</span> <span class="n">myapp_mymodel</span> <span class="k">SET</span> <span class="nb">uuid</span> <span class="o">=</span> <span class="n">uuid_generate_v4</span><span class="p">();</span>
-<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">myapp_mymodel</span> <span class="k">ALTER</span> <span class="nb">uuid</span> <span class="k">SET</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">;</span>
-<span class="k">COMMIT</span><span class="p">;</span>
+<span class="k">BEGIN</span><span class="p">;</span><span class="w">
+</span><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">myapp_mymodel</span><span class="w"> </span><span class="k">ADD</span><span class="w"> </span><span class="nb">uuid</span><span class="w"> </span><span class="nb">uuid</span><span class="p">;</span><span class="w">
+</span><span class="k">UPDATE</span><span class="w"> </span><span class="n">myapp_mymodel</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="nb">uuid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">uuid_generate_v4</span><span class="p">();</span><span class="w">
+</span><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">myapp_mymodel</span><span class="w"> </span><span class="k">ALTER</span><span class="w"> </span><span class="nb">uuid</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span><span class="w">
+</span><span class="k">COMMIT</span><span class="p">;</span>
 </pre>
 <p>Or variations of the above (if you want the default generated by the
 database, a non-locking operation on a large table, a unique constraint...)</p>
@@ -489,26 +489,26 @@ database, a non-locking operation on a large table, a unique constraint...)</p>
 script using a PL/pgSQL <tt class="docutils literal">DO</tt> statement or with an additional script to
 replace the second step in the previous example (untested):</p>
 <pre class="code python literal-block">
-<span class="c1"># migration add_uuid_nullable.post.py</span>
-<span class="n">cur</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-<span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
-    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;
+<span class="c1"># migration add_uuid_nullable.post.py</span><span class="w">
+</span><span class="n">cur</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span><span class="w">
+</span><span class="k">while</span> <span class="mi">1</span><span class="p">:</span><span class="w">
+</span>    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;
         UPDATE myapp_mymodel SET uuid = uuid_generate_v4()
         FROM (
             SELECT id FROM myapp_mymodel WHERE uuid IS NULL
             ORDER BY id LIMIT 1000
         ) x USING (id)
         RETURNING id
-        &quot;&quot;&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">():</span>
-        <span class="k">break</span>
+        &quot;&quot;&quot;</span><span class="p">)</span><span class="w">
+</span>    <span class="k">if</span> <span class="ow">not</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">():</span><span class="w">
+</span>        <span class="k">break</span>
 </pre>
 <hr class="docutils" />
 <p><a class="reference external" href="https://docs.djangoproject.com/en/3.0/howto/writing-migrations/#migrating-data-between-third-party-apps">Migrating data between third-party apps</a> gets in the way with the whole
 <tt class="docutils literal">get_model()</tt> machinery and you have to fight its error.</p>
 <p>It's much more simple if you just leave Python out:</p>
 <pre class="code postgres literal-block">
-<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">oldapp_oldmodel</span> <span class="k">RENAME</span> <span class="k">TO</span> <span class="n">newapp_newmodel</span><span class="p">;</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">oldapp_oldmodel</span><span class="w"> </span><span class="k">RENAME</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">newapp_newmodel</span><span class="p">;</span>
 </pre>
 <p>Or whatever <tt class="docutils literal">INSERT</tt> and <tt class="docutils literal">UPDATE</tt> it takes to get data into new tables.</p>
 <hr class="docutils" />
@@ -521,8 +521,8 @@ changes and Django models state operations (which, in my opinion, had no reason 
 merged together in first place and the second has no reason to exist).</p>
 <p>Dropping the complications, everything you need is here:</p>
 <pre class="code postgres literal-block">
-<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">core_book_authors</span> <span class="k">RENAME</span> <span class="k">TO</span> <span class="n">core_authorbook</span><span class="p">;</span>
-<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">core_authorbook</span> <span class="k">ADD</span> <span class="n">is_primary</span> <span class="nb">bool</span> <span class="k">default</span> <span class="k">false</span><span class="p">;</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">core_book_authors</span><span class="w"> </span><span class="k">RENAME</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">core_authorbook</span><span class="p">;</span><span class="w">
+</span><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">core_authorbook</span><span class="w"> </span><span class="k">ADD</span><span class="w"> </span><span class="n">is_primary</span><span class="w"> </span><span class="nb">bool</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
 </pre>
 <p>The first statement, by the way, is verbatim in a <tt class="docutils literal">RunSQL</tt> example.
 I think this example wouldn't necessarily have been portable so I
@@ -617,16 +617,16 @@ records, or just adding an extra JOIN to another query.</p>
 server, you can log all the operations performed to the database adding the
 following logger configuration to your <tt class="docutils literal">settings.py</tt>:</p>
 <pre class="code python literal-block">
-<span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="c1"># ...</span>
-    <span class="s1">'loggers'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="c1"># ...</span>
-        <span class="s1">'django.db'</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">'handlers'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'console'</span><span class="p">],</span>
-            <span class="s1">'level'</span><span class="p">:</span> <span class="s1">'DEBUG'</span><span class="p">,</span>
-        <span class="p">},</span>
-    <span class="p">},</span>
-<span class="p">}</span>
+<span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span><span class="w">
+</span>    <span class="c1"># ...</span><span class="w">
+</span>    <span class="s1">'loggers'</span><span class="p">:</span> <span class="p">{</span><span class="w">
+</span>        <span class="c1"># ...</span><span class="w">
+</span>        <span class="s1">'django.db'</span><span class="p">:</span> <span class="p">{</span><span class="w">
+</span>            <span class="s1">'handlers'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'console'</span><span class="p">],</span><span class="w">
+</span>            <span class="s1">'level'</span><span class="p">:</span> <span class="s1">'DEBUG'</span><span class="p">,</span><span class="w">
+</span>        <span class="p">},</span><span class="w">
+</span>    <span class="p">},</span><span class="w">
+</span><span class="p">}</span>
 </pre>
 <p>You will get used to the amount of SQL blobs popping up in the dev server
 log at each request. If you accidentally introduce a ripple load, it'll be

@@ -151,11 +151,11 @@ and results are tied to Python objects refcount, in <a class="reference external
 complete yet, but it already exposes everything needed for the psycopg3
 implementation so far, and wrapping further functions is straightforward.</p>
 <pre class="code pycon literal-block">
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psycopg3</span> <span class="kn">import</span> <span class="n">pq</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pqconn</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">PGconn</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;dbname=psycopg3_test&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">pqconn</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;select 'hello' || ' world!'&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="go">b'hello world!'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psycopg3</span> <span class="kn">import</span> <span class="n">pq</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">pqconn</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">PGconn</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;dbname=psycopg3_test&quot;</span><span class="p">)</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">pqconn</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;select 'hello' || ' world!'&quot;</span><span class="p">)</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="w">
+</span><span class="go">b'hello world!'</span>
 </pre>
 <p>Among the libpq functions exposed there are the non-blocking ones for
 connecting and for querying. The blocking ones are exposed too, but the idea
@@ -172,13 +172,13 @@ should present, but the most natural way (which is what <a class="reference exte
 understanding) is to replicate exactly the blocking interface, <tt class="docutils literal">await</tt>ing
 whenever it would block. So what may it look like is:</p>
 <pre class="code pycon literal-block">
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cnn</span> <span class="o">=</span> <span class="k">await</span> <span class="n">psycopg3</span><span class="o">.</span><span class="n">connect_async</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span> <span class="o">=</span> <span class="n">cnn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select 'hello' || ' mum!'&quot;</span><span class="p">)</span>
-<span class="go"># &gt;&gt;&gt; await cur.fetchone()  # TODO: not implemented yet
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cnn</span> <span class="o">=</span> <span class="k">await</span> <span class="n">psycopg3</span><span class="o">.</span><span class="n">connect_async</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span> <span class="o">=</span> <span class="n">cnn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select 'hello' || ' mum!'&quot;</span><span class="p">)</span><span class="w">
+</span><span class="go"># &gt;&gt;&gt; await cur.fetchone()  # TODO: not implemented yet
 # but the result is on the client already
-</span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="go">b'hello mum!'</span>
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="w">
+</span><span class="go">b'hello mum!'</span>
 </pre>
 <p>The async interaction with the libpq is a delicate matter and surely not
 something I would like to repeat with different flavours in several parts of
@@ -203,36 +203,36 @@ exclamation should be:</p>
 <p>This is the idea: showing a simplified connection procedure (the query
 procedure is more complicated but it follow a similar collaboration pattern):</p>
 <pre class="code python literal-block">
-<span class="c1"># simplified `psycopg3.connection.BaseConnection._connect_gen()`</span>
-<span class="k">def</span> <span class="nf">connect_gen</span><span class="p">(</span><span class="n">conninfo</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;
+<span class="c1"># simplified `psycopg3.connection.BaseConnection._connect_gen()`</span><span class="w">
+</span><span class="k">def</span> <span class="nf">connect_gen</span><span class="p">(</span><span class="n">conninfo</span><span class="p">):</span><span class="w">
+    </span><span class="sd">&quot;&quot;&quot;
     Generator to create a database connection without blocking.
 
     Yield pairs (fileno, `Wait`) whenever an operation would block. The
     generator can be restarted sending the appropriate `Ready` state when
     the file descriptor is ready.
-    &quot;&quot;&quot;</span>
-    <span class="n">conn</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">PGconn</span><span class="o">.</span><span class="n">connect_start</span><span class="p">(</span><span class="n">conninfo</span><span class="p">)</span>
-    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">connect_poll</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">OK</span><span class="p">:</span>
-            <span class="k">break</span>
-        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">READING</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">conn</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span>
-        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">WRITING</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">conn</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span>
+    &quot;&quot;&quot;</span><span class="w">
+</span>    <span class="n">conn</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">PGconn</span><span class="o">.</span><span class="n">connect_start</span><span class="p">(</span><span class="n">conninfo</span><span class="p">)</span><span class="w">
+</span>    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span><span class="w">
+</span>        <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">connect_poll</span><span class="p">()</span><span class="w">
+</span>        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">OK</span><span class="p">:</span><span class="w">
+</span>            <span class="k">break</span><span class="w">
+</span>        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">READING</span><span class="p">:</span><span class="w">
+</span>            <span class="k">yield</span> <span class="n">conn</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span><span class="w">
+</span>        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="n">pq</span><span class="o">.</span><span class="n">PollingStatus</span><span class="o">.</span><span class="n">WRITING</span><span class="p">:</span><span class="w">
+</span>            <span class="k">yield</span> <span class="n">conn</span><span class="o">.</span><span class="n">socket</span><span class="p">,</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span><span class="w">
 
-    <span class="k">return</span> <span class="n">conn</span>
+</span>    <span class="k">return</span> <span class="n">conn</span>
 </pre>
 <p>This generator yields as soon as it would block, asking the consumer to be
 awaken as soon as the connection is ready to read or write. This generator
 can be consumed in a blocking way using a procedure such as:</p>
 <pre class="code python literal-block">
-<span class="kn">from</span> <span class="nn">select</span> <span class="kn">import</span> <span class="n">select</span>
+<span class="kn">from</span> <span class="nn">select</span> <span class="kn">import</span> <span class="n">select</span><span class="w">
 
-<span class="c1"># simplified `psycopg3.waiting.wait_select()`</span>
-<span class="k">def</span> <span class="nf">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;
+</span><span class="c1"># simplified `psycopg3.waiting.wait_select()`</span><span class="w">
+</span><span class="k">def</span> <span class="nf">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">):</span><span class="w">
+    </span><span class="sd">&quot;&quot;&quot;
     Wait on the behalf of a generator using select().
 
     *gen* is expected to generate tuples (fd, status). consume it and block
@@ -240,32 +240,32 @@ can be consumed in a blocking way using a procedure such as:</p>
     to the generator.
 
     Return what the generator eventually returned.
-    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
-        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span><span class="p">:</span>
-                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">fd</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[])</span>
-                <span class="n">ready</span> <span class="o">=</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span>
-            <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span><span class="p">:</span>
-                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([],</span> <span class="p">[</span><span class="n">fd</span><span class="p">],</span> <span class="p">[])</span>
-                <span class="n">ready</span> <span class="o">=</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span>
-            <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">RW</span><span class="p">:</span>
-                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">fd</span><span class="p">],</span> <span class="p">[</span><span class="n">fd</span><span class="p">],</span> <span class="p">[])</span>
-                <span class="n">ready</span> <span class="o">=</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span> <span class="k">if</span> <span class="n">rw</span> <span class="k">else</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span>
+    &quot;&quot;&quot;</span><span class="w">
+</span>    <span class="k">try</span><span class="p">:</span><span class="w">
+</span>        <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span><span class="w">
+</span>        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span><span class="w">
+</span>            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span><span class="p">:</span><span class="w">
+</span>                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">fd</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[])</span><span class="w">
+</span>                <span class="n">ready</span> <span class="o">=</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="w">
+</span>            <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span><span class="p">:</span><span class="w">
+</span>                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([],</span> <span class="p">[</span><span class="n">fd</span><span class="p">],</span> <span class="p">[])</span><span class="w">
+</span>                <span class="n">ready</span> <span class="o">=</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="w">
+</span>            <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">RW</span><span class="p">:</span><span class="w">
+</span>                <span class="n">rf</span><span class="p">,</span> <span class="n">wf</span><span class="p">,</span> <span class="n">xf</span> <span class="o">=</span> <span class="n">select</span><span class="p">([</span><span class="n">fd</span><span class="p">],</span> <span class="p">[</span><span class="n">fd</span><span class="p">],</span> <span class="p">[])</span><span class="w">
+</span>                <span class="n">ready</span> <span class="o">=</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span> <span class="k">if</span> <span class="n">rw</span> <span class="k">else</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="w">
 
-            <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">ready</span><span class="p">)</span>
+</span>            <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">ready</span><span class="p">)</span><span class="w">
 
-    <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span>    <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span><span class="w">
+</span>        <span class="k">return</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre>
 <p>With these two functions happily collaborating the blocking call
 <tt class="docutils literal">psycopg3.connect()</tt> can be implemented with something like:</p>
 <pre class="code python literal-block">
-<span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="n">dsn</span><span class="p">):</span>
-    <span class="n">gen</span> <span class="o">=</span> <span class="n">connect_gen</span><span class="p">(</span><span class="n">dsn</span><span class="p">)</span>
-    <span class="n">pgconn</span> <span class="o">=</span> <span class="n">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>   <span class="c1"># the low-level libpq connection</span>
-    <span class="k">return</span> <span class="n">Connection</span><span class="p">(</span><span class="n">pgconn</span><span class="p">)</span>   <span class="c1"># the high-level DBAPI connection</span>
+<span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="n">dsn</span><span class="p">):</span><span class="w">
+</span>    <span class="n">gen</span> <span class="o">=</span> <span class="n">connect_gen</span><span class="p">(</span><span class="n">dsn</span><span class="p">)</span><span class="w">
+</span>    <span class="n">pgconn</span> <span class="o">=</span> <span class="n">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>   <span class="c1"># the low-level libpq connection</span><span class="w">
+</span>    <span class="k">return</span> <span class="n">Connection</span><span class="p">(</span><span class="n">pgconn</span><span class="p">)</span>   <span class="c1"># the high-level DBAPI connection</span>
 </pre>
 <p>What about the async connection? I'm relatively new to asyncio, so I'm not
 sure if this is the most idiomatic way to do it, but at the moment it looks
@@ -274,66 +274,66 @@ wait collaboratively for a file descriptor to become ready, but they only take
 a callback, they don't block the coroutine. So we block it against an <a class="reference external" href="https://docs.python.org/3/library/asyncio-sync.html#event">Event</a>,
 and use the callback to free it.</p>
 <pre class="code python literal-block">
-<span class="kn">from</span> <span class="nn">asyncio</span> <span class="kn">import</span> <span class="n">get_event_loop</span><span class="p">,</span> <span class="n">Event</span>
+<span class="kn">from</span> <span class="nn">asyncio</span> <span class="kn">import</span> <span class="n">get_event_loop</span><span class="p">,</span> <span class="n">Event</span><span class="w">
 
-<span class="c1"># simplified `psycopg3.waiting.wait_async()`</span>
-<span class="k">async</span> <span class="k">def</span> <span class="nf">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">):</span>
-    <span class="n">ev</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
-    <span class="n">loop</span> <span class="o">=</span> <span class="n">get_event_loop</span><span class="p">()</span>
-    <span class="n">ready</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span class="c1"># simplified `psycopg3.waiting.wait_async()`</span><span class="w">
+</span><span class="k">async</span> <span class="k">def</span> <span class="nf">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">):</span><span class="w">
+</span>    <span class="n">ev</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span><span class="w">
+</span>    <span class="n">loop</span> <span class="o">=</span> <span class="n">get_event_loop</span><span class="p">()</span><span class="w">
+</span>    <span class="n">ready</span> <span class="o">=</span> <span class="kc">None</span><span class="w">
 
-    <span class="k">def</span> <span class="nf">wakeup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
-        <span class="k">nonlocal</span> <span class="n">ready</span>
-        <span class="n">ready</span> <span class="o">=</span> <span class="n">state</span>
-        <span class="n">ev</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+</span>    <span class="k">def</span> <span class="nf">wakeup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span><span class="w">
+</span>        <span class="k">nonlocal</span> <span class="n">ready</span><span class="w">
+</span>        <span class="n">ready</span> <span class="o">=</span> <span class="n">state</span><span class="w">
+</span>        <span class="n">ev</span><span class="o">.</span><span class="n">set</span><span class="p">()</span><span class="w">
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
-        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">ev</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span><span class="p">:</span>
-                <span class="n">loop</span><span class="o">.</span><span class="n">add_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
-                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-                <span class="n">loop</span><span class="o">.</span><span class="n">remove_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span><span class="p">:</span>
-                <span class="n">loop</span><span class="o">.</span><span class="n">add_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
-                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-                <span class="n">loop</span><span class="o">.</span><span class="n">remove_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">RW</span><span class="p">:</span>
-                <span class="n">loop</span><span class="o">.</span><span class="n">add_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
-                <span class="n">loop</span><span class="o">.</span><span class="n">add_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="p">)</span>
-                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-                <span class="n">loop</span><span class="o">.</span><span class="n">remove_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-                <span class="n">loop</span><span class="o">.</span><span class="n">remove_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+</span>    <span class="k">try</span><span class="p">:</span><span class="w">
+</span>        <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span><span class="w">
+</span>        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span><span class="w">
+</span>            <span class="n">ev</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span><span class="w">
+</span>            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">R</span><span class="p">:</span><span class="w">
+</span>                <span class="n">loop</span><span class="o">.</span><span class="n">add_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="p">)</span><span class="w">
+</span>                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span><span class="w">
+</span>                <span class="n">loop</span><span class="o">.</span><span class="n">remove_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="w">
+</span>            <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">W</span><span class="p">:</span><span class="w">
+</span>                <span class="n">loop</span><span class="o">.</span><span class="n">add_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="p">)</span><span class="w">
+</span>                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span><span class="w">
+</span>                <span class="n">loop</span><span class="o">.</span><span class="n">remove_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="w">
+</span>            <span class="k">elif</span> <span class="n">s</span> <span class="o">==</span> <span class="n">Wait</span><span class="o">.</span><span class="n">RW</span><span class="p">:</span><span class="w">
+</span>                <span class="n">loop</span><span class="o">.</span><span class="n">add_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">R</span><span class="p">)</span><span class="w">
+</span>                <span class="n">loop</span><span class="o">.</span><span class="n">add_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">wakeup</span><span class="p">,</span> <span class="n">Ready</span><span class="o">.</span><span class="n">W</span><span class="p">)</span><span class="w">
+</span>                <span class="k">await</span> <span class="n">ev</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span><span class="w">
+</span>                <span class="n">loop</span><span class="o">.</span><span class="n">remove_reader</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="w">
+</span>                <span class="n">loop</span><span class="o">.</span><span class="n">remove_writer</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="w">
 
-            <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">ready</span><span class="p">)</span>
+</span>            <span class="n">fd</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">ready</span><span class="p">)</span><span class="w">
 
-    <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span>    <span class="k">except</span> <span class="ne">StopIteration</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span><span class="w">
+</span>        <span class="k">return</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre>
 <p>which allows to implement an asyncio-friendly connection function with:</p>
 <pre class="code python literal-block">
-<span class="k">async</span> <span class="k">def</span> <span class="nf">connect_async</span><span class="p">(</span><span class="n">dsn</span><span class="p">):</span>
-    <span class="n">gen</span> <span class="o">=</span> <span class="n">connect_gen</span><span class="p">(</span><span class="n">dsn</span><span class="p">)</span>
-    <span class="n">pgconn</span> <span class="o">=</span> <span class="k">await</span> <span class="n">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>  <span class="c1"># the low-level libpq connection</span>
-    <span class="k">return</span> <span class="n">AsyncConnection</span><span class="p">(</span><span class="n">pgconn</span><span class="p">)</span>  <span class="c1"># an AIOPG-style high-level connection</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">connect_async</span><span class="p">(</span><span class="n">dsn</span><span class="p">):</span><span class="w">
+</span>    <span class="n">gen</span> <span class="o">=</span> <span class="n">connect_gen</span><span class="p">(</span><span class="n">dsn</span><span class="p">)</span><span class="w">
+</span>    <span class="n">pgconn</span> <span class="o">=</span> <span class="k">await</span> <span class="n">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>  <span class="c1"># the low-level libpq connection</span><span class="w">
+</span>    <span class="k">return</span> <span class="n">AsyncConnection</span><span class="p">(</span><span class="n">pgconn</span><span class="p">)</span>  <span class="c1"># an AIOPG-style high-level connection</span>
 </pre>
 <p>The same <tt class="docutils literal"><span class="pre">wait_*()</span></tt> functions are used to wrap a send-query-fetch-result
 generator underlying <tt class="docutils literal">cursor.execute()</tt> and friends:</p>
 <pre class="code python literal-block">
-<span class="k">class</span> <span class="nc">Cursor</span><span class="p">(</span><span class="n">BaseCursor</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>   <span class="c1"># ignoring values for now</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
-            <span class="n">gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_send</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-            <span class="n">results</span> <span class="o">=</span> <span class="n">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>  <span class="c1"># process the result to python</span>
+<span class="k">class</span> <span class="nc">Cursor</span><span class="p">(</span><span class="n">BaseCursor</span><span class="p">):</span><span class="w">
+</span>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>   <span class="c1"># ignoring values for now</span><span class="w">
+</span>        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span><span class="w">
+</span>            <span class="n">gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_send</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="w">
+</span>            <span class="n">results</span> <span class="o">=</span> <span class="n">wait_select</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span><span class="w">
+</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>  <span class="c1"># process the result to python</span><span class="w">
 
-<span class="k">class</span> <span class="nc">AsyncCursor</span><span class="p">(</span><span class="n">BaseCursor</span><span class="p">):</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
-        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
-            <span class="n">gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_send</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-            <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+</span><span class="k">class</span> <span class="nc">AsyncCursor</span><span class="p">(</span><span class="n">BaseCursor</span><span class="p">):</span><span class="w">
+</span>    <span class="k">async</span> <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span><span class="w">
+</span>        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span><span class="w">
+</span>            <span class="n">gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute_send</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="w">
+</span>            <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">wait_async</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span><span class="w">
+</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_execute_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre>
 <p>Minimal code duplication, different high level interface. Symmetry. I like it!</p>
 <p>Furthermore, unpacking the query mechanism allowed the library to gain a new
@@ -341,13 +341,13 @@ feature: it is now possible with a single roundtrip to return more than one
 result, implementing the <a class="reference external" href="https://www.python.org/dev/peps/pep-0249/#nextset">nextset()</a> method, which isn't available in
 psycopg2:</p>
 <pre class="code pycon literal-block">
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select 10; select 20&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="go">b'10'
-</span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">nextset</span><span class="p">()</span>
-<span class="go">True
-</span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="go">b'20'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;select 10; select 20&quot;</span><span class="p">)</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="w">
+</span><span class="go">b'10'
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">nextset</span><span class="p">()</span><span class="w">
+</span><span class="go">True
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span><span class="o">.</span><span class="n">_result</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="w">
+</span><span class="go">b'20'</span>
 </pre>
 <p>What's left? Well, a lot! Now that the basic machinery is in place, and Python
 can send and retrieve bytes to and from Postgres, it's time to attack the

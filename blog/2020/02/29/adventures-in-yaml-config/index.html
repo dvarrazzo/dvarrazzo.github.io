@@ -135,26 +135,26 @@ to more scatological ones) it was called <a class="reference external" href="htt
 <p>The idea of the tool is to define a <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file containing a description of the
 rule to apply to different database objects to dump. For instance:</p>
 <pre class="code YAML literal-block">
-<span class="c1"># A YAML file is similar in content to a JSON file, but easier for human</span>
-<span class="c1"># to edit: more compact, less noisy, and can be commented.</span>
-<span class="nt">db_objects</span><span class="p">:</span>
+<span class="c1"># A YAML file is similar in content to a JSON file, but easier for human</span><span class="w">
+</span><span class="c1"># to edit: more compact, less noisy, and can be commented.</span><span class="w">
+</span><span class="nt">db_objects</span><span class="p">:</span><span class="w">
 
-  <span class="c1"># dump all the tables in the schema 'myapp'</span>
-  <span class="p-Indicator">-</span> <span class="nt">schema</span><span class="p">:</span> <span class="l-Scalar-Plain">myapp</span>
-    <span class="nt">action</span><span class="p">:</span> <span class="l-Scalar-Plain">dump</span>
+  </span><span class="c1"># dump all the tables in the schema 'myapp'</span><span class="w">
+  </span><span class="p-Indicator">-</span><span class="w"> </span><span class="nt">schema</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">myapp</span><span class="w">
+    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">dump</span><span class="w">
 
-  <span class="c1"># but not the one starting with 'audit_'</span>
-  <span class="p-Indicator">-</span> <span class="nt">schema</span><span class="p">:</span> <span class="l-Scalar-Plain">myapp</span>
-    <span class="nt">names</span><span class="p">:</span> <span class="s">&quot;^audit_.*&quot;</span>
-    <span class="nt">action</span><span class="p">:</span> <span class="l-Scalar-Plain">skip</span>
+  </span><span class="c1"># but not the one starting with 'audit_'</span><span class="w">
+  </span><span class="p-Indicator">-</span><span class="w"> </span><span class="nt">schema</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">myapp</span><span class="w">
+    </span><span class="nt">names</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;^audit_.*&quot;</span><span class="w">
+    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">skip</span><span class="w">
 
-  <span class="c1"># don't dump customers passwords, and replace their telephone no. with a dummy</span>
-  <span class="p-Indicator">-</span> <span class="nt">schema</span><span class="p">:</span> <span class="l-Scalar-Plain">myapp</span>
-    <span class="nt">name</span><span class="p">:</span> <span class="l-Scalar-Plain">customer</span>
-    <span class="nt">no_columns</span><span class="p">:</span>
-      <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">password</span>
-    <span class="nt">replace</span><span class="p">:</span>
-      <span class="nt">telephone</span><span class="p">:</span> <span class="s">&quot;+44</span><span class="nv"> </span><span class="s">7853</span><span class="nv"> </span><span class="s">123456&quot;</span>
+  </span><span class="c1"># don't dump customers passwords, and replace their telephone no. with a dummy</span><span class="w">
+  </span><span class="p-Indicator">-</span><span class="w"> </span><span class="nt">schema</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">myapp</span><span class="w">
+    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">customer</span><span class="w">
+    </span><span class="nt">no_columns</span><span class="p">:</span><span class="w">
+      </span><span class="p-Indicator">-</span><span class="w"> </span><span class="l-Scalar-Plain">password</span><span class="w">
+    </span><span class="nt">replace</span><span class="p">:</span><span class="w">
+      </span><span class="nt">telephone</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+44</span><span class="nv"> </span><span class="s">7853</span><span class="nv"> </span><span class="s">123456&quot;</span>
 </pre>
 <p>This description would produce a data-only dump as a text file containing the
 data and enough statements to restore them by piping the entire file into
@@ -194,24 +194,24 @@ possible to perform automatic validation of the document against the schema
 <p>However the results are not entirely satisfactory. For instance, this is a
 configuration file containing 4 errors:</p>
 <pre class="code YAML literal-block">
-<span class="ln">1 </span><span class="c1"># badconfig.yaml</span>
-<span class="ln">2 </span><span class="nt">db_objects</span><span class="p">:</span>
-<span class="ln">3 </span>  <span class="p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l-Scalar-Plain">10</span>
-<span class="ln">4 </span>    <span class="nt">action</span><span class="p">:</span> <span class="l-Scalar-Plain">download</span>
-<span class="ln">5 </span>    <span class="nt">kid</span><span class="p">:</span> <span class="l-Scalar-Plain">table</span>
-<span class="ln">6 </span>    <span class="nt">adjust_score</span><span class="p">:</span> <span class="l-Scalar-Plain">twelve</span>
+<span class="ln">1 </span><span class="c1"># badconfig.yaml</span><span class="w">
+</span><span class="ln">2 </span><span class="w"></span><span class="nt">db_objects</span><span class="p">:</span><span class="w">
+</span><span class="ln">3 </span><span class="w">  </span><span class="p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">10</span><span class="w">
+</span><span class="ln">4 </span><span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">download</span><span class="w">
+</span><span class="ln">5 </span><span class="w">    </span><span class="nt">kid</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">table</span><span class="w">
+</span><span class="ln">6 </span><span class="w">    </span><span class="nt">adjust_score</span><span class="p">:</span><span class="w"> </span><span class="l-Scalar-Plain">twelve</span>
 </pre>
 <p>It's easy to use the validator to find all the errors at once:</p>
 <pre class="code pycon literal-block">
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jsonschema</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">yaml</span>
-<span class="go">
-</span><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;seldump/schema/config.yaml&quot;</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">validator</span> <span class="o">=</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">Draft7Validator</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
-<span class="go">
-</span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;badconfig.yaml&quot;</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">iter_errors</span><span class="p">(</span><span class="n">config</span><span class="p">)))</span>
-<span class="go">
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">jsonschema</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">yaml</span><span class="w">
+</span><span class="go">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">schema</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;seldump/schema/config.yaml&quot;</span><span class="p">))</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">validator</span> <span class="o">=</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">Draft7Validator</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span><span class="w">
+</span><span class="go">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;badconfig.yaml&quot;</span><span class="p">))</span><span class="w">
+</span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">validator</span><span class="o">.</span><span class="n">iter_errors</span><span class="p">(</span><span class="n">config</span><span class="p">)))</span><span class="w">
+</span><span class="go">
 Additional properties are not allowed ('kid' was unexpected)
 10 is not of type 'string'
 'twelve' is not of type 'integer'

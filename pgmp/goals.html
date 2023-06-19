@@ -1,27 +1,23 @@
+<!DOCTYPE html>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>Goals of the project &#8212; PostgreSQL Multiple Precision Arithmetic 1.1.0dev0 documentation</title>
-    <link rel="stylesheet" href="_static/pgmp.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pgmp.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YCKCK1NGRM"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'UA-158968242-1');
+      gtag('config', 'G-YCKCK1NGRM');
     </script>
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=Accessible"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -44,45 +40,47 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="goals-of-the-project">
-<span id="goals"></span><h1>Goals of the project<a class="headerlink" href="#goals-of-the-project" title="Permalink to this headline">¶</a></h1>
+  <section id="goals-of-the-project">
+<span id="goals"></span><h1>Goals of the project<a class="headerlink" href="#goals-of-the-project" title="Permalink to this heading">¶</a></h1>
 <p>If you wonder what is this project for, here is a loose set of goals and
 achievements.</p>
-<dl class="goals docutils">
-<dt>Learning more about PostgreSQL internals</dt>
-<dd>The project has been an occasion to learn something more about PostgreSQL
+<dl class="simple goals">
+<dt>Learning more about PostgreSQL internals</dt><dd><p>The project has been an occasion to learn something more about PostgreSQL
 internals and more advanced topics: memory allocation in the server,
 definition of complete arithmetic data types and their operators. This
-goal has been completely fulfilled.</dd>
-<dt>Providing and edge on other databases</dt>
-<dd>As far as I know no other database provides rational numbers nor the wide
+goal has been completely fulfilled.</p>
+</dd>
+<dt>Providing and edge on other databases</dt><dd><p>As far as I know no other database provides rational numbers nor the wide
 range of mathematical functions exposed by the GMP. Having them directly
 available into the database makes PostgreSQL a good choice in environments
 where these functions are of use, such as in mathematical and cryptography
-research.</dd>
+research.</p>
+</dd>
 </dl>
 <p>Here instead is a list of <em>non-goals</em>:</p>
-<dl class="goals docutils">
-<dt>An extension to be used by everybody</dt>
-<dd>For almost every user the performance offered by the <code class="xref py py-obj docutils literal notranslate"><span class="pre">numeric</span></code> data type
+<dl class="simple goals">
+<dt>An extension to be used by everybody</dt><dd><p>For almost every user the performance offered by the <code class="xref py py-obj docutils literal notranslate"><span class="pre">numeric</span></code> data type
 are perfectly acceptable and the extra performance provided by <code class="xref py py-obj docutils literal notranslate"><span class="pre">mpz</span></code> may
-not justify the use of an external library.</dd>
-<dt>Replacing PostgreSQL builtin numerical types</dt>
-<dd>GMP data type are not constrained by the semantic specified by SQL, so
+not justify the use of an external library.</p>
+</dd>
+<dt>Replacing PostgreSQL builtin numerical types</dt><dd><p>GMP data type are not constrained by the semantic specified by SQL, so
 they will hardly replace any standard data type. Furthermore the GMP (as
 well as the pgmp extension) is distributed with LGPL license, which is
 perfectly compatible with the PostgreSQL terms of distribution but likely
 to not be well accepted by the PostgreSQL developers who usually prefer
-BSD-style licenses.</dd>
+BSD-style licenses.</p>
+</dd>
 </dl>
-</div>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
         </div>
         <div class="sidebar">
+          
           <h3>Table of Contents</h3>
           <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pgmp</span></code> extension installation</a></li>
@@ -97,10 +95,9 @@ BSD-style licenses.</dd>
             <form class="search" action="search.html" method="get">
                 <input type="text" name="q" />
                 <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
             </form>
           </div>
+
         </div>
         <div class="clearer"></div>
       </div>
@@ -124,7 +121,7 @@ BSD-style licenses.</dd>
           
     <div class="footer" role="contentinfo">
         &#169; Copyright 2011-2020, Daniele Varrazzo.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
     </div>
         </div>
         <div class="clearer"></div>

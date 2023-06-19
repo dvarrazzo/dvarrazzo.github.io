@@ -198,10 +198,10 @@ data via a <a class="reference external" href="https://www.psycopg.org/docs/usag
 requires people to roll their own adaptation format. The target for copying
 data into the database using psycopg3 should be as easy as:</p>
 <pre class="code python literal-block">
-<span class="n">curs</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;COPY song (artist, title) FROM STDIN&quot;</span><span class="p">,</span> <span class="p">[</span>
-    <span class="p">(</span><span class="s2">&quot;Sinead O'Connor&quot;</span><span class="p">,</span> <span class="s2">&quot;Nothing Compares 2 U&quot;</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">'REM'</span><span class="p">,</span> <span class="s2">&quot;Losing my Religion&quot;</span><span class="p">),</span>
-<span class="p">])</span>
+<span class="n">curs</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;COPY song (artist, title) FROM STDIN&quot;</span><span class="p">,</span> <span class="p">[</span><span class="w">
+</span>    <span class="p">(</span><span class="s2">&quot;Sinead O'Connor&quot;</span><span class="p">,</span> <span class="s2">&quot;Nothing Compares 2 U&quot;</span><span class="p">),</span><span class="w">
+</span>    <span class="p">(</span><span class="s1">'REM'</span><span class="p">,</span> <span class="s2">&quot;Losing my Religion&quot;</span><span class="p">),</span><span class="w">
+</span><span class="p">])</span>
 </pre>
 </div>
 <div class="section" id="context-managers-and-transactions">
@@ -211,13 +211,13 @@ never landed in the <a class="reference external" href="https://www.python.org/d
 managers wrap a transaction, committing it if exiting on success or rolling it
 back in case of error. So the way to use it is something like:</p>
 <pre class="code python literal-block">
-<span class="n">conn</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">DSN</span><span class="p">)</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="c1"># these are two separate transactions</span>
-    <span class="k">with</span> <span class="n">conn</span><span class="p">:</span>
-        <span class="n">do_something</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">conn</span><span class="p">:</span>
-        <span class="n">do_something_else</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">DSN</span><span class="p">)</span><span class="w">
+</span><span class="k">try</span><span class="p">:</span><span class="w">
+</span>    <span class="c1"># these are two separate transactions</span><span class="w">
+</span>    <span class="k">with</span> <span class="n">conn</span><span class="p">:</span><span class="w">
+</span>        <span class="n">do_something</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span><span class="w">
+</span>    <span class="k">with</span> <span class="n">conn</span><span class="p">:</span><span class="w">
+</span>        <span class="n">do_something_else</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
 </pre>
 <p>This idea has its usefulness,  but it is a <em>very</em> surprising behaviour:
 developers usually expect the same resources released by <tt class="docutils literal">close()</tt> to be
@@ -225,9 +225,9 @@ released on context exit (as files, sockets, and even DBAPI cursors do). It
 also gets in the way of managing different life cycles on the connection, for
 instance if there is the connection is taken from a pool:</p>
 <pre class="code python literal-block">
-<span class="k">with</span> <span class="n">pool</span><span class="o">.</span><span class="n">getconn</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
-    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">curs</span><span class="p">:</span>
-        <span class="n">do_someting</span><span class="p">(</span><span class="n">curs</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">pool</span><span class="o">.</span><span class="n">getconn</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span><span class="w">
+</span>    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">curs</span><span class="p">:</span><span class="w">
+</span>        <span class="n">do_someting</span><span class="p">(</span><span class="n">curs</span><span class="p">)</span>
 </pre>
 <p>then it is expected (and <a class="reference external" href="https://github.com/psycopg/psycopg2/pull/17">reasonably requested</a>) that the connection is
 returned to the pool at the end of the block.</p>
@@ -240,18 +240,18 @@ them on connection context exit, and to add an explicit method to start an
 atomic block (either a transaction or a savepoint, according to the current
 connection state):</p>
 <pre class="code python literal-block">
-<span class="k">with</span> <span class="n">connect</span><span class="p">(</span><span class="n">DSN</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
-    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
-        <span class="n">do_something</span><span class="p">()</span>
-        <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
-            <span class="n">do_something_nested</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">connect</span><span class="p">(</span><span class="n">DSN</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span><span class="w">
+</span>    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span><span class="w">
+</span>        <span class="n">do_something</span><span class="p">()</span><span class="w">
+</span>        <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span><span class="w">
+</span>            <span class="n">do_something_nested</span><span class="p">()</span><span class="w">
 
-    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">tx</span><span class="p">:</span>
-        <span class="n">do_something_else</span><span class="p">()</span>
-        <span class="c1"># we were just testing and we don't really want to do this</span>
-        <span class="n">tx</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+</span>    <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">tx</span><span class="p">:</span><span class="w">
+</span>        <span class="n">do_something_else</span><span class="p">()</span><span class="w">
+</span>        <span class="c1"># we were just testing and we don't really want to do this</span><span class="w">
+</span>        <span class="n">tx</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span><span class="w">
 
-<span class="c1"># and here the connection is closed</span>
+</span><span class="c1"># and here the connection is closed</span>
 </pre>
 </div>
 <div class="section" id="optional-c-module">
@@ -332,8 +332,8 @@ suggests, are actually unencoded 8 bits, see <a class="reference external" href=
 </li>
 <li><p class="first">return value on <tt class="docutils literal">execute()</tt>:</p>
 <pre class="code python literal-block">
-<span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
-    <span class="c1"># ...</span>
+<span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">):</span><span class="w">
+</span>    <span class="c1"># ...</span>
 </pre>
 </li>
 <li><p class="first">connection and cursor-scoped adapters (currently you can scope the

@@ -1,27 +1,24 @@
+<!DOCTYPE html>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>[Ab]using PostgreSQL to calculate \(\pi\) &#8212; PostgreSQL Multiple Precision Arithmetic 1.1.0dev0 documentation</title>
-    <link rel="stylesheet" href="_static/pgmp.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-158968242-1"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pgmp.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YCKCK1NGRM"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'UA-158968242-1');
+      gtag('config', 'G-YCKCK1NGRM');
     </script>
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=Accessible"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=Accessible"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -44,8 +41,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="ab-using-postgresql-to-calculate-pi">
-<h1>[Ab]using PostgreSQL to calculate <span class="math notranslate nohighlight">\(\pi\)</span><a class="headerlink" href="#ab-using-postgresql-to-calculate-pi" title="Permalink to this headline">¶</a></h1>
+  <section id="ab-using-postgresql-to-calculate-pi">
+<h1>[Ab]using PostgreSQL to calculate <span class="math notranslate nohighlight">\(\pi\)</span><a class="headerlink" href="#ab-using-postgresql-to-calculate-pi" title="Permalink to this heading">¶</a></h1>
 <p>Once the crime of binding the <a class="reference external" href="https://www.gmplib.org/">GMP</a> multiple precision arithmetic library into
 <a class="reference external" href="https://www.postgresql.org/">PostgreSQL</a> has been perpetrated, using it to calculate one million digits of
 <span class="math notranslate nohighlight">\(\pi\)</span> is the least evil.</p>
@@ -62,19 +59,19 @@ digits, we use a Taylor series scaled to <span class="math notranslate nohighlig
 provided in this nice <a class="reference external" href="https://web.archive.org/web/20111211140154/http://en.literateprograms.org/Pi_with_Machin's_formula_(Python)">LiteratePrograms article</a>.</p>
 <p>It is possible to implement the <code class="xref py py-obj docutils literal notranslate"><span class="pre">arccot()</span></code> function using a
 <a class="reference external" href="https://www.postgresql.org/docs/current/queries-with.html">common table expression</a> from PostgreSQL 8.4:</p>
-<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">arccot</span><span class="p">(</span><span class="n">x</span> <span class="n">mpz</span><span class="p">,</span> <span class="n">unity</span> <span class="n">mpz</span><span class="p">)</span>
-<span class="k">RETURNS</span> <span class="n">mpz</span> <span class="k">AS</span>
+<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">arccot</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="n">mpz</span><span class="p">,</span><span class="w"> </span><span class="n">unity</span><span class="w"> </span><span class="n">mpz</span><span class="p">)</span>
+<span class="k">RETURNS</span><span class="w"> </span><span class="n">mpz</span><span class="w"> </span><span class="k">AS</span>
 <span class="s">$$</span>
-<span class="k">WITH</span> <span class="k">RECURSIVE</span> <span class="n">t</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">xp</span><span class="p">)</span> <span class="k">AS</span> <span class="p">(</span>
-    <span class="k">VALUES</span> <span class="p">(</span><span class="mf">3</span><span class="p">,</span> <span class="nv">$2</span> <span class="o">/</span> <span class="o">-</span><span class="p">(</span><span class="nv">$1</span> <span class="o">^</span> <span class="mf">3</span><span class="p">))</span>
-  <span class="k">UNION</span> <span class="k">ALL</span>
-    <span class="k">SELECT</span> <span class="n">n</span><span class="o">+</span><span class="mf">2</span><span class="p">,</span> <span class="n">xp</span> <span class="o">/</span> <span class="o">-</span><span class="p">(</span><span class="nv">$1</span> <span class="o">^</span> <span class="mf">2</span><span class="p">)</span>
-    <span class="k">FROM</span> <span class="n">t</span>
-    <span class="k">WHERE</span> <span class="n">xp</span> <span class="o">&lt;&gt;</span> <span class="mf">0</span>
+<span class="k">WITH</span><span class="w"> </span><span class="k">RECURSIVE</span><span class="w"> </span><span class="n">t</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">xp</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="nv">$2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="nv">$1</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="mf">3</span><span class="p">))</span>
+<span class="w">  </span><span class="k">UNION</span><span class="w"> </span><span class="k">ALL</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">n</span><span class="o">+</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="n">xp</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="nv">$1</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">t</span>
+<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">xp</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="mf">0</span>
 <span class="p">)</span>
-<span class="k">SELECT</span> <span class="n">sum</span><span class="p">(</span><span class="n">xp</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nv">$2</span> <span class="o">/</span> <span class="nv">$1</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">t</span><span class="p">;</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">sum</span><span class="p">(</span><span class="n">xp</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nv">$2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nv">$1</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">t</span><span class="p">;</span>
 <span class="s">$$</span>
-<span class="k">LANGUAGE</span> <span class="k">sql</span> <span class="k">IMMUTABLE</span> <span class="k">STRICT</span><span class="p">;</span>
+<span class="k">LANGUAGE</span><span class="w"> </span><span class="k">sql</span><span class="w"> </span><span class="k">IMMUTABLE</span><span class="w"> </span><span class="k">STRICT</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>However using this method all the temporary terms in the calculation are kept
@@ -83,47 +80,47 @@ CPU. The performance can be improved using <a class="reference external" href="h
 fastest language around, but it’s perfectly suitable for this task, as the
 time spent in the function body is negligible respect to the time spent in the
 arithmetic functions with huge operators.</p>
-<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">arccot</span><span class="p">(</span><span class="n">x</span> <span class="n">mpz</span><span class="p">,</span> <span class="n">unity</span> <span class="n">mpz</span><span class="p">)</span>
-<span class="k">RETURNS</span> <span class="n">mpz</span> <span class="k">AS</span>
+<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">arccot</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="n">mpz</span><span class="p">,</span><span class="w"> </span><span class="n">unity</span><span class="w"> </span><span class="n">mpz</span><span class="p">)</span>
+<span class="k">RETURNS</span><span class="w"> </span><span class="n">mpz</span><span class="w"> </span><span class="k">AS</span>
 <span class="s">$$</span>
 <span class="k">DECLARE</span>
-    <span class="n">xp</span> <span class="n">mpz</span> <span class="o">:=</span> <span class="n">unity</span> <span class="o">/</span> <span class="n">x</span><span class="p">;</span>
-    <span class="n">xp2</span> <span class="n">mpz</span> <span class="o">:=</span> <span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">^</span> <span class="mf">2</span><span class="p">);</span>
-    <span class="n">acc</span> <span class="n">mpz</span> <span class="o">:=</span> <span class="n">xp</span><span class="p">;</span>
-    <span class="n">n</span> <span class="n">mpz</span> <span class="o">:=</span> <span class="mf">3</span><span class="p">;</span>
-    <span class="n">term</span> <span class="n">mpz</span><span class="p">;</span>
+<span class="w">    </span><span class="n">xp</span><span class="w"> </span><span class="n">mpz</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">unity</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="n">xp2</span><span class="w"> </span><span class="n">mpz</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="mf">2</span><span class="p">);</span>
+<span class="w">    </span><span class="n">acc</span><span class="w"> </span><span class="n">mpz</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">xp</span><span class="p">;</span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="n">mpz</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mf">3</span><span class="p">;</span>
+<span class="w">    </span><span class="n">term</span><span class="w"> </span><span class="n">mpz</span><span class="p">;</span>
 <span class="k">BEGIN</span>
-    <span class="k">LOOP</span>
-        <span class="n">xp</span> <span class="o">:=</span> <span class="n">xp</span> <span class="o">/</span> <span class="n">xp2</span><span class="p">;</span>
-        <span class="n">term</span> <span class="o">:=</span> <span class="n">xp</span> <span class="o">/</span> <span class="n">n</span><span class="p">;</span>
-        <span class="k">EXIT</span> <span class="k">WHEN</span> <span class="n">term</span> <span class="o">=</span> <span class="mf">0</span><span class="p">;</span>
-        <span class="n">acc</span> <span class="o">:=</span> <span class="n">acc</span> <span class="o">+</span> <span class="n">term</span><span class="p">;</span>
-        <span class="n">n</span> <span class="o">:=</span> <span class="n">n</span> <span class="o">+</span> <span class="mf">2</span><span class="p">;</span>
-    <span class="k">END</span> <span class="k">LOOP</span><span class="p">;</span>
-    <span class="k">RETURN</span> <span class="n">acc</span><span class="p">;</span>
+<span class="w">    </span><span class="k">LOOP</span>
+<span class="w">        </span><span class="n">xp</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">xp</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">xp2</span><span class="p">;</span>
+<span class="w">        </span><span class="n">term</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">xp</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">        </span><span class="k">EXIT</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">acc</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">acc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">term</span><span class="p">;</span>
+<span class="w">        </span><span class="n">n</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
+<span class="w">    </span><span class="k">END</span><span class="w"> </span><span class="k">LOOP</span><span class="p">;</span>
+<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="n">acc</span><span class="p">;</span>
 <span class="k">END</span>
 <span class="s">$$</span>
-<span class="k">LANGUAGE</span> <span class="n">plpgsql</span> <span class="k">IMMUTABLE</span> <span class="k">STRICT</span><span class="p">;</span>
+<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span><span class="w"> </span><span class="k">IMMUTABLE</span><span class="w"> </span><span class="k">STRICT</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>And the Machin-like formula using it:</p>
-<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">pi_hwang_97</span><span class="p">(</span><span class="n">ndigits</span> <span class="nb">int</span><span class="p">)</span>
-<span class="k">RETURNS</span> <span class="n">mpz</span> <span class="k">AS</span>
+<div class="highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="k">REPLACE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="n">pi_hwang_97</span><span class="p">(</span><span class="n">ndigits</span><span class="w"> </span><span class="nb">int</span><span class="p">)</span>
+<span class="k">RETURNS</span><span class="w"> </span><span class="n">mpz</span><span class="w"> </span><span class="k">AS</span>
 <span class="s">$$</span>
 <span class="k">DECLARE</span>
-    <span class="n">unity</span> <span class="n">mpz</span> <span class="o">=</span> <span class="mf">10</span><span class="o">::</span><span class="n">mpz</span> <span class="o">^</span> <span class="p">(</span><span class="n">ndigits</span> <span class="o">+</span> <span class="mf">10</span><span class="p">);</span>
+<span class="w">    </span><span class="n">unity</span><span class="w"> </span><span class="n">mpz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10</span><span class="o">::</span><span class="n">mpz</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">ndigits</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">10</span><span class="p">);</span>
 <span class="k">BEGIN</span>
-    <span class="k">RETURN</span> <span class="mf">4</span> <span class="o">*</span> <span class="p">(</span>
-        <span class="mf">183</span> <span class="o">*</span> <span class="n">arccot</span><span class="p">(</span><span class="mf">239</span><span class="p">,</span> <span class="n">unity</span><span class="p">)</span>
-        <span class="o">+</span> <span class="mf">32</span> <span class="o">*</span> <span class="n">arccot</span><span class="p">(</span><span class="mf">1023</span><span class="p">,</span> <span class="n">unity</span><span class="p">)</span>
-        <span class="o">-</span> <span class="mf">68</span> <span class="o">*</span> <span class="n">arccot</span><span class="p">(</span><span class="mf">5832</span><span class="p">,</span> <span class="n">unity</span><span class="p">)</span>
-        <span class="o">+</span> <span class="mf">12</span> <span class="o">*</span> <span class="n">arccot</span><span class="p">(</span><span class="mf">110443</span><span class="p">,</span> <span class="n">unity</span><span class="p">)</span>
-        <span class="o">-</span> <span class="mf">12</span> <span class="o">*</span> <span class="n">arccot</span><span class="p">(</span><span class="mf">4841182</span><span class="p">,</span> <span class="n">unity</span><span class="p">)</span>
-        <span class="o">-</span> <span class="mf">100</span> <span class="o">*</span> <span class="n">arccot</span><span class="p">(</span><span class="mf">6826318</span><span class="p">,</span> <span class="n">unity</span><span class="p">)</span>
-        <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">10</span><span class="o">::</span><span class="n">mpz</span> <span class="o">^</span> <span class="mf">10</span><span class="p">);</span>
+<span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="mf">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span>
+<span class="w">        </span><span class="mf">183</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">arccot</span><span class="p">(</span><span class="mf">239</span><span class="p">,</span><span class="w"> </span><span class="n">unity</span><span class="p">)</span>
+<span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="mf">32</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">arccot</span><span class="p">(</span><span class="mf">1023</span><span class="p">,</span><span class="w"> </span><span class="n">unity</span><span class="p">)</span>
+<span class="w">        </span><span class="o">-</span><span class="w"> </span><span class="mf">68</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">arccot</span><span class="p">(</span><span class="mf">5832</span><span class="p">,</span><span class="w"> </span><span class="n">unity</span><span class="p">)</span>
+<span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="mf">12</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">arccot</span><span class="p">(</span><span class="mf">110443</span><span class="p">,</span><span class="w"> </span><span class="n">unity</span><span class="p">)</span>
+<span class="w">        </span><span class="o">-</span><span class="w"> </span><span class="mf">12</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">arccot</span><span class="p">(</span><span class="mf">4841182</span><span class="p">,</span><span class="w"> </span><span class="n">unity</span><span class="p">)</span>
+<span class="w">        </span><span class="o">-</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">arccot</span><span class="p">(</span><span class="mf">6826318</span><span class="p">,</span><span class="w"> </span><span class="n">unity</span><span class="p">)</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">10</span><span class="o">::</span><span class="n">mpz</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="mf">10</span><span class="p">);</span>
 <span class="k">END</span>
 <span class="s">$$</span>
-<span class="k">LANGUAGE</span> <span class="n">plpgsql</span> <span class="k">IMMUTABLE</span> <span class="k">STRICT</span><span class="p">;</span>
+<span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span><span class="w"> </span><span class="k">IMMUTABLE</span><span class="w"> </span><span class="k">STRICT</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>This function produces 200,000 digits of <span class="math notranslate nohighlight">\(\pi\)</span> in 30 sec on my laptop
@@ -175,14 +172,16 @@ implements this idea:</p>
 <p>The script uses 4 cores concurrently to calculate the intermediate terms: it
 produces 200,000 digits in about 13 seconds and 1 million digits in 8 minutes
 and 30 seconds.</p>
-</div>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
         </div>
         <div class="sidebar">
+          
           <h3>Table of Contents</h3>
           <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pgmp</span></code> extension installation</a></li>
@@ -197,10 +196,9 @@ and 30 seconds.</p>
             <form class="search" action="search.html" method="get">
                 <input type="text" name="q" />
                 <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
             </form>
           </div>
+
         </div>
         <div class="clearer"></div>
       </div>
@@ -224,7 +222,7 @@ and 30 seconds.</p>
           
     <div class="footer" role="contentinfo">
         &#169; Copyright 2011-2020, Daniele Varrazzo.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
     </div>
         </div>
         <div class="clearer"></div>
